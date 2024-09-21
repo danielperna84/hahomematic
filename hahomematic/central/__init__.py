@@ -451,7 +451,7 @@ class CentralUnit(PayloadMixin):
             for device_in_state in self._devices.values()
             if device_in_state.firmware_update_state in device_firmware_states
         ]:
-            await self.refresh_firmware_data(device_address=device.device_address)
+            await self.refresh_firmware_data(device_address=device.address)
 
     async def _refresh_device_descriptions(
         self, client: hmcl.Client, device_address: str | None = None
@@ -764,12 +764,11 @@ class CentralUnit(PayloadMixin):
                         interface_id=interface_id,
                         device_address=device_address,
                     )
-
-                except Exception as err:  # pragma: no cover
+                except Exception as ex:  # pragma: no cover
                     _LOGGER.error(
                         "CREATE_DEVICES failed: %s [%s] Unable to create device: %s, %s",
-                        type(err).__name__,
-                        reduce_args(args=err.args),
+                        type(ex).__name__,
+                        reduce_args(args=ex.args),
                         interface_id,
                         device_address,
                     )
@@ -779,11 +778,11 @@ class CentralUnit(PayloadMixin):
                         await device.load_value_cache()
                         new_devices.add(device)
                         self._devices[device_address] = device
-                except Exception as err:  # pragma: no cover
+                except Exception as ex:  # pragma: no cover
                     _LOGGER.error(
                         "CREATE_DEVICES failed: %s [%s] Unable to create entities: %s, %s",
-                        type(err).__name__,
-                        reduce_args(args=err.args),
+                        type(ex).__name__,
+                        reduce_args(args=ex.args),
                         interface_id,
                         device_address,
                     )
@@ -873,11 +872,11 @@ class CentralUnit(PayloadMixin):
                     if dev_desc["ADDRESS"] not in known_addresses:
                         await client.fetch_paramset_descriptions(device_description=dev_desc)
                         save_paramset_descriptions = True
-                except Exception as err:  # pragma: no cover
+                except Exception as ex:  # pragma: no cover
                     _LOGGER.error(
                         "ADD_NEW_DEVICES failed: %s [%s]",
-                        type(err).__name__,
-                        reduce_args(args=err.args),
+                        type(ex).__name__,
+                        reduce_args(args=ex.args),
                     )
 
             await self.save_caches(
@@ -1003,18 +1002,18 @@ class CentralUnit(PayloadMixin):
 
     def remove_device(self, device: HmDevice) -> None:
         """Remove device to central collections."""
-        if device.device_address not in self._devices:
+        if device.address not in self._devices:
             _LOGGER.debug(
                 "REMOVE_DEVICE: device %s not registered in central",
-                device.device_address,
+                device.address,
             )
             return
-        device.clear_collections()
+        device.remove()
 
         self._device_descriptions.remove_device(device=device)
         self._paramset_descriptions.remove_device(device=device)
         self._device_details.remove_device(device=device)
-        del self._devices[device.device_address]
+        del self._devices[device.address]
 
     def remove_event_subscription(self, entity: BaseParameterEntity) -> None:
         """Remove event subscription from central collections."""
@@ -1091,9 +1090,9 @@ class CentralUnit(PayloadMixin):
         parameters: set[str] = set()
         for channels in self._paramset_descriptions.raw_paramset_descriptions.values():
             for channel_address in channels:
-                device_type: str | None = None
+                model: str | None = None
                 if full_format:
-                    device_type = self._device_descriptions.get_device_type(
+                    model = self._device_descriptions.get_model(
                         device_address=get_device_address(channel_address)
                     )
                 for parameter, parameter_data in (
@@ -1126,7 +1125,7 @@ class CentralUnit(PayloadMixin):
                             else get_channel_no(channel_address)
                         )
 
-                        full_parameter = f"{parameter}:{paramset_key}@{device_type}:"
+                        full_parameter = f"{parameter}:{paramset_key}@{model}:"
                         if channel is not None:
                             full_parameter += str(channel)
                         parameters.add(full_parameter)
@@ -1137,7 +1136,7 @@ class CentralUnit(PayloadMixin):
         """Get the virtual remote for the Client."""
         for client in self._clients.values():
             virtual_remote = client.get_virtual_remote()
-            if virtual_remote and virtual_remote.device_address == device_address:
+            if virtual_remote and virtual_remote.address == device_address:
                 return virtual_remote
         return None
 
@@ -1375,11 +1374,11 @@ class ConnectionChecker(threading.Thread):
                         await self._central.load_and_refresh_entity_data()
         except NoConnection as nex:
             _LOGGER.error("CHECK_CONNECTION failed: no connection: %s", reduce_args(args=nex.args))
-        except Exception as err:
+        except Exception as ex:
             _LOGGER.error(
                 "CHECK_CONNECTION failed: %s [%s]",
-                type(err).__name__,
-                reduce_args(args=err.args),
+                type(ex).__name__,
+                reduce_args(args=ex.args),
             )
 
 

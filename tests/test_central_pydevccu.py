@@ -43,11 +43,11 @@ async def test_central_full(central_unit_full) -> None:
 
     data = {}
     for device in central_unit_full.devices:
-        if device.device_type not in data:
-            data[device.device_type] = {}
+        if device.model not in data:
+            data[device.model] = {}
         for entity in device.generic_entities:
-            if entity.parameter not in data[device.device_type]:
-                data[device.device_type][entity.parameter] = f"{entity.hmtype}"
+            if entity.parameter not in data[device.model]:
+                data[device.model][entity.parameter] = f"{entity.hmtype}"
         pub_state_props = get_public_attributes_for_state_property(data_object=device)
         assert pub_state_props
         info_config_props = get_public_attributes_for_info_property(data_object=device)
@@ -59,9 +59,9 @@ async def test_central_full(central_unit_full) -> None:
 
     ce_channels = {}
     for custom_entity in custom_entities:
-        if custom_entity.device.device_type not in ce_channels:
-            ce_channels[custom_entity.device.device_type] = []
-        ce_channels[custom_entity.device.device_type].append(custom_entity.channel_no)
+        if custom_entity.device.model not in ce_channels:
+            ce_channels[custom_entity.device.model] = []
+        ce_channels[custom_entity.device.model].append(custom_entity.channel.no)
         pub_value_props = get_public_attributes_for_state_property(data_object=custom_entity)
         assert pub_value_props
         pub_config_props = get_public_attributes_for_config_property(data_object=custom_entity)
@@ -107,7 +107,7 @@ async def test_central_full(central_unit_full) -> None:
 
     addresses: dict[str, str] = {}
     for address, device in central_unit_full._devices.items():
-        addresses[address] = f"{device.device_type}.json"
+        addresses[address] = f"{device.model}.json"
 
     with open(
         file=os.path.join(central_unit_full.config.storage_folder, "all_devices.json"),

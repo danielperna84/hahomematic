@@ -21,8 +21,8 @@ from hahomematic.const import (
     ENTITY_KEY,
     EVENT_ADDRESS,
     EVENT_CHANNEL_NO,
-    EVENT_DEVICE_TYPE,
     EVENT_INTERFACE_ID,
+    EVENT_MODEL,
     EVENT_PARAMETER,
     EVENT_VALUE,
     INIT_DATETIME,
@@ -30,7 +30,6 @@ from hahomematic.const import (
     KWARGS_ARG_ENTITY,
     NO_CACHE_ENTRY,
     CallSource,
-    DeviceDescription,
     EntityUsage,
     Flag,
     HmPlatform,
@@ -48,7 +47,7 @@ from hahomematic.platforms.support import (
     GenericParameterType,
     PayloadMixin,
     convert_value,
-    generate_channel_unique_id,
+    generate_unique_id,
 )
 from hahomematic.support import get_entity_key, reduce_args
 import hahomematic.validator as val
@@ -95,7 +94,7 @@ EVENT_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(EVENT_ADDRESS): val.device_address,
         vol.Required(EVENT_CHANNEL_NO): val.channel_no,
-        vol.Required(EVENT_DEVICE_TYPE): str,
+        vol.Required(EVENT_MODEL): str,
         vol.Required(EVENT_INTERFACE_ID): str,
         vol.Required(EVENT_PARAMETER): str,
         vol.Optional(EVENT_VALUE): vol.Any(bool, int),
@@ -139,7 +138,7 @@ class CallbackEntity(ABC):
         """Return the central unit."""
         return self._central
 
-    @config_property
+    @property
     @abstractmethod
     def full_name(self) -> str:
         """Return the full name of the entity."""
@@ -280,35 +279,17 @@ class BaseEntity(CallbackEntity, PayloadMixin):
 
     def __init__(
         self,
-        device: hmd.HmDevice,
+        channel: hmd.HmChannel,
         unique_id: str,
-        channel_no: int,
         is_in_multiple_channels: bool,
     ) -> None:
         """Initialize the entity."""
         PayloadMixin.__init__(self)
-        super().__init__(central=device.central, unique_id=unique_id)
-        self._device: Final[hmd.HmDevice] = device
-        self._channel_no: Final = channel_no
-        self._channel_address: Final[str] = hms.get_channel_address(
-            device_address=device.device_address, channel_no=channel_no
-        )
-        self._channel_description: Final = self._get_channel_description(
-            interface_id=self._device.interface_id, channel_address=self._channel_address
-        )
-        self._channel_type: Final = self._channel_description["TYPE"]
-        self._channel_unique_id: Final = generate_channel_unique_id(
-            central=device.central, address=self._channel_address
-        )
-        self._rooms: Final = self._central.device_details.get_channel_rooms(
-            channel_address=self._channel_address
-        )
+        super().__init__(central=channel.central, unique_id=unique_id)
+        self._channel: Final[hmd.HmChannel] = channel
+        self._device: Final[hmd.HmDevice] = channel.device
         self._is_in_multiple_channels: Final = is_in_multiple_channels
-        self._function: Final = self._central.device_details.get_function_text(
-            address=self._channel_address
-        )
-        self._client: Final[hmcl.Client] = device.client
-
+        self._client: Final[hmcl.Client] = channel.device.client
         self._forced_usage: EntityUsage | None = None
         self._entity_name_data: Final = self._get_entity_name()
 
@@ -318,29 +299,14 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         return self._device.available
 
     @property
-    def base_channel_no(self) -> int | None:
-        """Return the base channel no of the entity."""
-        return self._device.get_sub_device_channel(channel_no=self._channel_no)
-
-    @property
     def path(self) -> str:
         """Return the base path of the entity."""
-        return f"{self._device.path}/{self._channel_no}/{self._platform}"
+        return f"{self._channel.path}/{self._platform}"
 
     @property
-    def channel_address(self) -> str:
-        """Return the channel_address of the entity."""
-        return self._channel_address
-
-    @property
-    def channel_no(self) -> int:
-        """Return the channel_no of the entity."""
-        return self._channel_no
-
-    @property
-    def channel_unique_id(self) -> str:
-        """Return the channel_unique_id of the entity."""
-        return self._channel_unique_id
+    def channel(self) -> hmd.HmChannel:
+        """Return the channel the entity."""
+        return self._channel
 
     @property
     def device(self) -> hmd.HmDevice:
@@ -348,14 +314,14 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         return self._device
 
     @property
-    def function(self) -> str | None:
-        """Return the function of the entity."""
-        return self._function
-
-    @config_property
     def full_name(self) -> str:
         """Return the full name of the entity."""
         return self._entity_name_data.full_name
+
+    @property
+    def function(self) -> str | None:
+        """Return the function."""
+        return self._channel.function
 
     @property
     def is_in_multiple_channels(self) -> bool:
@@ -375,14 +341,12 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     @property
     def room(self) -> str | None:
         """Return the room, if only one exists."""
-        if self._rooms and len(self._rooms) == 1:
-            return list(self._rooms)[0]
-        return None
+        return self._channel.room
 
     @property
     def rooms(self) -> set[str]:
         """Return the rooms assigned to an entity."""
-        return self._rooms
+        return self._channel.rooms
 
     @property
     def usage(self) -> EntityUsage:
@@ -396,14 +360,6 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     @abstractmethod
     async def load_entity_value(self, call_source: CallSource, direct_call: bool = False) -> None:
         """Init the entity data."""
-
-    def _get_channel_description(
-        self, interface_id: str, channel_address: str
-    ) -> DeviceDescription:
-        """Return the description of the channel."""
-        return self.central.device_descriptions.get_device_description(
-            interface_id=interface_id, address=channel_address
-        )
 
     @abstractmethod
     def _get_entity_name(self) -> EntityNameData:
@@ -422,9 +378,7 @@ class BaseParameterEntity[
 
     def __init__(
         self,
-        device: hmd.HmDevice,
-        unique_id: str,
-        channel_address: str,
+        channel: hmd.HmChannel,
         paramset_key: ParamsetKey,
         parameter: str,
         parameter_data: ParameterData,
@@ -435,17 +389,18 @@ class BaseParameterEntity[
         self._parameter: Final[str] = parameter
 
         super().__init__(
-            device=device,
-            unique_id=unique_id,
-            channel_no=hms.get_channel_no(address=channel_address),  # type: ignore[arg-type]
-            is_in_multiple_channels=device.central.paramset_descriptions.is_in_multiple_channels(
-                channel_address=channel_address, parameter=parameter
+            channel=channel,
+            unique_id=generate_unique_id(
+                central=channel.central, address=channel.address, parameter=parameter
+            ),
+            is_in_multiple_channels=channel.device.central.paramset_descriptions.is_in_multiple_channels(
+                channel_address=channel.address, parameter=parameter
             ),
         )
         self._is_un_ignored: Final[bool] = (
             self._central.parameter_visibility.parameter_is_un_ignored(
-                device_type=self._device.device_type,
-                channel_no=self._channel_no,
+                model=self._device.model,
+                channel_no=self._channel.no,
                 paramset_key=self._paramset_key,
                 parameter=self._parameter,
                 custom_only=True,
@@ -502,7 +457,7 @@ class BaseParameterEntity[
     def entity_key(self) -> ENTITY_KEY:
         """Return entity key value."""
         return get_entity_key(
-            channel_address=self._channel_address,
+            channel_address=self._channel.address,
             paramset_key=self._paramset_key,
             parameter=self._parameter,
         )
@@ -631,7 +586,7 @@ class BaseParameterEntity[
     def _channel_operation_mode(self) -> str | None:
         """Return the channel operation mode if available."""
         cop: BaseParameterEntity | None = self._device.get_generic_entity(
-            channel_address=self._channel_address,
+            channel_address=self._channel.address,
             parameter=Parameter.CHANNEL_OPERATION_MODE,
         )
         if cop and cop.value:
@@ -641,7 +596,7 @@ class BaseParameterEntity[
     @property
     def _enabled_by_channel_operation_mode(self) -> bool | None:
         """Return, if the entity/event must be enabled."""
-        if self._channel_type not in _CONFIGURABLE_CHANNEL:
+        if self._channel.type_name not in _CONFIGURABLE_CHANNEL:
             return None
         if self._parameter not in KEY_CHANNEL_OPERATION_MODE_VISIBILITY:
             return None
@@ -702,7 +657,7 @@ class BaseParameterEntity[
 
         self.write_value(
             value=await self._device.value_cache.get_value(
-                channel_address=self._channel_address,
+                channel_address=self._channel.address,
                 paramset_key=self._paramset_key,
                 parameter=self._parameter,
                 call_source=call_source,
@@ -734,7 +689,7 @@ class BaseParameterEntity[
         """Update parameter data."""
         if parameter_data := self._central.paramset_descriptions.get_parameter_data(
             interface_id=self._device.interface_id,
-            channel_address=self._channel_address,
+            channel_address=self._channel.address,
             paramset_key=self._paramset_key,
             parameter=self._parameter,
         ):
@@ -763,7 +718,7 @@ class BaseParameterEntity[
             _LOGGER.debug(
                 "CONVERT_VALUE: conversion failed for %s, %s, %s, value: [%s]",
                 self._device.interface_id,
-                self._channel_address,
+                self._channel.address,
                 self._parameter,
                 value,
             )
@@ -772,9 +727,9 @@ class BaseParameterEntity[
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
         event_data = {
-            EVENT_ADDRESS: self._device.device_address,
-            EVENT_CHANNEL_NO: self._channel_no,
-            EVENT_DEVICE_TYPE: self._device.device_type,
+            EVENT_ADDRESS: self._device.address,
+            EVENT_CHANNEL_NO: self._channel.no,
+            EVENT_MODEL: self._device.model,
             EVENT_INTERFACE_ID: self._device.interface_id,
             EVENT_PARAMETER: self._parameter,
         }
@@ -786,10 +741,10 @@ class BaseParameterEntity[
 class CallParameterCollector:
     """Create a Paramset based on given generic entities."""
 
-    def __init__(self, device: hmd.HmDevice) -> None:
+    def __init__(self, client: hmcl.Client) -> None:
         """Init the generator."""
-        self._device: Final = device
-        self._client: Final = device.client
+        self._client: Final = client
+        self._central: Final = client.central
         self._paramsets: Final[dict[ParamsetKey, dict[int, dict[str, dict[str, Any]]]]] = {}
 
     def add_entity(
@@ -803,9 +758,9 @@ class CallParameterCollector:
             self._paramsets[entity.paramset_key] = {}
         if collector_order not in self._paramsets[entity.paramset_key]:
             self._paramsets[entity.paramset_key][collector_order] = {}
-        if entity.channel_address not in self._paramsets[entity.paramset_key][collector_order]:
-            self._paramsets[entity.paramset_key][collector_order][entity.channel_address] = {}
-        self._paramsets[entity.paramset_key][collector_order][entity.channel_address][
+        if entity.channel.address not in self._paramsets[entity.paramset_key][collector_order]:
+            self._paramsets[entity.paramset_key][collector_order][entity.channel.address] = {}
+        self._paramsets[entity.paramset_key][collector_order][entity.channel.address][
             entity.parameter
         ] = value
 
@@ -827,7 +782,7 @@ class CallParameterCollector:
                                 wait_for_callback=wait_for_callback,
                             )
                             if use_command_queue:
-                                await self._device.central.command_queue_handler.put(
+                                await self._central.command_queue_handler.put(
                                     address=channel_address,
                                     command=set_value_command,
                                 )
@@ -842,7 +797,7 @@ class CallParameterCollector:
                             wait_for_callback=wait_for_callback,
                         )
                         if use_command_queue:
-                            await self._device.central.command_queue_handler.put(
+                            await self._central.command_queue_handler.put(
                                 address=channel_address,
                                 command=put_paramset_command,
                             )
@@ -876,7 +831,7 @@ def bind_collector(
             if collector_exists:
                 return_value = await func(*args, **kwargs)
             else:
-                collector = CallParameterCollector(device=args[0].device)
+                collector = CallParameterCollector(client=args[0].channel.device.client)
                 kwargs[_COLLECTOR_ARGUMENT_NAME] = collector
                 return_value = await func(*args, **kwargs)
                 await collector.send_data(

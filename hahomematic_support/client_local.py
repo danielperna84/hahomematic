@@ -57,16 +57,16 @@ class ClientLocal(Client):  # pragma: no cover
         """Return the model of the backend."""
         return BACKEND_LOCAL
 
-    def get_product_group(self, device_type: str) -> ProductGroup:
+    def get_product_group(self, model: str) -> ProductGroup:
         """Return the product group."""
-        l_device_type = device_type.lower()
-        if l_device_type.startswith("hmipw"):
+        l_model = model.lower()
+        if l_model.startswith("hmipw"):
             return ProductGroup.HMIPW
-        if l_device_type.startswith("hmip"):
+        if l_model.startswith("hmip"):
             return ProductGroup.HMIP
-        if l_device_type.startswith("hmw"):
+        if l_model.startswith("hmw"):
             return ProductGroup.HMW
-        if l_device_type.startswith("hm"):
+        if l_model.startswith("hm"):
             return ProductGroup.HM
         return ProductGroup.UNKNOWN
 

@@ -11,11 +11,12 @@ import voluptuous as vol
 
 from hahomematic import support as hms
 from hahomematic.const import HmPlatform, Parameter
+from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.custom import entity as hmce
 from hahomematic.platforms.custom.const import ED, DeviceProfile, Field
-from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
+from hahomematic.platforms.custom.support import CustomConfig
 from hahomematic.platforms.support import generate_unique_id
+from hahomematic.support import reduce_args
 import hahomematic.validator as val
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ DEFAULT_INCLUDE_DEFAULT_ENTITIES: Final = True
 ALL_DEVICES: dict[HmPlatform, Mapping[str, CustomConfig | tuple[CustomConfig, ...]]] = {}
 ALL_BLACKLISTED_DEVICES: list[tuple[str, ...]] = []
 
-SCHEMA_ED_ADDITIONAL_ENTITIES = vol.Schema(
+_SCHEMA_ED_ADDITIONAL_ENTITIES = vol.Schema(
     {
         vol.Required(vol.Any(val.positive_int, tuple[int, ...])): vol.Schema(
             (vol.Optional(Parameter),)
@@ -33,44 +34,44 @@ SCHEMA_ED_ADDITIONAL_ENTITIES = vol.Schema(
     }
 )
 
-SCHEMA_ED_FIELD_DETAILS = vol.Schema({vol.Required(Field): Parameter})
+_SCHEMA_ED_FIELD_DETAILS = vol.Schema({vol.Required(Field): Parameter})
 
-SCHEMA_ED_FIELD = vol.Schema({vol.Required(val.positive_int): SCHEMA_ED_FIELD_DETAILS})
+_SCHEMA_ED_FIELD = vol.Schema({vol.Required(int): _SCHEMA_ED_FIELD_DETAILS})
 
-SCHEMA_ED_DEVICE_GROUP = vol.Schema(
+_SCHEMA_ED_DEVICE_GROUP = vol.Schema(
     {
-        vol.Required(ED.PRIMARY_CHANNEL.value): vol.Any(val.positive_int, None),
-        vol.Required(ED.ALLOW_UNDEFINED_GENERIC_ENTITIES.value): bool,
+        vol.Required(ED.PRIMARY_CHANNEL.value, default=0): vol.Any(val.positive_int, None),
+        vol.Required(ED.ALLOW_UNDEFINED_GENERIC_ENTITIES.value, default=False): bool,
         vol.Optional(ED.SECONDARY_CHANNELS.value): (val.positive_int,),
-        vol.Optional(ED.REPEATABLE_FIELDS.value): SCHEMA_ED_FIELD_DETAILS,
-        vol.Optional(ED.VISIBLE_REPEATABLE_FIELDS.value): SCHEMA_ED_FIELD_DETAILS,
-        vol.Optional(ED.FIELDS.value): SCHEMA_ED_FIELD,
-        vol.Optional(ED.VISIBLE_FIELDS.value): SCHEMA_ED_FIELD,
+        vol.Optional(ED.REPEATABLE_FIELDS.value): _SCHEMA_ED_FIELD_DETAILS,
+        vol.Optional(ED.VISIBLE_REPEATABLE_FIELDS.value): _SCHEMA_ED_FIELD_DETAILS,
+        vol.Optional(ED.FIELDS.value): _SCHEMA_ED_FIELD,
+        vol.Optional(ED.VISIBLE_FIELDS.value): _SCHEMA_ED_FIELD,
     }
 )
 
-SCHEMA_ED_DEVICE_GROUPS = vol.Schema(
+_SCHEMA_ED_DEVICE_GROUPS = vol.Schema(
     {
-        vol.Required(ED.DEVICE_GROUP.value): SCHEMA_ED_DEVICE_GROUP,
-        vol.Optional(ED.ADDITIONAL_ENTITIES.value): SCHEMA_ED_ADDITIONAL_ENTITIES,
+        vol.Required(ED.DEVICE_GROUP.value): _SCHEMA_ED_DEVICE_GROUP,
+        vol.Optional(ED.ADDITIONAL_ENTITIES.value): _SCHEMA_ED_ADDITIONAL_ENTITIES,
         vol.Optional(
             ED.INCLUDE_DEFAULT_ENTITIES.value, default=DEFAULT_INCLUDE_DEFAULT_ENTITIES
         ): bool,
     }
 )
 
-SCHEMA_DEVICE_DESCRIPTION = vol.Schema(
+_SCHEMA_DEVICE_DESCRIPTION = vol.Schema(
     {
-        vol.Required(ED.DEFAULT_ENTITIES.value): SCHEMA_ED_ADDITIONAL_ENTITIES,
+        vol.Required(ED.DEFAULT_ENTITIES.value): _SCHEMA_ED_ADDITIONAL_ENTITIES,
         vol.Required(ED.DEVICE_DEFINITIONS.value): vol.Schema(
             {
-                vol.Required(DeviceProfile): SCHEMA_ED_DEVICE_GROUPS,
+                vol.Required(DeviceProfile): _SCHEMA_ED_DEVICE_GROUPS,
             }
         ),
     }
 )
 
-ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
+_ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
     ED.DEFAULT_ENTITIES: {
         0: (
             Parameter.DUTY_CYCLE,
@@ -88,7 +89,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
     ED.DEVICE_DEFINITIONS: {
         DeviceProfile.IP_BUTTON_LOCK: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
                 ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: True,
                 ED.REPEATABLE_FIELDS: {
                     Field.BUTTON_LOCK: Parameter.GLOBAL_BUTTON_LOCK,
@@ -97,9 +97,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.IP_COVER: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 1,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
-                ED.SECONDARY_CHANNELS: (2, 3),
+                ED.SECONDARY_CHANNELS: (1, 2),
                 ED.REPEATABLE_FIELDS: {
                     Field.COMBINED_PARAMETER: Parameter.COMBINED_PARAMETER,
                     Field.LEVEL: Parameter.LEVEL,
@@ -107,13 +105,13 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                     Field.STOP: Parameter.STOP,
                 },
                 ED.FIELDS: {
-                    0: {
+                    -1: {
                         Field.DIRECTION: Parameter.ACTIVITY_STATE,
                         Field.CHANNEL_OPERATION_MODE: Parameter.CHANNEL_OPERATION_MODE,
                     },
                 },
                 ED.VISIBLE_FIELDS: {
-                    0: {
+                    -1: {
                         Field.CHANNEL_LEVEL: Parameter.LEVEL,
                         Field.CHANNEL_LEVEL_2: Parameter.LEVEL_2,
                     },
@@ -122,16 +120,14 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.IP_DIMMER: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 1,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
-                ED.SECONDARY_CHANNELS: (2, 3),
+                ED.SECONDARY_CHANNELS: (1, 2),
                 ED.REPEATABLE_FIELDS: {
                     Field.LEVEL: Parameter.LEVEL,
                     Field.ON_TIME_VALUE: Parameter.ON_TIME,
                     Field.RAMP_TIME_VALUE: Parameter.RAMP_TIME,
                 },
                 ED.VISIBLE_FIELDS: {
-                    0: {
+                    -1: {
                         Field.CHANNEL_LEVEL: Parameter.LEVEL,
                     },
                 },
@@ -139,8 +135,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.IP_GARAGE: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.DOOR_COMMAND: Parameter.DOOR_COMMAND,
                     Field.SECTION: Parameter.SECTION,
@@ -155,10 +149,8 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.IP_HDM: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 1,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.FIELDS: {
-                    1: {
+                    0: {
                         Field.DIRECTION: Parameter.ACTIVITY_STATE,
                         Field.LEVEL: Parameter.LEVEL,
                         Field.LEVEL_2: Parameter.LEVEL_2,
@@ -169,9 +161,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.IP_FIXED_COLOR_LIGHT: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 1,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
-                ED.SECONDARY_CHANNELS: (2, 3),
+                ED.SECONDARY_CHANNELS: (1, 2),
                 ED.REPEATABLE_FIELDS: {
                     Field.COLOR: Parameter.COLOR,
                     Field.COLOR_BEHAVIOUR: Parameter.COLOR_BEHAVIOUR,
@@ -182,7 +172,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                     Field.RAMP_TIME_VALUE: Parameter.RAMP_TIME_VALUE,
                 },
                 ED.VISIBLE_FIELDS: {
-                    0: {
+                    -1: {
                         Field.CHANNEL_COLOR: Parameter.COLOR,
                         Field.CHANNEL_LEVEL: Parameter.LEVEL,
                     },
@@ -191,8 +181,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.IP_SIMPLE_FIXED_COLOR_LIGHT_WIRED: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.COLOR: Parameter.COLOR,
                     Field.COLOR_BEHAVIOUR: Parameter.COLOR_BEHAVIOUR,
@@ -206,8 +194,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.IP_SIMPLE_FIXED_COLOR_LIGHT: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.COLOR: Parameter.COLOR,
                     Field.LEVEL: Parameter.LEVEL,
@@ -220,9 +206,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.IP_RGBW_LIGHT: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 1,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
-                ED.SECONDARY_CHANNELS: (2, 3, 4),
+                ED.SECONDARY_CHANNELS: (1, 2, 3),
                 ED.REPEATABLE_FIELDS: {
                     Field.COLOR_TEMPERATURE: Parameter.COLOR_TEMPERATURE,
                     Field.DIRECTION: Parameter.ACTIVITY_STATE,
@@ -238,7 +222,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                     Field.SATURATION: Parameter.SATURATION,
                 },
                 ED.FIELDS: {
-                    0: {
+                    -1: {
                         Field.DEVICE_OPERATION_MODE: Parameter.DEVICE_OPERATION_MODE,
                     },
                 },
@@ -246,8 +230,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.IP_DRG_DALI: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.COLOR_TEMPERATURE: Parameter.COLOR_TEMPERATURE,
                     Field.ON_TIME_VALUE: Parameter.DURATION_VALUE,
@@ -265,21 +247,19 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.IP_SWITCH: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 1,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
-                ED.SECONDARY_CHANNELS: (2, 3),
+                ED.SECONDARY_CHANNELS: (1, 2),
                 ED.REPEATABLE_FIELDS: {
                     Field.STATE: Parameter.STATE,
                     Field.ON_TIME_VALUE: Parameter.ON_TIME,
                 },
                 ED.VISIBLE_FIELDS: {
-                    0: {
+                    -1: {
                         Field.CHANNEL_STATE: Parameter.STATE,
                     },
                 },
             },
             ED.ADDITIONAL_ENTITIES: {
-                4: (
+                3: (
                     Parameter.CURRENT,
                     Parameter.ENERGY_COUNTER,
                     Parameter.FREQUENCY,
@@ -291,15 +271,13 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.IP_LOCK: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 1,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.DIRECTION: Parameter.ACTIVITY_STATE,
                     Field.LOCK_STATE: Parameter.LOCK_STATE,
                     Field.LOCK_TARGET_LEVEL: Parameter.LOCK_TARGET_LEVEL,
                 },
                 ED.FIELDS: {
-                    0: {
+                    -1: {
                         Field.ERROR: Parameter.ERROR_JAMMED,
                     },
                 },
@@ -307,8 +285,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.IP_SIREN: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 3,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.ACOUSTIC_ALARM_ACTIVE: Parameter.ACOUSTIC_ALARM_ACTIVE,
                     Field.OPTICAL_ALARM_ACTIVE: Parameter.OPTICAL_ALARM_ACTIVE,
@@ -321,8 +297,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.IP_SIREN_SMOKE: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 1,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.SMOKE_DETECTOR_COMMAND: Parameter.SMOKE_DETECTOR_COMMAND,
                 },
@@ -333,8 +307,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.IP_THERMOSTAT: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.ACTIVE_PROFILE: Parameter.ACTIVE_PROFILE,
                     Field.BOOST_MODE: Parameter.BOOST_MODE,
@@ -363,8 +335,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.IP_THERMOSTAT_GROUP: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.ACTIVE_PROFILE: Parameter.ACTIVE_PROFILE,
                     Field.BOOST_MODE: Parameter.BOOST_MODE,
@@ -402,8 +372,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.RF_COVER: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.DIRECTION: Parameter.DIRECTION,
                     Field.LEVEL: Parameter.LEVEL,
@@ -415,8 +383,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.RF_DIMMER: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.LEVEL: Parameter.LEVEL,
                     Field.ON_TIME_VALUE: Parameter.ON_TIME,
@@ -426,8 +392,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.RF_DIMMER_COLOR: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.LEVEL: Parameter.LEVEL,
                     Field.ON_TIME_VALUE: Parameter.ON_TIME,
@@ -445,8 +409,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.RF_DIMMER_COLOR_FIXED: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.LEVEL: Parameter.LEVEL,
                     Field.ON_TIME_VALUE: Parameter.ON_TIME,
@@ -456,8 +418,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.RF_DIMMER_COLOR_TEMP: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.LEVEL: Parameter.LEVEL,
                     Field.ON_TIME_VALUE: Parameter.ON_TIME,
@@ -472,8 +432,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.RF_DIMMER_WITH_VIRT_CHANNEL: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.SECONDARY_CHANNELS: (1, 2),
                 ED.REPEATABLE_FIELDS: {
                     Field.LEVEL: Parameter.LEVEL,
@@ -484,8 +442,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.RF_LOCK: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.DIRECTION: Parameter.DIRECTION,
                     Field.OPEN: Parameter.OPEN,
@@ -496,8 +452,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.RF_SWITCH: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.STATE: Parameter.STATE,
                     Field.ON_TIME_VALUE: Parameter.ON_TIME,
@@ -515,8 +469,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.RF_THERMOSTAT: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.AUTO_MODE: Parameter.AUTO_MODE,
                     Field.BOOST_MODE: Parameter.BOOST_MODE,
@@ -541,8 +493,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.RF_THERMOSTAT_GROUP: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.AUTO_MODE: Parameter.AUTO_MODE,
                     Field.BOOST_MODE: Parameter.BOOST_MODE,
@@ -568,8 +518,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.SIMPLE_RF_THERMOSTAT: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.VISIBLE_REPEATABLE_FIELDS: {
                     Field.HUMIDITY: Parameter.HUMIDITY,
                     Field.TEMPERATURE: Parameter.TEMPERATURE,
@@ -584,91 +532,144 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
     },
 }
 
+VALID_ENTITY_DEFINITION = _SCHEMA_DEVICE_DESCRIPTION(_ENTITY_DEFINITION)
+
 
 def validate_entity_definition() -> Any:
     """Validate the entity_definition."""
     try:
-        return SCHEMA_DEVICE_DESCRIPTION(ENTITY_DEFINITION)
+        return _SCHEMA_DEVICE_DESCRIPTION(_ENTITY_DEFINITION)
     except vol.Invalid as err:  # pragma: no cover
         _LOGGER.error("The entity definition could not be validated. %s, %s", err.path, err.msg)
         return None
 
 
 def make_custom_entity(
-    device: hmd.HmDevice,
+    channel: hmd.HmChannel,
     entity_class: type,
     device_profile: DeviceProfile,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[hmce.CustomEntity, ...]:
+    custom_config: CustomConfig,
+) -> None:
     """
     Create custom_entities.
 
     We use a helper-function to avoid raising exceptions during object-init.
     """
-    entities: list[hmce.CustomEntity] = []
-
-    entity_def = _get_device_entities(device_profile, group_base_channels[0])
-
-    for base_channel_no in group_base_channels:
-        device_def = _get_device_group(device_profile, base_channel_no)
-        channels = [device_def[ED.PRIMARY_CHANNEL]]
-        if secondary_channels := device_def.get(ED.SECONDARY_CHANNELS):
-            channels.extend(secondary_channels)
-        for channel_no in set(channels):
-            entities.extend(
-                _create_entities(
-                    device=device,
-                    custom_entity_class=entity_class,
-                    device_profile=device_profile,
-                    device_def=device_def,
-                    entity_def=entity_def,
-                    channel_no=channel_no,
-                    base_channel_no=base_channel_no,
-                    extended=extended,
-                )
-            )
-
-    return tuple(entities)
+    add_sub_device_channels_to_device(
+        device=channel.device, device_profile=device_profile, custom_config=custom_config
+    )
+    base_channel_no = get_sub_device_base_channel(device=channel.device, channel_no=channel.no)
+    channels = _relevant_channels(device_profile=device_profile, custom_config=custom_config)
+    if channel.no in set(channels):
+        _create_entity(
+            channel=channel,
+            custom_entity_class=entity_class,
+            device_profile=device_profile,
+            device_def=_get_device_group(device_profile, base_channel_no),
+            entity_def=_get_device_entities(device_profile, base_channel_no),
+            base_channel_no=base_channel_no,
+            custom_config=_rebase_pri_channels(
+                device_profile=device_profile, custom_config=custom_config
+            ),
+        )
 
 
-def _create_entities(
-    device: hmd.HmDevice,
+def _create_entity(
+    channel: hmd.HmChannel,
     custom_entity_class: type,
     device_profile: DeviceProfile,
     device_def: Mapping[ED, Any],
     entity_def: Mapping[int, tuple[Parameter, ...]],
-    channel_no: int | None = None,
-    base_channel_no: int | None = None,
-    extended: ExtendedConfig | None = None,
-) -> tuple[hmce.CustomEntity, ...]:
+    base_channel_no: int | None,
+    custom_config: CustomConfig,
+) -> None:
     """Create custom entities."""
-    entities: list[hmce.CustomEntity] = []
-    channel_address = hms.get_channel_address(
-        device_address=device.device_address, channel_no=channel_no
+    unique_id = generate_unique_id(central=channel.central, address=channel.address)
+
+    try:
+        if (
+            entity := custom_entity_class(
+                channel=channel,
+                unique_id=unique_id,
+                device_profile=device_profile,
+                device_def=device_def,
+                entity_def=entity_def,
+                base_channel_no=base_channel_no,
+                custom_config=custom_config,
+            )
+        ) and entity.has_data_entities:
+            channel.add_entity(entity)
+    except Exception as ex:
+        raise HaHomematicException(
+            f"_CREATE_ENTITY: unable to create entity: {reduce_args(args=ex.args)}"
+        ) from ex
+
+
+def _rebase_pri_channels(
+    device_profile: DeviceProfile, custom_config: CustomConfig
+) -> CustomConfig:
+    """Re base primary channel of custom config."""
+    device_def = _get_device_group(device_profile, 0)
+    if (pri_def := device_def[ED.PRIMARY_CHANNEL]) is None:
+        return custom_config
+    pri_channels = [cu + pri_def for cu in custom_config.channels]
+    return CustomConfig(
+        make_ce_func=custom_config.make_ce_func,
+        channels=tuple(pri_channels),
+        extended=custom_config.extended,
     )
-    unique_id = generate_unique_id(central=device.central, address=channel_address)
-    if channel_address not in device.channel_addresses:
-        return tuple(entities)
-    entity = custom_entity_class(
-        device=device,
-        unique_id=unique_id,
-        device_profile=device_profile,
-        device_def=device_def,
-        entity_def=entity_def,
-        channel_no=channel_no,
-        base_channel_no=base_channel_no,
-        extended=extended,
-    )
-    if entity.has_data_entities:
-        device.add_entity(entity)
-        entities.append(entity)
-    return tuple(entities)
+
+
+def _relevant_channels(
+    device_profile: DeviceProfile, custom_config: CustomConfig
+) -> tuple[int | None, ...]:
+    """Return the relevant channels."""
+    device_def = _get_device_group(device_profile, 0)
+    def_channels = [device_def[ED.PRIMARY_CHANNEL]]
+    if sec_channels := device_def.get(ED.SECONDARY_CHANNELS):
+        def_channels.extend(sec_channels)
+
+    channels: set[int | None] = set()
+    for def_ch in def_channels:
+        for conf_ch in custom_config.channels:
+            if def_ch is not None and conf_ch is not None:
+                channels.add(def_ch + conf_ch)
+            else:
+                channels.add(None)
+    return tuple(channels)
+
+
+def add_sub_device_channels_to_device(
+    device: hmd.HmDevice, device_profile: DeviceProfile, custom_config: CustomConfig
+) -> None:
+    """Return the relevant channels."""
+    device_def = _get_device_group(device_profile, 0)
+    pri_channel = device_def[ED.PRIMARY_CHANNEL]
+    sec_channels = device_def.get(ED.SECONDARY_CHANNELS)
+    if pri_channel is None:
+        return
+    for conf_channel in custom_config.channels:
+        if conf_channel is None:
+            continue
+        rebased_pri_channel = conf_channel + pri_channel
+        device.add_sub_device_channel(
+            channel_no=rebased_pri_channel, base_channel_no=rebased_pri_channel
+        )
+        if sec_channels:
+            for sec_channel in sec_channels:
+                device.add_sub_device_channel(
+                    channel_no=conf_channel + sec_channel, base_channel_no=rebased_pri_channel
+                )
+
+
+def get_sub_device_base_channel(device: hmd.HmDevice, channel_no: int | None) -> int | None:
+    """Get base channel of sub_device."""
+    return device.get_sub_device_base_channel(channel_no=channel_no)
 
 
 def get_default_entities() -> Mapping[int | tuple[int, ...], tuple[Parameter, ...]]:
     """Return the default entities."""
-    return ENTITY_DEFINITION[ED.DEFAULT_ENTITIES]  # type: ignore[return-value]
+    return VALID_ENTITY_DEFINITION[ED.DEFAULT_ENTITIES]  # type: ignore[no-any-return]
 
 
 def get_include_default_entities(device_profile: DeviceProfile) -> bool:
@@ -679,7 +680,7 @@ def get_include_default_entities(device_profile: DeviceProfile) -> bool:
 
 def _get_device_definition(device_profile: DeviceProfile) -> Mapping[ED, Any]:
     """Return device from entity definitions."""
-    return cast(Mapping[ED, Any], ENTITY_DEFINITION[ED.DEVICE_DEFINITIONS][device_profile])
+    return cast(Mapping[ED, Any], VALID_ENTITY_DEFINITION[ED.DEVICE_DEFINITIONS][device_profile])
 
 
 def _get_device_group(
@@ -688,14 +689,13 @@ def _get_device_group(
     """Return the device group."""
     device = _get_device_definition(device_profile)
     group = cast(dict[ED, Any], device[ED.DEVICE_GROUP])
-    if not base_channel_no:
-        return group
-
     # Create a deep copy of the group due to channel rebase
     group = deepcopy(group)
+    if not base_channel_no:
+        return group
     # Add base_channel_no to the primary_channel to get the real primary_channel number
-    primary_channel = group[ED.PRIMARY_CHANNEL]
-    group[ED.PRIMARY_CHANNEL] = primary_channel + base_channel_no
+    if (primary_channel := group[ED.PRIMARY_CHANNEL]) is not None:
+        group[ED.PRIMARY_CHANNEL] = primary_channel + base_channel_no
 
     # Add base_channel_no to the secondary_channels
     # to get the real secondary_channel numbers
@@ -723,14 +723,16 @@ def _rebase_entity_dict(
 
 
 def _get_device_entities(
-    device_profile: DeviceProfile, base_channel_no: int
+    device_profile: DeviceProfile, base_channel_no: int | None
 ) -> Mapping[int, tuple[Parameter, ...]]:
     """Return the device entities."""
     additional_entities = (
-        ENTITY_DEFINITION[ED.DEVICE_DEFINITIONS]
+        VALID_ENTITY_DEFINITION[ED.DEVICE_DEFINITIONS]
         .get(device_profile, {})
         .get(ED.ADDITIONAL_ENTITIES, {})
     )
+    if not base_channel_no:
+        return additional_entities  # type: ignore[no-any-return]
     new_entities: dict[int, tuple[Parameter, ...]] = {}
     if additional_entities:
         for channel_no, field in additional_entities.items():
@@ -738,17 +740,17 @@ def _get_device_entities(
     return new_entities
 
 
-def get_entity_configs(
-    device_type: str,
+def get_custom_configs(
+    model: str,
     platform: HmPlatform | None = None,
-) -> tuple[CustomConfig | tuple[CustomConfig, ...], ...]:
+) -> tuple[CustomConfig, ...]:
     """Return the entity configs to create custom entities."""
-    device_type = device_type.lower().replace("hb-", "hm-")
-    funcs = []
+    model = model.lower().replace("hb-", "hm-")
+    custom_configs: list[CustomConfig] = []
     for platform_blacklisted_devices in ALL_BLACKLISTED_DEVICES:
         if hms.element_matches_key(
             search_elements=platform_blacklisted_devices,
-            compare_with=device_type,
+            compare_with=model,
         ):
             return ()
 
@@ -757,58 +759,56 @@ def get_entity_configs(
             continue
         if func := _get_entity_config_by_platform(
             platform_devices=platform_devices,
-            device_type=device_type,
+            model=model,
         ):
-            funcs.append(func)  # noqa:PERF401
-    return tuple(funcs)
+            if isinstance(func, tuple):
+                custom_configs.extend(func)  # noqa:PERF401
+            else:
+                custom_configs.append(func)
+    return tuple(custom_configs)
 
 
 def _get_entity_config_by_platform(
     platform_devices: Mapping[str, CustomConfig | tuple[CustomConfig, ...]],
-    device_type: str,
+    model: str,
 ) -> CustomConfig | tuple[CustomConfig, ...] | None:
     """Return the entity configs to create custom entities."""
     for d_type, custom_configs in platform_devices.items():
-        if device_type.lower() == d_type.lower():
+        if model.lower() == d_type.lower():
             return custom_configs
 
     for d_type, custom_configs in platform_devices.items():
-        if device_type.lower().startswith(d_type.lower()):
+        if model.lower().startswith(d_type.lower()):
             return custom_configs
 
     return None
 
 
-def is_multi_channel_device(device_type: str, platform: HmPlatform) -> bool:
+def is_multi_channel_device(model: str, platform: HmPlatform) -> bool:
     """Return true, if device has multiple channels."""
     channels: list[int | None] = []
-    for entity_configs in get_entity_configs(device_type=device_type, platform=platform):
-        if isinstance(entity_configs, CustomConfig):
-            channels.extend(entity_configs.channels)
-        else:
-            for entity_config in entity_configs:
-                channels.extend(entity_config.channels)
-
+    for custom_config in get_custom_configs(model=model, platform=platform):
+        channels.extend(custom_config.channels)
     return len(channels) > 1
 
 
-def entity_definition_exists(device_type: str) -> bool:
+def entity_definition_exists(model: str) -> bool:
     """Check if device desc exits."""
-    return len(get_entity_configs(device_type)) > 0
+    return len(get_custom_configs(model)) > 0
 
 
 def get_required_parameters() -> tuple[Parameter, ...]:
     """Return all required parameters for custom entities."""
     required_parameters: list[Parameter] = []
-    for channel in ENTITY_DEFINITION[ED.DEFAULT_ENTITIES]:
-        required_parameters.extend(ENTITY_DEFINITION[ED.DEFAULT_ENTITIES][channel])
-    for device in ENTITY_DEFINITION[ED.DEVICE_DEFINITIONS]:
-        device_def = ENTITY_DEFINITION[ED.DEVICE_DEFINITIONS][device][ED.DEVICE_GROUP]
+    for channel in VALID_ENTITY_DEFINITION[ED.DEFAULT_ENTITIES]:
+        required_parameters.extend(VALID_ENTITY_DEFINITION[ED.DEFAULT_ENTITIES][channel])
+    for device in VALID_ENTITY_DEFINITION[ED.DEVICE_DEFINITIONS]:
+        device_def = VALID_ENTITY_DEFINITION[ED.DEVICE_DEFINITIONS][device][ED.DEVICE_GROUP]
         required_parameters.extend(list(device_def.get(ED.REPEATABLE_FIELDS, {}).values()))
         required_parameters.extend(list(device_def.get(ED.VISIBLE_REPEATABLE_FIELDS, {}).values()))
         required_parameters.extend(list(device_def.get(ED.REPEATABLE_FIELDS, {}).values()))
         for additional_entities in list(
-            ENTITY_DEFINITION[ED.DEVICE_DEFINITIONS][device]
+            VALID_ENTITY_DEFINITION[ED.DEVICE_DEFINITIONS][device]
             .get(ED.ADDITIONAL_ENTITIES, {})
             .values()
         ):

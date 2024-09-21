@@ -72,13 +72,13 @@ def callback_backend_system(system_event: BackendSystemEvent) -> Callable:
                     client.central.fire_backend_system_callback(
                         system_event=system_event, **kwargs
                     )
-            except Exception as err:  # pragma: no cover
+            except Exception as ex:  # pragma: no cover
                 _LOGGER.warning(
                     "EXEC_BACKEND_SYSTEM_CALLBACK failed: Unable to reduce kwargs for backend_system_callback"
                 )
                 raise HaHomematicException(
-                    f"args-exception backend_system_callback [{reduce_args(args=err.args)}]"
-                ) from err
+                    f"args-exception backend_system_callback [{reduce_args(args=ex.args)}]"
+                ) from ex
 
         if asyncio.iscoroutinefunction(func):
             return async_wrapper_backend_system_callback
@@ -107,12 +107,12 @@ def callback_event[**_P, _R](
             if client := hmcl.get_client(interface_id=interface_id):
                 client.modified_at = datetime.now()
                 client.central.fire_backend_parameter_callback(*args, **kwargs)
-        except Exception as err:  # pragma: no cover
+        except Exception as ex:  # pragma: no cover
             _LOGGER.warning(
                 "EXEC_ENTITY_EVENT_CALLBACK failed: Unable to reduce kwargs for event_callback"
             )
             raise HaHomematicException(
-                f"args-exception event_callback [{reduce_args(args=err.args)}]"
-            ) from err
+                f"args-exception event_callback [{reduce_args(args=ex.args)}]"
+            ) from ex
 
     return async_wrapper_event_callback

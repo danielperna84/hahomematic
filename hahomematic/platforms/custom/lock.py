@@ -262,62 +262,54 @@ class CeRfLock(BaseLock):
 
 
 def make_ip_lock(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[CustomEntity, ...]:
+    channel: hmd.HmChannel,
+    custom_config: CustomConfig,
+) -> None:
     """Create HomematicIP lock entities."""
-    return hmed.make_custom_entity(
-        device=device,
+    hmed.make_custom_entity(
+        channel=channel,
         entity_class=CeIpLock,
         device_profile=DeviceProfile.IP_LOCK,
-        group_base_channels=group_base_channels,
-        extended=extended,
+        custom_config=custom_config,
     )
 
 
 def make_ip_button_lock(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[CustomEntity, ...]:
+    channel: hmd.HmChannel,
+    custom_config: CustomConfig,
+) -> None:
     """Create HomematicIP ip button lock entities."""
-    return hmed.make_custom_entity(
-        device=device,
+    hmed.make_custom_entity(
+        channel=channel,
         entity_class=CeButtonLock,
         device_profile=DeviceProfile.IP_BUTTON_LOCK,
-        group_base_channels=group_base_channels,
-        extended=extended,
+        custom_config=custom_config,
     )
 
 
 def make_rf_button_lock(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[CustomEntity, ...]:
+    channel: hmd.HmChannel,
+    custom_config: CustomConfig,
+) -> None:
     """Create HomematicIP rf button lock entities."""
-    return hmed.make_custom_entity(
-        device=device,
+    hmed.make_custom_entity(
+        channel=channel,
         entity_class=CeButtonLock,
         device_profile=DeviceProfile.RF_BUTTON_LOCK,
-        group_base_channels=group_base_channels,
-        extended=extended,
+        custom_config=custom_config,
     )
 
 
 def make_rf_lock(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[CustomEntity, ...]:
+    channel: hmd.HmChannel,
+    custom_config: CustomConfig,
+) -> None:
     """Create HomeMatic rf lock entities."""
-    return hmed.make_custom_entity(
-        device=device,
+    hmed.make_custom_entity(
+        channel=channel,
         entity_class=CeRfLock,
         device_profile=DeviceProfile.RF_LOCK,
-        group_base_channels=group_base_channels,
-        extended=extended,
+        custom_config=custom_config,
     )
 
 
@@ -338,7 +330,6 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     ),
     "HmIP-DLD": CustomConfig(
         make_ce_func=make_ip_lock,
-        channels=(0,),
         extended=ExtendedConfig(
             additional_entities={
                 0: (Parameter.ERROR_JAMMED,),

@@ -17,7 +17,7 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
-from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
+from hahomematic.platforms.custom.support import CustomConfig
 from hahomematic.platforms.decorators import config_property, state_property
 from hahomematic.platforms.entity import CallParameterCollector, bind_collector, service_call
 from hahomematic.platforms.generic.action import HmAction
@@ -379,7 +379,7 @@ class CeRfThermostat(BaseClimateEntity):
     ) -> None:
         """Enable the away mode by calendar on thermostat."""
         await self._client.set_value(
-            channel_address=self._channel_address,
+            channel_address=self._channel.address,
             paramset_key=ParamsetKey.VALUES,
             parameter="PARTY_MODE_SUBMIT",
             value=_party_mode_code(start=start, end=end, away_temperature=away_temperature),
@@ -401,7 +401,7 @@ class CeRfThermostat(BaseClimateEntity):
         end = datetime.now() - timedelta(hours=10)
 
         await self._client.set_value(
-            channel_address=self._channel_address,
+            channel_address=self._channel.address,
             paramset_key=ParamsetKey.VALUES,
             parameter="PARTY_MODE_SUBMIT",
             value=_party_mode_code(start=start, end=end, away_temperature=12.0),
@@ -557,7 +557,7 @@ class CeIpThermostat(BaseClimateEntity):
     ) -> None:
         """Enable the away mode by calendar on thermostat."""
         await self._client.put_paramset(
-            channel_address=self._channel_address,
+            channel_address=self._channel.address,
             paramset_key=ParamsetKey.VALUES,
             values={
                 "SET_POINT_MODE": ModeHmIP.AWAY,
@@ -580,7 +580,7 @@ class CeIpThermostat(BaseClimateEntity):
     async def disable_away_mode(self) -> None:
         """Disable the away mode on thermostat."""
         await self._client.put_paramset(
-            channel_address=self._channel_address,
+            channel_address=self._channel.address,
             paramset_key=ParamsetKey.VALUES,
             values={
                 "SET_POINT_MODE": ModeHmIP.AWAY,
@@ -614,101 +614,91 @@ class CeIpThermostat(BaseClimateEntity):
 
 
 def make_simple_thermostat(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[CustomEntity, ...]:
+    channel: hmd.HmChannel,
+    custom_config: CustomConfig,
+) -> None:
     """Create SimpleRfThermostat entities."""
-    return hmed.make_custom_entity(
-        device=device,
+    hmed.make_custom_entity(
+        channel=channel,
         entity_class=CeSimpleRfThermostat,
         device_profile=DeviceProfile.SIMPLE_RF_THERMOSTAT,
-        group_base_channels=group_base_channels,
-        extended=extended,
+        custom_config=custom_config,
     )
 
 
 def make_thermostat(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[CustomEntity, ...]:
+    channel: hmd.HmChannel,
+    custom_config: CustomConfig,
+) -> None:
     """Create RfThermostat entities."""
-    return hmed.make_custom_entity(
-        device=device,
+    hmed.make_custom_entity(
+        channel=channel,
         entity_class=CeRfThermostat,
         device_profile=DeviceProfile.RF_THERMOSTAT,
-        group_base_channels=group_base_channels,
-        extended=extended,
+        custom_config=custom_config,
     )
 
 
 def make_thermostat_group(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[CustomEntity, ...]:
+    channel: hmd.HmChannel,
+    custom_config: CustomConfig,
+) -> None:
     """Create RfThermostat group entities."""
-    return hmed.make_custom_entity(
-        device=device,
+    hmed.make_custom_entity(
+        channel=channel,
         entity_class=CeRfThermostat,
         device_profile=DeviceProfile.RF_THERMOSTAT_GROUP,
-        group_base_channels=group_base_channels,
-        extended=extended,
+        custom_config=custom_config,
     )
 
 
 def make_ip_thermostat(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[CustomEntity, ...]:
+    channel: hmd.HmChannel,
+    custom_config: CustomConfig,
+) -> None:
     """Create IPThermostat entities."""
-    return hmed.make_custom_entity(
-        device=device,
+    hmed.make_custom_entity(
+        channel=channel,
         entity_class=CeIpThermostat,
         device_profile=DeviceProfile.IP_THERMOSTAT,
-        group_base_channels=group_base_channels,
-        extended=extended,
+        custom_config=custom_config,
     )
 
 
 def make_ip_thermostat_group(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[CustomEntity, ...]:
+    channel: hmd.HmChannel,
+    custom_config: CustomConfig,
+) -> None:
     """Create IPThermostat group entities."""
-    return hmed.make_custom_entity(
-        device=device,
+    hmed.make_custom_entity(
+        channel=channel,
         entity_class=CeIpThermostat,
         device_profile=DeviceProfile.IP_THERMOSTAT_GROUP,
-        group_base_channels=group_base_channels,
-        extended=extended,
+        custom_config=custom_config,
     )
 
 
 # Case for device model is not relevant.
 # HomeBrew (HB-) devices are always listed as HM-.
 DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
-    "ALPHA-IP-RBG": CustomConfig(make_ce_func=make_ip_thermostat, channels=(1,)),
-    "BC-RT-TRX-CyG": CustomConfig(make_ce_func=make_thermostat, channels=(1,)),
-    "BC-RT-TRX-CyN": CustomConfig(make_ce_func=make_thermostat, channels=(1,)),
-    "BC-TC-C-WM": CustomConfig(make_ce_func=make_thermostat, channels=(1,)),
+    "ALPHA-IP-RBG": CustomConfig(make_ce_func=make_ip_thermostat),
+    "BC-RT-TRX-CyG": CustomConfig(make_ce_func=make_thermostat),
+    "BC-RT-TRX-CyN": CustomConfig(make_ce_func=make_thermostat),
+    "BC-TC-C-WM": CustomConfig(make_ce_func=make_thermostat),
     "HM-CC-RT-DN": CustomConfig(make_ce_func=make_thermostat, channels=(4,)),
-    "HM-CC-TC": CustomConfig(make_ce_func=make_simple_thermostat, channels=(1,)),
-    "HM-CC-VG-1": CustomConfig(make_ce_func=make_thermostat_group, channels=(1,)),
+    "HM-CC-TC": CustomConfig(make_ce_func=make_simple_thermostat),
+    "HM-CC-VG-1": CustomConfig(make_ce_func=make_thermostat_group),
     "HM-TC-IT-WM-W-EU": CustomConfig(make_ce_func=make_thermostat, channels=(2,)),
-    "HmIP-BWTH": CustomConfig(make_ce_func=make_ip_thermostat, channels=(1,)),
-    "HmIP-HEATING": CustomConfig(make_ce_func=make_ip_thermostat_group, channels=(1,)),
-    "HmIP-STH": CustomConfig(make_ce_func=make_ip_thermostat, channels=(1,)),
-    "HmIP-WTH": CustomConfig(make_ce_func=make_ip_thermostat, channels=(1,)),
-    "HmIP-eTRV": CustomConfig(make_ce_func=make_ip_thermostat, channels=(1,)),
-    "HmIPW-SCTHD": CustomConfig(make_ce_func=make_ip_thermostat, channels=(1,)),
-    "HmIPW-STH": CustomConfig(make_ce_func=make_ip_thermostat, channels=(1,)),
-    "HmIPW-WTH": CustomConfig(make_ce_func=make_ip_thermostat, channels=(1,)),
-    "Thermostat AA": CustomConfig(make_ce_func=make_ip_thermostat, channels=(1,)),
-    "ZEL STG RM FWT": CustomConfig(make_ce_func=make_simple_thermostat, channels=(1,)),
+    "HmIP-BWTH": CustomConfig(make_ce_func=make_ip_thermostat),
+    "HmIP-HEATING": CustomConfig(make_ce_func=make_ip_thermostat_group),
+    "HmIP-STH": CustomConfig(make_ce_func=make_ip_thermostat),
+    "HmIP-WTH": CustomConfig(make_ce_func=make_ip_thermostat),
+    "HmIP-eTRV": CustomConfig(make_ce_func=make_ip_thermostat),
+    "HmIPW-SCTHD": CustomConfig(make_ce_func=make_ip_thermostat),
+    "HmIPW-STH": CustomConfig(make_ce_func=make_ip_thermostat),
+    "HmIPW-WTH": CustomConfig(make_ce_func=make_ip_thermostat),
+    "Thermostat AA": CustomConfig(make_ce_func=make_ip_thermostat),
+    "ZEL STG RM FWT": CustomConfig(make_ce_func=make_simple_thermostat),
 }
 hmed.ALL_DEVICES[HmPlatform.CLIMATE] = DEVICES
 BLACKLISTED_DEVICES: tuple[str, ...] = ("HmIP-STHO",)

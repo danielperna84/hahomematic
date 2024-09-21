@@ -14,7 +14,7 @@ class CustomConfig:
     """Data for custom entity creation."""
 
     make_ce_func: Callable
-    channels: tuple[int | None, ...]
+    channels: tuple[int | None, ...] = (1,)
     extended: ExtendedConfig | None = None
 
 

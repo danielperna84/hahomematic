@@ -201,12 +201,15 @@ async def test_get_entity_name(
     """Test get_entity_name."""
     central, _, _ = central_client_factory
     device = central.get_device(address="VCU2128127")
-    name_data = get_entity_name(central=central, device=device, channel_no=4, parameter="LEVEL")
+    assert device
+    channel4 = device.get_channel(channel_address=f"{device.address}:5")
+    name_data = get_entity_name(channel=channel4, parameter="LEVEL")
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Level"
     assert name_data.entity_name == "Level"
 
-    central.device_details.add_name(address=f"{device.device_address}:5", name="Roof")
-    name_data = get_entity_name(central=central, device=device, channel_no=5, parameter="LEVEL")
+    central.device_details.add_name(address=f"{device.address}:5", name="Roof")
+    channel5 = device.get_channel(channel_address=f"{device.address}:5")
+    name_data = get_entity_name(channel=channel5, parameter="LEVEL")
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Roof Level"
     assert name_data.entity_name == "Roof Level"
 
@@ -214,9 +217,7 @@ async def test_get_entity_name(
         "hahomematic.platforms.support._get_base_name_from_channel_or_device",
         return_value=None,
     ):
-        name_data = get_entity_name(
-            central=central, device=device, channel_no=5, parameter="LEVEL"
-        )
+        name_data = get_entity_name(channel=channel5, parameter="LEVEL")
         assert name_data.full_name == ""
         assert name_data.entity_name is None
 
@@ -241,13 +242,16 @@ async def test_get_event_name(
     """Test get_event_name."""
     central, _, _ = central_client_factory
     device = central.get_device(address="VCU2128127")
-    name_data = get_event_name(central=central, device=device, channel_no=4, parameter="LEVEL")
+    assert device
+    channel4 = device.get_channel(channel_address=f"{device.address}:4")
+    name_data = get_event_name(channel=channel4, parameter="LEVEL")
     assert name_data.channel_name == "ch4"
     assert name_data.entity_name == "ch4 Level"
     assert name_data.full_name == "HmIP-BSM_VCU2128127 ch4 Level"
 
-    central.device_details.add_name(address=f"{device.device_address}:5", name="Roof")
-    name_data = get_event_name(central=central, device=device, channel_no=5, parameter="LEVEL")
+    central.device_details.add_name(address=f"{device.address}:5", name="Roof")
+    channel5 = device.get_channel(channel_address=f"{device.address}:5")
+    name_data = get_event_name(channel=channel5, parameter="LEVEL")
     assert name_data.channel_name == "Roof"
     assert name_data.entity_name == "Roof Level"
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Roof Level"
@@ -256,7 +260,7 @@ async def test_get_event_name(
         "hahomematic.platforms.support._get_base_name_from_channel_or_device",
         return_value=None,
     ):
-        name_data = get_event_name(central=central, device=device, channel_no=5, parameter="LEVEL")
+        name_data = get_event_name(channel=channel5, parameter="LEVEL")
         assert name_data.full_name == ""
         assert name_data.entity_name is None
 
@@ -281,10 +285,10 @@ async def test_custom_entity_name(
     """Test get_custom_entity_name."""
     central, _, _ = central_client_factory
     device = central.get_device(address="VCU2128127")
+    assert device
+    channel4 = device.get_channel(channel_address=f"{device.address}:4")
     name_data = get_custom_entity_name(
-        central=central,
-        device=device,
-        channel_no=4,
+        channel=channel4,
         is_only_primary_channel=True,
         usage=EntityUsage.CE_PRIMARY,
     )
@@ -292,20 +296,17 @@ async def test_custom_entity_name(
     assert name_data.entity_name == ""
 
     name_data = get_custom_entity_name(
-        central=central,
-        device=device,
-        channel_no=4,
+        channel=channel4,
         is_only_primary_channel=False,
         usage=EntityUsage.CE_SECONDARY,
     )
     assert name_data.full_name == "HmIP-BSM_VCU2128127 vch4"
     assert name_data.entity_name == "vch4"
 
-    central.device_details.add_name(address=f"{device.device_address}:5", name="Roof")
+    central.device_details.add_name(address=f"{device.address}:5", name="Roof")
+    channel5 = device.get_channel(channel_address=f"{device.address}:5")
     name_data = get_custom_entity_name(
-        central=central,
-        device=device,
-        channel_no=5,
+        channel=channel5,
         is_only_primary_channel=True,
         usage=EntityUsage.CE_PRIMARY,
     )
@@ -313,9 +314,7 @@ async def test_custom_entity_name(
     assert name_data.entity_name == "Roof"
 
     name_data = get_custom_entity_name(
-        central=central,
-        device=device,
-        channel_no=5,
+        channel=channel5,
         is_only_primary_channel=False,
         usage=EntityUsage.CE_SECONDARY,
     )
@@ -327,9 +326,7 @@ async def test_custom_entity_name(
         return_value=None,
     ):
         name_data = get_custom_entity_name(
-            central=central,
-            device=device,
-            channel_no=5,
+            channel=channel5,
             is_only_primary_channel=False,
             usage=EntityUsage.CE_SECONDARY,
         )
@@ -357,13 +354,12 @@ async def test_get_device_name(
     """Test get_device_name."""
     central, _, _ = central_client_factory
     assert (
-        get_device_name(central=central, device_address="VCU2128127", device_type="HmIP-BSM")
+        get_device_name(central=central, device_address="VCU2128127", model="HmIP-BSM")
         == "HmIP-BSM_VCU2128127"
     )
     central.device_details.add_name(address="VCU2128127", name="Roof")
     assert (
-        get_device_name(central=central, device_address="VCU2128127", device_type="HmIP-BSM")
-        == "Roof"
+        get_device_name(central=central, device_address="VCU2128127", model="HmIP-BSM") == "Roof"
     )
 
 

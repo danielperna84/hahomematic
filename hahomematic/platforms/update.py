@@ -41,7 +41,7 @@ class HmUpdate(CallbackEntity, PayloadMixin):
         super().__init__(
             central=device.central,
             unique_id=generate_unique_id(
-                central=device.central, address=device.device_address, parameter="Update"
+                central=device.central, address=device.address, parameter="Update"
             ),
         )
         self._set_modified_at()
@@ -57,7 +57,7 @@ class HmUpdate(CallbackEntity, PayloadMixin):
         """Return the device of the entity."""
         return self._device
 
-    @config_property
+    @property
     def full_name(self) -> str:
         """Return the full name of the entity."""
         return f"{self._device.name} Update"
@@ -129,7 +129,5 @@ class HmUpdate(CallbackEntity, PayloadMixin):
 
     async def refresh_firmware_data(self) -> None:
         """Refresh device firmware data."""
-        await self._device.central.refresh_firmware_data(
-            device_address=self._device.device_address
-        )
+        await self._device.central.refresh_firmware_data(device_address=self._device.address)
         self._set_modified_at()

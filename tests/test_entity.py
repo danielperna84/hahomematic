@@ -75,7 +75,7 @@ async def test_custom_entity_callback(
     await central.event(const.INTERFACE_ID, "VCU2128127:4", "STATE", 0)
     assert switch.value is False
     await central.delete_devices(
-        interface_id=const.INTERFACE_ID, addresses=[switch.device.device_address]
+        interface_id=const.INTERFACE_ID, addresses=[switch.device.address]
     )
     assert factory.system_event_mock.call_args_list[-1] == call(
         "deleteDevices", interface_id="CentralTest-BidCos-RF", addresses=["VCU2128127"]
@@ -124,7 +124,7 @@ async def test_generic_entity_callback(
     await central.event(const.INTERFACE_ID, "VCU2128127:4", "STATE", 0)
     assert switch.value is False
     await central.delete_devices(
-        interface_id=const.INTERFACE_ID, addresses=[switch.device.device_address]
+        interface_id=const.INTERFACE_ID, addresses=[switch.device.address]
     )
     assert factory.system_event_mock.call_args_list[-1] == call(
         "deleteDevices", interface_id="CentralTest-BidCos-RF", addresses=["VCU2128127"]

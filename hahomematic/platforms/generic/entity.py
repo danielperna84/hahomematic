@@ -30,18 +30,14 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
 
     def __init__(
         self,
-        device: hmd.HmDevice,
-        unique_id: str,
-        channel_address: str,
+        channel: hmd.HmChannel,
         paramset_key: ParamsetKey,
         parameter: str,
         parameter_data: ParameterData,
     ) -> None:
         """Init the generic entity."""
         super().__init__(
-            device=device,
-            unique_id=unique_id,
-            channel_address=channel_address,
+            channel=channel,
             paramset_key=paramset_key,
             parameter=parameter,
             parameter_data=parameter_data,
@@ -119,7 +115,7 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
             return
 
         await self._client.set_value(
-            channel_address=self._channel_address,
+            channel_address=self._channel.address,
             paramset_key=self._paramset_key,
             parameter=self._parameter,
             value=converted_value,
@@ -134,9 +130,7 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
     def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""
         return get_entity_name(
-            central=self._central,
-            device=self._device,
-            channel_no=self.channel_no,
+            channel=self._channel,
             parameter=self._parameter,
         )
 
@@ -145,8 +139,8 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
         if self._forced_usage:
             return self._forced_usage
         if self._central.parameter_visibility.parameter_is_hidden(
-            device_type=self._device.device_type,
-            channel_no=self.channel_no,
+            model=self._device.model,
+            channel_no=self._channel.no,
             paramset_key=self._paramset_key,
             parameter=self._parameter,
         ):

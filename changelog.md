@@ -1,3 +1,9 @@
+# Version 2024.9.8 (2024-09-21)
+
+- Refactor device/entity to extract channel
+- Replace device_type by model
+- Shorten names
+
 # Version 2024.9.7 (2024-09-15)
 
 - Add bind_collector to all relevant methods with option to disable it
