@@ -318,7 +318,7 @@ def _get_base_name_from_channel_or_device(channel: hmd.HmChannel) -> str | None:
     default_channel_name = f"{channel.device.model} {channel.address}"
     name = channel.central.device_details.get_name(channel.address)
     if name is None or name == default_channel_name:
-        return hms.get_channel_address(device_address=channel.device.name, channel_no=channel.no)
+        return channel.device.name if channel.no is None else f"{channel.device.name}:{channel.no}"
     return name
 
 

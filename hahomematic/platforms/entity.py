@@ -376,6 +376,8 @@ class BaseParameterEntity[
 ](BaseEntity):
     """Base class for stateless entities."""
 
+    _unique_id_prefix: str = ""
+
     def __init__(
         self,
         channel: hmd.HmChannel,
@@ -391,7 +393,10 @@ class BaseParameterEntity[
         super().__init__(
             channel=channel,
             unique_id=generate_unique_id(
-                central=channel.central, address=channel.address, parameter=parameter
+                central=channel.central,
+                address=channel.address,
+                parameter=parameter,
+                prefix=self._unique_id_prefix,
             ),
             is_in_multiple_channels=channel.device.central.paramset_descriptions.is_in_multiple_channels(
                 channel_address=channel.address, parameter=parameter

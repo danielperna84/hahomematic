@@ -14,34 +14,17 @@ from hahomematic.const import (
     Operations,
     ParamsetKey,
 )
-from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.custom import create_custom_entity_and_append_to_channels
 from hahomematic.platforms.event import create_event_and_append_to_channel
 from hahomematic.platforms.generic import create_entity_and_append_to_channel
 
 _LOGGER: Final = logging.getLogger(__name__)
 
 
-def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
+def create_entities_and_events(device: hmd.HmDevice) -> None:
     """Create the entities associated to this device."""
-    for channel_address in device.channels:
-        if (channel := device.get_channel(channel_address=channel_address)) is None:
-            raise HaHomematicException(
-                f"CREATE_ENTITIES_AND_APPEND_TO_DEVICE: Channel {channel_address} does not exists.",
-            )
-
-        if not device.central.paramset_descriptions.get_paramset_keys(
-            interface_id=device.interface_id, channel_address=channel_address
-        ):
-            _LOGGER.debug(
-                "CREATE_ENTITIES: Skipping channel %s, missing paramsets",
-                channel_address,
-            )
-            continue
-        for paramset_key in device.central.paramset_descriptions.get_paramset_keys(
-            interface_id=device.interface_id, channel_address=channel_address
-        ):
+    for channel in device.channels.values():
+        for paramset_key, paramsset_key_descriptions in channel.paramsset_descriptions.items():
             if not device.central.parameter_visibility.is_relevant_paramset(
                 model=device.model,
                 channel_no=channel.no,
@@ -51,11 +34,19 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
             for (
                 parameter,
                 parameter_data,
-            ) in device.central.paramset_descriptions.get_paramset_descriptions(
-                interface_id=device.interface_id,
-                channel_address=channel_address,
-                paramset_key=paramset_key,
-            ).items():
+            ) in paramsset_key_descriptions.items():
+                if device.central.parameter_visibility.parameter_is_ignored(
+                    model=device.model,
+                    channel_no=channel.no,
+                    paramset_key=paramset_key,
+                    parameter=parameter,
+                ):
+                    _LOGGER.debug(
+                        "CREATE_ENTITIES_AND_APPEND_TO_DEVICE: Ignoring parameter: %s [%s]",
+                        parameter,
+                        channel.address,
+                    )
+                    continue
                 parameter_is_un_ignored: bool = (
                     device.central.parameter_visibility.parameter_is_un_ignored(
                         model=device.model,
@@ -107,4 +98,3 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
-    create_custom_entity_and_append_to_channels(device=device)

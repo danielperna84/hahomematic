@@ -66,7 +66,8 @@ from hahomematic.exceptions import (
     NoConnection,
 )
 from hahomematic.performance import measure_execution_time
-from hahomematic.platforms import create_entities_and_append_to_device
+from hahomematic.platforms import create_entities_and_events
+from hahomematic.platforms.custom import create_custom_entities
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.decorators import info_property
 from hahomematic.platforms.device import HmDevice
@@ -773,7 +774,8 @@ class CentralUnit(PayloadMixin):
                     )
                 try:
                     if device:
-                        create_entities_and_append_to_device(device=device)
+                        create_entities_and_events(device=device)
+                        create_custom_entities(device=device)
                         await device.load_value_cache()
                         new_devices.add(device)
                         self._devices[device_address] = device

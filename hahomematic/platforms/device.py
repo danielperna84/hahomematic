@@ -604,6 +604,9 @@ class HmChannel(PayloadMixin):
             interface_id=self._device.interface_id, address=channel_address
         )
         self._type_name: Final = self._description["TYPE"]
+        self._paramset_keys: Final = tuple(
+            ParamsetKey(paramset_key) for paramset_key in self._description["PARAMSETS"]
+        )
         self._no: Final[int | None] = get_channel_no(address=channel_address)
         self._unique_id: Final = generate_channel_unique_id(
             central=self._central, address=channel_address
@@ -622,17 +625,17 @@ class HmChannel(PayloadMixin):
 
     @property
     def address(self) -> str:
-        """Return the address of the device."""
+        """Return the address of the channel."""
         return self._address
 
     @property
     def base_no(self) -> int | None:
-        """Return the base channel no of the entity."""
+        """Return the base channel no of the channel."""
         return self._base_no
 
     @property
     def central(self) -> hmcu.CentralUnit:
-        """Return the channel_address of the device."""
+        """Return the central."""
         return self._central
 
     @property
@@ -652,7 +655,7 @@ class HmChannel(PayloadMixin):
 
     @property
     def function(self) -> str | None:
-        """Return the function of the entity."""
+        """Return the function of the channel."""
         return self._function
 
     @property
@@ -666,18 +669,25 @@ class HmChannel(PayloadMixin):
         return tuple(self._generic_events.values())
 
     @property
-    def type_name(self) -> str:
-        """Return the type name of the channel."""
-        return self._type_name
-
-    @property
     def no(self) -> int | None:
-        """Return the channel_no of the device."""
+        """Return the channel_no of the channel."""
         return self._no
 
     @property
+    def paramset_keys(self) -> tuple[ParamsetKey, ...]:
+        """Return the paramset_keys of the channel."""
+        return self._paramset_keys
+
+    @property
+    def paramsset_descriptions(self) -> dict[ParamsetKey, dict[str, ParameterData]]:
+        """Return the paramset descriptions of the channel."""
+        return self._central.paramset_descriptions.get_channel_paramset_descriptions(
+            interface_id=self._device.interface_id, channel_address=self._address
+        )
+
+    @property
     def path(self) -> str:
-        """Return the base path of the entity."""
+        """Return the path of the channel."""
         return f"{self._device.path}/{self._no}"
 
     @info_property
@@ -689,8 +699,13 @@ class HmChannel(PayloadMixin):
 
     @property
     def rooms(self) -> set[str]:
-        """Return all rooms of the device."""
+        """Return all rooms of the channel."""
         return self._rooms
+
+    @property
+    def type_name(self) -> str:
+        """Return the type name of the channel."""
+        return self._type_name
 
     @property
     def unique_id(self) -> str:
@@ -698,7 +713,7 @@ class HmChannel(PayloadMixin):
         return self._unique_id
 
     def add_entity(self, entity: CallbackEntity) -> None:
-        """Add a hm entity to a device."""
+        """Add an entity to a channel."""
         if isinstance(entity, BaseParameterEntity):
             self._central.add_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
@@ -710,7 +725,7 @@ class HmChannel(PayloadMixin):
             self._generic_events[entity.entity_key] = entity
 
     def _remove_entity(self, entity: CallbackEntity) -> None:
-        """Add a hm entity to a device."""
+        """Remove an entity from a channel."""
         if isinstance(entity, BaseParameterEntity):
             self._central.remove_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
