@@ -1,3 +1,8 @@
+# Version 2024.9.10 (2024-09-22)
+
+- Use paramset_description from channel
+- Remove unnecessary checks
+
 # Version 2024.9.9 (2024-09-21)
 
 - Use channel instead of channel_addresses
