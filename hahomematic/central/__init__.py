@@ -359,14 +359,23 @@ class CentralUnit(PayloadMixin):
             )
         ):
             self._xml_rpc_server_ip_addr = ip_addr
-        self._xml_rpc_server = (
-            xmlrpc.create_xml_rpc_server(
-                ip_addr=ip_addr,
-                port=self._config.callback_port or self._config.default_callback_port,
+
+        try:
+            self._xml_rpc_server = (
+                xmlrpc.create_xml_rpc_server(
+                    ip_addr=ip_addr,
+                    port=self._config.callback_port or self._config.default_callback_port,
+                )
+                if self._config.enable_server
+                else None
             )
-            if self._config.enable_server
-            else None
-        )
+        except OSError as oserr:
+            message = (
+                f"START: Failed to start central unit {self.name}: {reduce_args(args=oserr.args)}"
+            )
+            _LOGGER.warning(message)
+            raise HaHomematicException(message) from oserr
+
         if self._xml_rpc_server:
             self._xml_rpc_server.add_central(self)
         self._xml_rpc_server_port = self._xml_rpc_server.port if self._xml_rpc_server else 0
@@ -1599,9 +1608,11 @@ def _get_new_channel_events(new_devices: set[HmDevice]) -> tuple[tuple[GenericEv
 
     for device in new_devices:
         for event_type in ENTITY_EVENTS:
-            if hm_channel_events := device.get_events(
-                event_type=event_type, registered=False
-            ).values():
+            if (
+                hm_channel_events := list(
+                    device.get_events(event_type=event_type, registered=False).values()
+                )
+            ) and len(hm_channel_events) > 0:
                 channel_events.append(hm_channel_events)  # type: ignore[arg-type] # noqa:PERF401
 
     return tuple(channel_events)

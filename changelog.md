@@ -1,8 +1,9 @@
 # Version 2024.9.10 (2024-09-22)
 
-- Use paramset_description from channel
-- Remove unnecessary checks
+- Catch bind address errors of xml rpc server
 - Refactor get_events, get_new_entities
+- Remove unnecessary checks
+- Use paramset_description from channel
 
 # Version 2024.9.9 (2024-09-21)
 
