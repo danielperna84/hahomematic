@@ -12,9 +12,7 @@ from hahomematic.platforms.custom.definition import entity_definition_exists, ge
 _LOGGER: Final = logging.getLogger(__name__)
 
 
-def create_custom_entity_and_append_to_channels(
-    device: hmd.HmDevice,
-) -> None:
+def create_custom_entities(device: hmd.HmDevice) -> None:
     """Decides which default platform should be used, and creates the required entities."""
 
     if device.ignore_for_custom_entity:

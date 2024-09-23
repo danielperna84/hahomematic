@@ -202,7 +202,8 @@ class XmlRpcServer(threading.Thread):
             self.ip_addr,
             self.port,
         )
-        self._simple_xml_rpc_server.serve_forever()
+        if self._simple_xml_rpc_server:
+            self._simple_xml_rpc_server.serve_forever()
 
     def stop(self) -> None:
         """Stop the XmlRPC-Server."""

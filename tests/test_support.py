@@ -27,7 +27,7 @@ from hahomematic.platforms.support import (
     generate_unique_id,
     get_custom_entity_name,
     get_device_name,
-    get_entity_name,
+    get_entity_name_data,
     get_event_name,
 )
 from hahomematic.support import (
@@ -203,13 +203,13 @@ async def test_get_entity_name(
     device = central.get_device(address="VCU2128127")
     assert device
     channel4 = device.get_channel(channel_address=f"{device.address}:5")
-    name_data = get_entity_name(channel=channel4, parameter="LEVEL")
+    name_data = get_entity_name_data(channel=channel4, parameter="LEVEL")
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Level"
     assert name_data.entity_name == "Level"
 
     central.device_details.add_name(address=f"{device.address}:5", name="Roof")
     channel5 = device.get_channel(channel_address=f"{device.address}:5")
-    name_data = get_entity_name(channel=channel5, parameter="LEVEL")
+    name_data = get_entity_name_data(channel=channel5, parameter="LEVEL")
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Roof Level"
     assert name_data.entity_name == "Roof Level"
 
@@ -217,7 +217,7 @@ async def test_get_entity_name(
         "hahomematic.platforms.support._get_base_name_from_channel_or_device",
         return_value=None,
     ):
-        name_data = get_entity_name(channel=channel5, parameter="LEVEL")
+        name_data = get_entity_name_data(channel=channel5, parameter="LEVEL")
         assert name_data.full_name == ""
         assert name_data.entity_name is None
 

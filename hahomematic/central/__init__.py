@@ -43,6 +43,7 @@ from hahomematic.const import (
     EVENT_TYPE,
     IGNORE_FOR_UN_IGNORE_PARAMETERS,
     IP_ANY_V4,
+    PLATFORMS,
     PORT_ANY,
     UN_IGNORE_WILDCARD,
     BackendSystemEvent,
@@ -66,7 +67,8 @@ from hahomematic.exceptions import (
     NoConnection,
 )
 from hahomematic.performance import measure_execution_time
-from hahomematic.platforms import create_entities_and_append_to_device
+from hahomematic.platforms import create_entities_and_events
+from hahomematic.platforms.custom import create_custom_entities
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.decorators import info_property
 from hahomematic.platforms.device import HmDevice
@@ -357,14 +359,23 @@ class CentralUnit(PayloadMixin):
             )
         ):
             self._xml_rpc_server_ip_addr = ip_addr
-        self._xml_rpc_server = (
-            xmlrpc.create_xml_rpc_server(
-                ip_addr=ip_addr,
-                port=self._config.callback_port or self._config.default_callback_port,
+
+        try:
+            self._xml_rpc_server = (
+                xmlrpc.create_xml_rpc_server(
+                    ip_addr=ip_addr,
+                    port=self._config.callback_port or self._config.default_callback_port,
+                )
+                if self._config.enable_server
+                else None
             )
-            if self._config.enable_server
-            else None
-        )
+        except OSError as oserr:
+            message = (
+                f"START: Failed to start central unit {self.name}: {reduce_args(args=oserr.args)}"
+            )
+            _LOGGER.warning(message)
+            raise HaHomematicException(message) from oserr
+
         if self._xml_rpc_server:
             self._xml_rpc_server.add_central(self)
         self._xml_rpc_server_port = self._xml_rpc_server.port if self._xml_rpc_server else 0
@@ -698,17 +709,16 @@ class CentralUnit(PayloadMixin):
             and (registered is None or he.is_registered == registered)
         )
 
-    def get_channel_events(
+    def get_events(
         self, event_type: HomematicEventType, registered: bool | None = None
-    ) -> tuple[list[GenericEvent], ...]:
+    ) -> tuple[tuple[GenericEvent, ...], ...]:
         """Return all channel event entities."""
-        hm_channel_events: list[list[GenericEvent]] = []
+        hm_channel_events: list[tuple[GenericEvent, ...]] = []
         for device in self.devices:
-            for channel_events in device.get_channel_events(event_type=event_type).values():
+            for channel_events in device.get_events(event_type=event_type).values():
                 if registered is None or (channel_events[0].is_registered == registered):
                     hm_channel_events.append(channel_events)
                     continue
-
         return tuple(hm_channel_events)
 
     def get_virtual_remotes(self) -> tuple[HmDevice, ...]:
@@ -773,7 +783,8 @@ class CentralUnit(PayloadMixin):
                     )
                 try:
                     if device:
-                        create_entities_and_append_to_device(device=device)
+                        create_entities_and_events(device=device)
+                        create_custom_entities(device=device)
                         await device.load_value_cache()
                         new_devices.add(device)
                         self._devices[device_address] = device
@@ -1577,30 +1588,31 @@ def _get_new_entities(
     new_devices: set[HmDevice],
 ) -> Mapping[HmPlatform, AbstractSet[CallbackEntity]]:
     """Return new entities by platform."""
-    entities_by_platform: dict[HmPlatform, set[CallbackEntity]] = {}
-    for platform in HmPlatform:
-        if platform == HmPlatform.EVENT:
-            continue
-        entities_by_platform[platform] = set()
+
+    entities_by_platform: dict[HmPlatform, set[CallbackEntity]] = {
+        platform: set() for platform in PLATFORMS if platform != HmPlatform.EVENT
+    }
 
     for device in new_devices:
-        for platform, entities in device.get_entities_by_platform(
-            exclude_no_create=True, registered=False
-        ).items():
-            entities_by_platform[platform].update(entities)
+        for platform in entities_by_platform:
+            entities_by_platform[platform].update(
+                device.get_entities(platform=platform, exclude_no_create=True, registered=False)
+            )
 
     return entities_by_platform
 
 
-def _get_new_channel_events(new_devices: set[HmDevice]) -> tuple[list[GenericEvent], ...]:
+def _get_new_channel_events(new_devices: set[HmDevice]) -> tuple[tuple[GenericEvent, ...], ...]:
     """Return new channel events by platform."""
-    channel_events: list[list[GenericEvent]] = []
+    channel_events: list[tuple[GenericEvent, ...]] = []
 
     for device in new_devices:
         for event_type in ENTITY_EVENTS:
-            if hm_channel_events := device.get_channel_events(
-                event_type=event_type, registered=False
-            ).values():
+            if (
+                hm_channel_events := list(
+                    device.get_events(event_type=event_type, registered=False).values()
+                )
+            ) and len(hm_channel_events) > 0:
                 channel_events.append(hm_channel_events)  # type: ignore[arg-type] # noqa:PERF401
 
     return tuple(channel_events)

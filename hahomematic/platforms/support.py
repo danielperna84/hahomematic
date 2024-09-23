@@ -98,38 +98,57 @@ class OnTimeMixin:
         return on_time
 
 
-class EntityNameData:
+class ChannelNameData:
+    """Dataclass for channel name parts."""
+
+    def __init__(self, device_name: str, channel_name: str) -> None:
+        """Init the EntityNameData class."""
+        self.device_name: Final = device_name
+        self.channel_name: Final = self._get_channel_name(
+            device_name=device_name, channel_name=channel_name
+        )
+        self.full_name = (
+            f"{device_name} {self.channel_name}".strip() if self.channel_name else device_name
+        )
+        self.sub_device_name = channel_name if channel_name else device_name
+
+    @staticmethod
+    def empty() -> ChannelNameData:
+        """Return an empty EntityNameData."""
+        return ChannelNameData(device_name="", channel_name="")
+
+    @staticmethod
+    def _get_channel_name(device_name: str, channel_name: str) -> str:
+        """Return the channel_name of the entity only name."""
+        if device_name and channel_name and channel_name.startswith(device_name):
+            c_name = channel_name.replace(device_name, "").strip()
+            if c_name.startswith(":"):
+                c_name = c_name[1:]
+            return c_name
+        return channel_name.strip()
+
+
+class EntityNameData(ChannelNameData):
     """Dataclass for entity name parts."""
 
     def __init__(
         self, device_name: str, channel_name: str, parameter_name: str | None = None
     ) -> None:
         """Init the EntityNameData class."""
-        self.device_name: Final = device_name
-        self.channel_name: Final = self._get_channel_name(
-            device_name=device_name, channel_name=channel_name
-        )
+        super().__init__(device_name=device_name, channel_name=channel_name)
+
         self.entity_name: Final = self._get_entity_name(
             device_name=device_name, channel_name=channel_name, parameter_name=parameter_name
         )
-        self.full_name: Final = (
+        self.full_name = (
             f"{device_name} {self.entity_name}".strip() if self.entity_name else device_name
         )
         self.parameter_name = parameter_name
-        self.sub_device_name = channel_name if channel_name else device_name
 
     @staticmethod
     def empty() -> EntityNameData:
         """Return an empty EntityNameData."""
         return EntityNameData(device_name="", channel_name="")
-
-    @staticmethod
-    def _get_channel_name(device_name: str, channel_name: str) -> str:
-        """Return the channel_name of the entity only name."""
-        if device_name and channel_name and channel_name.startswith(device_name):
-            return channel_name.replace(device_name, "").strip()
-
-        return channel_name.strip()
 
     @staticmethod
     def _get_channel_parameter_name(channel_name: str, parameter_name: str | None) -> str | None:
@@ -166,15 +185,31 @@ def get_device_name(central: hmcu.CentralUnit, device_address: str, model: str) 
         model,
         device_address,
     )
-    return _get_generic_device_name(device_address=device_address, model=model)
+    return _get_generic_name(address=device_address, model=model)
 
 
-def _get_generic_device_name(device_address: str, model: str) -> str:
-    """Return auto-generated device name."""
-    return f"{model}_{device_address}"
+def _get_generic_name(address: str, model: str) -> str:
+    """Return auto-generated device/channel name."""
+    return f"{model}_{address}"
 
 
-def get_entity_name(
+def get_channel_name_data(channel: hmd.HmChannel) -> ChannelNameData:
+    """Get name for entity."""
+    if channel_base_name := _get_base_name_from_channel_or_device(channel=channel):
+        return ChannelNameData(
+            device_name=channel.device.name,
+            channel_name=channel_base_name,
+        )
+
+    _LOGGER.debug(
+        "GET_CHANNEL_NAME_DATA: Using unique_id for %s %s",
+        channel.device.model,
+        channel.address,
+    )
+    return ChannelNameData.empty()
+
+
+def get_entity_name_data(
     channel: hmd.HmChannel,
     parameter: str,
 ) -> EntityNameData:
@@ -316,9 +351,9 @@ def generate_channel_unique_id(
 def _get_base_name_from_channel_or_device(channel: hmd.HmChannel) -> str | None:
     """Get the name from channel if it's not default, otherwise from device."""
     default_channel_name = f"{channel.device.model} {channel.address}"
-    name = channel.central.device_details.get_name(channel.address)
+    name = channel.central.device_details.get_name(address=channel.address)
     if name is None or name == default_channel_name:
-        return hms.get_channel_address(device_address=channel.device.name, channel_no=channel.no)
+        return channel.device.name if channel.no is None else f"{channel.device.name}:{channel.no}"
     return name
 
 

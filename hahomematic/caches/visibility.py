@@ -469,10 +469,10 @@ class ParameterVisibilityCache:
             else ((model_l, channel_no),)
         )
 
-        for dtl, cno in search_matrix:
+        for ml, cno in search_matrix:
             if (
                 (custom_un_ignore := self._custom_un_ignore_complex)
-                and (channel_values := custom_un_ignore.get(dtl))
+                and (channel_values := custom_un_ignore.get(ml))
                 and (paramset_key_values := channel_values.get(cno))
                 and parameter in paramset_key_values.get(paramset_key, set())
             ):

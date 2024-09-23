@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any, Final
 
-from hahomematic import support as hms
 from hahomematic.async_support import loop_check
 from hahomematic.const import (
     CLICK_EVENTS,
@@ -21,7 +20,7 @@ from hahomematic.const import (
 )
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.entity import BaseParameterEntity
-from hahomematic.platforms.support import EntityNameData, generate_unique_id, get_event_name
+from hahomematic.platforms.support import EntityNameData, get_event_name
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -35,11 +34,11 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
     def __init__(
         self,
         channel: hmd.HmChannel,
-        unique_id: str,
         parameter: str,
         parameter_data: ParameterData,
     ) -> None:
         """Initialize the event handler."""
+        self._unique_id_prefix = f"event_{channel.central.name}"
         super().__init__(
             channel=channel,
             paramset_key=ParamsetKey.VALUES,
@@ -127,31 +126,11 @@ def create_event_and_append_to_channel(
     channel: hmd.HmChannel, parameter: str, parameter_data: ParameterData
 ) -> None:
     """Create action event entity."""
-    device = channel.device
-    if device.central.parameter_visibility.parameter_is_ignored(
-        model=device.model,
-        channel_no=hms.get_channel_no(address=channel.address),
-        paramset_key=ParamsetKey.VALUES,
-        parameter=parameter,
-    ):
-        _LOGGER.debug(
-            "create_event_and_append_to_device: Ignoring parameter: %s [%s]",
-            parameter,
-            channel.address,
-        )
-        return
-    unique_id = generate_unique_id(
-        central=device.central,
-        address=channel.address,
-        parameter=parameter,
-        prefix=f"event_{device.central.name}",
-    )
-
     _LOGGER.debug(
         "CREATE_EVENT_AND_APPEND_TO_DEVICE: Creating event for %s, %s, %s",
         channel.address,
         parameter,
-        device.interface_id,
+        channel.device.interface_id,
     )
     event_t: type[GenericEvent] | None = None
     if parameter_data["OPERATIONS"] & Operations.EVENT:
@@ -164,7 +143,6 @@ def create_event_and_append_to_channel(
     if event_t:
         event = event_t(
             channel=channel,
-            unique_id=unique_id,
             parameter=parameter,
             parameter_data=parameter_data,
         )

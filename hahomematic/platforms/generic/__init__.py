@@ -45,26 +45,11 @@ def create_entity_and_append_to_channel(
     parameter_data: ParameterData,
 ) -> None:
     """Decides which default platform should be used, and creates the required entities."""
-    central = channel.central
-    device = channel.device
-    if central.parameter_visibility.parameter_is_ignored(
-        model=device.model,
-        channel_no=hms.get_channel_no(address=channel.address),
-        paramset_key=paramset_key,
-        parameter=parameter,
-    ):
-        _LOGGER.debug(
-            "CREATE_ENTITIES: Ignoring parameter: %s [%s]",
-            parameter,
-            channel.address,
-        )
-        return
-
     _LOGGER.debug(
         "CREATE_ENTITIES: Creating entity for %s, %s, %s",
         channel.address,
         parameter,
-        device.interface_id,
+        channel.device.interface_id,
     )
     p_type = parameter_data["TYPE"]
     p_operations = parameter_data["OPERATIONS"]
@@ -72,7 +57,7 @@ def create_entity_and_append_to_channel(
     if p_operations & Operations.WRITE:
         if p_type == ParameterType.ACTION:
             if p_operations == Operations.WRITE:
-                if parameter in _BUTTON_ACTIONS or device.model in VIRTUAL_REMOTE_TYPES:
+                if parameter in _BUTTON_ACTIONS or channel.device.model in VIRTUAL_REMOTE_TYPES:
                     entity_t = HmButton
                 else:
                     entity_t = HmAction
