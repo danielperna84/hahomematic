@@ -20,7 +20,6 @@ from hahomematic.const import (
     CALLBACK_TYPE,
     DEFAULT_DEVICE_DESCRIPTIONS_DIR,
     DEFAULT_PARAMSET_DESCRIPTIONS_DIR,
-    ENTITY_EVENTS,
     ENTITY_KEY,
     IDENTIFIER_SEPARATOR,
     INIT_DATETIME,
@@ -442,24 +441,14 @@ class HmDevice(PayloadMixin):
 
         return entities_by_platform
 
-    def get_channel_events(
+    def get_events(
         self, event_type: HomematicEventType, registered: bool | None = None
-    ) -> Mapping[int, list[GenericEvent]]:
+    ) -> Mapping[int | None, tuple[GenericEvent, ...]]:
         """Return a list of specific events of a channel."""
-        event_dict: dict[int, list[GenericEvent]] = {}
-        if event_type not in ENTITY_EVENTS:
-            return event_dict
-        for event in self.generic_events:
-            if (
-                event.event_type == event_type
-                and (registered is None or event.is_registered == registered)
-                and event.channel.no is not None
-            ):
-                if event.channel.no not in event_dict:
-                    event_dict[event.channel.no] = []
-                event_dict[event.channel.no].append(event)
-
-        return event_dict
+        return {
+            channel.no: channel.get_events(event_type=event_type, registered=registered)
+            for channel in self._channels.values()
+        }
 
     def get_custom_entity(self, channel_no: int) -> hmce.CustomEntity | None:
         """Return an entity from device."""
@@ -796,22 +785,16 @@ class HmChannel(PayloadMixin):
 
     def get_events(
         self, event_type: HomematicEventType, registered: bool | None = None
-    ) -> Mapping[int, list[GenericEvent]]:
+    ) -> tuple[GenericEvent, ...]:
         """Return a list of specific events of a channel."""
-        event_dict: dict[int, list[GenericEvent]] = {}
-        if event_type not in ENTITY_EVENTS:
-            return event_dict
-        for event in self.generic_events:
+        return tuple(
+            event
+            for event in self.generic_events
             if (
                 event.event_type == event_type
                 and (registered is None or event.is_registered == registered)
-                and event.channel.no is not None
-            ):
-                if event.channel.no not in event_dict:
-                    event_dict[event.channel.no] = []
-                event_dict[event.channel.no].append(event)
-
-        return event_dict
+            )
+        )
 
     def get_generic_entity(
         self, parameter: str, paramset_key: ParamsetKey | None = None

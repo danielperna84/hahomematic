@@ -699,17 +699,16 @@ class CentralUnit(PayloadMixin):
             and (registered is None or he.is_registered == registered)
         )
 
-    def get_channel_events(
+    def get_events(
         self, event_type: HomematicEventType, registered: bool | None = None
-    ) -> tuple[list[GenericEvent], ...]:
+    ) -> tuple[tuple[GenericEvent, ...], ...]:
         """Return all channel event entities."""
-        hm_channel_events: list[list[GenericEvent]] = []
+        hm_channel_events: list[tuple[GenericEvent, ...]] = []
         for device in self.devices:
-            for channel_events in device.get_channel_events(event_type=event_type).values():
+            for channel_events in device.get_events(event_type=event_type).values():
                 if registered is None or (channel_events[0].is_registered == registered):
                     hm_channel_events.append(channel_events)
                     continue
-
         return tuple(hm_channel_events)
 
     def get_virtual_remotes(self) -> tuple[HmDevice, ...]:
@@ -1594,13 +1593,13 @@ def _get_new_entities(
     return entities_by_platform
 
 
-def _get_new_channel_events(new_devices: set[HmDevice]) -> tuple[list[GenericEvent], ...]:
+def _get_new_channel_events(new_devices: set[HmDevice]) -> tuple[tuple[GenericEvent, ...], ...]:
     """Return new channel events by platform."""
-    channel_events: list[list[GenericEvent]] = []
+    channel_events: list[tuple[GenericEvent, ...]] = []
 
     for device in new_devices:
         for event_type in ENTITY_EVENTS:
-            if hm_channel_events := device.get_channel_events(
+            if hm_channel_events := device.get_events(
                 event_type=event_type, registered=False
             ).values():
                 channel_events.append(hm_channel_events)  # type: ignore[arg-type] # noqa:PERF401
