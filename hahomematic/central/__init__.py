@@ -43,6 +43,7 @@ from hahomematic.const import (
     EVENT_TYPE,
     IGNORE_FOR_UN_IGNORE_PARAMETERS,
     IP_ANY_V4,
+    PLATFORMS,
     PORT_ANY,
     UN_IGNORE_WILDCARD,
     BackendSystemEvent,
@@ -1578,17 +1579,16 @@ def _get_new_entities(
     new_devices: set[HmDevice],
 ) -> Mapping[HmPlatform, AbstractSet[CallbackEntity]]:
     """Return new entities by platform."""
-    entities_by_platform: dict[HmPlatform, set[CallbackEntity]] = {}
-    for platform in HmPlatform:
-        if platform == HmPlatform.EVENT:
-            continue
-        entities_by_platform[platform] = set()
+
+    entities_by_platform: dict[HmPlatform, set[CallbackEntity]] = {
+        platform: set() for platform in PLATFORMS if platform != HmPlatform.EVENT
+    }
 
     for device in new_devices:
-        for platform, entities in device.get_entities_by_platform(
-            exclude_no_create=True, registered=False
-        ).items():
-            entities_by_platform[platform].update(entities)
+        for platform in entities_by_platform:
+            entities_by_platform[platform].update(
+                device.get_entities(platform=platform, exclude_no_create=True, registered=False)
+            )
 
     return entities_by_platform
 

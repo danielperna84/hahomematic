@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Mapping, Set as AbstractSet
+from collections.abc import Callable, Mapping
 from copy import copy
 from datetime import datetime
 from functools import partial
@@ -24,7 +24,6 @@ from hahomematic.const import (
     IDENTIFIER_SEPARATOR,
     INIT_DATETIME,
     NO_CACHE_ENTRY,
-    PLATFORMS,
     RELEVANT_INIT_PARAMETERS,
     CallSource,
     DataOperationResult,
@@ -423,24 +422,6 @@ class HmDevice(PayloadMixin):
             )
         return tuple(all_entities)
 
-    def get_entities_by_platform(
-        self, exclude_no_create: bool = True, registered: bool | None = None
-    ) -> Mapping[HmPlatform, AbstractSet[CallbackEntity]]:
-        """Return all externally registered entities."""
-        entities_by_platform: dict[HmPlatform, set[CallbackEntity]] = {}
-        for platform in PLATFORMS:
-            if platform == HmPlatform.EVENT:
-                continue
-            entities_by_platform[platform] = set()
-
-        for entity in self.get_entities(
-            exclude_no_create=exclude_no_create, registered=registered
-        ):
-            if entity.platform in PLATFORMS:
-                entities_by_platform[entity.platform].add(entity)
-
-        return entities_by_platform
-
     def get_events(
         self, event_type: HomematicEventType, registered: bool | None = None
     ) -> Mapping[int | None, tuple[GenericEvent, ...]]:
@@ -750,8 +731,8 @@ class HmChannel(PayloadMixin):
     ) -> tuple[CallbackEntity, ...]:
         """Get all entities of the device."""
         all_entities: list[CallbackEntity] = list(self._generic_entities.values())
-        if self.custom_entity:
-            all_entities.append(self.custom_entity)
+        if self._custom_entity:
+            all_entities.append(self._custom_entity)
 
         return tuple(
             entity
@@ -765,31 +746,13 @@ class HmChannel(PayloadMixin):
             and (registered is None or entity.is_registered == registered)
         )
 
-    def get_entities_by_platform(
-        self, exclude_no_create: bool = True, registered: bool | None = None
-    ) -> Mapping[HmPlatform, AbstractSet[CallbackEntity]]:
-        """Return all externally registered entities."""
-        entities_by_platform: dict[HmPlatform, set[CallbackEntity]] = {}
-        for platform in PLATFORMS:
-            if platform == HmPlatform.EVENT:
-                continue
-            entities_by_platform[platform] = set()
-
-        for entity in self.get_entities(
-            exclude_no_create=exclude_no_create, registered=registered
-        ):
-            if entity.platform in PLATFORMS:
-                entities_by_platform[entity.platform].add(entity)
-
-        return entities_by_platform
-
     def get_events(
         self, event_type: HomematicEventType, registered: bool | None = None
     ) -> tuple[GenericEvent, ...]:
         """Return a list of specific events of a channel."""
         return tuple(
             event
-            for event in self.generic_events
+            for event in self._generic_events.values()
             if (
                 event.event_type == event_type
                 and (registered is None or event.is_registered == registered)
