@@ -2,7 +2,7 @@
 
 - Use paramset_description from channel
 - Remove unnecessary checks
-- Refactor get_events
+- Refactor get_events, get_new_entities
 
 # Version 2024.9.9 (2024-09-21)
 
