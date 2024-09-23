@@ -15,7 +15,11 @@ from hahomematic.const import (
 )
 from hahomematic.platforms import device as hmd, entity as hme
 from hahomematic.platforms.entity import service_call
-from hahomematic.platforms.support import EntityNameData, GenericParameterType, get_entity_name
+from hahomematic.platforms.support import (
+    EntityNameData,
+    GenericParameterType,
+    get_entity_name_data,
+)
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -129,7 +133,7 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
 
     def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""
-        return get_entity_name(
+        return get_entity_name_data(
             channel=self._channel,
             parameter=self._parameter,
         )

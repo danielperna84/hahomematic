@@ -46,7 +46,13 @@ from hahomematic.platforms.decorators import info_property, state_property
 from hahomematic.platforms.entity import BaseParameterEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity
-from hahomematic.platforms.support import PayloadMixin, generate_channel_unique_id, get_device_name
+from hahomematic.platforms.support import (
+    ChannelNameData,
+    PayloadMixin,
+    generate_channel_unique_id,
+    get_channel_name_data,
+    get_device_name,
+)
 from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import (
     CacheEntry,
@@ -86,14 +92,6 @@ class HmDevice(PayloadMixin):
         self._forced_availability: ForcedDeviceAvailability = ForcedDeviceAvailability.NOT_SET
         self._device_updated_callbacks: Final[list[Callable]] = []
         self._firmware_update_callbacks: Final[list[Callable]] = []
-        channel_addresses = tuple(
-            [device_address]
-            + [address for address in self._description["CHILDREN"] if address != ""]
-        )
-        self._channels: Final[dict[str, HmChannel]] = {
-            address: HmChannel(device=self, channel_address=address)
-            for address in channel_addresses
-        }
         self._model: Final = self._description["TYPE"]
         self._is_updatable: Final = self._description["UPDATABLE"]
         self._rx_modes: Final = get_rx_modes(mode=self._description.get("RX_MODE", 0))
@@ -112,6 +110,14 @@ class HmDevice(PayloadMixin):
             device_address=device_address,
             model=self._model,
         )
+        channel_addresses = tuple(
+            [device_address]
+            + [address for address in self._description["CHILDREN"] if address != ""]
+        )
+        self._channels: Final[dict[str, HmChannel]] = {
+            address: HmChannel(device=self, channel_address=address)
+            for address in channel_addresses
+        }
         self._value_cache: Final[ValueCache] = ValueCache(device=self)
         self._rooms: Final = central.device_details.get_device_rooms(device_address=device_address)
         self._update_entity: Final = HmUpdate(device=self) if self.is_updatable else None
@@ -426,10 +432,13 @@ class HmDevice(PayloadMixin):
         self, event_type: HomematicEventType, registered: bool | None = None
     ) -> Mapping[int | None, tuple[GenericEvent, ...]]:
         """Return a list of specific events of a channel."""
-        return {
-            channel.no: channel.get_events(event_type=event_type, registered=registered)
-            for channel in self._channels.values()
-        }
+        events: dict[int | None, tuple[GenericEvent, ...]] = {}
+        for channel in self._channels.values():
+            if (
+                values := channel.get_events(event_type=event_type, registered=registered)
+            ) and len(values) > 0:
+                events[channel.no] = values
+        return events
 
     def get_custom_entity(self, channel_no: int) -> hmce.CustomEntity | None:
         """Return an entity from device."""
@@ -570,6 +579,8 @@ class HmChannel(PayloadMixin):
         self._device: Final = device
         self._central: Final = device.central
         self._address: Final = channel_address
+        self._no: Final[int | None] = get_channel_no(address=channel_address)
+        self._name_data: Final = get_channel_name_data(channel=self)
         self._description = self._central.device_descriptions.get_device_description(
             interface_id=self._device.interface_id, address=channel_address
         )
@@ -577,7 +588,7 @@ class HmChannel(PayloadMixin):
         self._paramset_keys: Final = tuple(
             ParamsetKey(paramset_key) for paramset_key in self._description["PARAMSETS"]
         )
-        self._no: Final[int | None] = get_channel_no(address=channel_address)
+
         self._unique_id: Final = generate_channel_unique_id(
             central=self._central, address=channel_address
         )
@@ -629,6 +640,11 @@ class HmChannel(PayloadMixin):
         return self._function
 
     @property
+    def full_name(self) -> str:
+        """Return the full name of the channel."""
+        return self._name_data.full_name
+
+    @property
     def generic_entities(self) -> tuple[GenericEntity, ...]:
         """Return the generic entities."""
         return tuple(self._generic_entities.values())
@@ -637,6 +653,16 @@ class HmChannel(PayloadMixin):
     def generic_events(self) -> tuple[GenericEvent, ...]:
         """Return the generic events."""
         return tuple(self._generic_events.values())
+
+    @property
+    def name(self) -> str:
+        """Return the name of the channel."""
+        return self._name_data.channel_name
+
+    @property
+    def name_data(self) -> ChannelNameData:
+        """Return the name data of the channel."""
+        return self._name_data
 
     @property
     def no(self) -> int | None:
