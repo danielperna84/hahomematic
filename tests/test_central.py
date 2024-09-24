@@ -13,6 +13,8 @@ from hahomematic.client import Client
 from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
     DATETIME_FORMAT_MILLIS,
+    DEFAULT_INCLUDE_INTERNAL_PROGRAMS,
+    DEFAULT_INCLUDE_INTERNAL_SYSVARS,
     EVENT_AVAILABLE,
     EntityUsage,
     HmPlatform,
@@ -748,11 +750,15 @@ async def test_central_services(
 ) -> None:
     """Test central fetch sysvar and programs."""
     central, mock_client, _ = central_client_factory
-    await central.fetch_program_data()
-    assert mock_client.method_calls[-1] == call.get_all_programs(include_internal=False)
+    await central.fetch_program_data(scheduled=True)
+    assert mock_client.method_calls[-1] == call.get_all_programs(
+        include_internal=DEFAULT_INCLUDE_INTERNAL_PROGRAMS
+    )
 
-    await central.fetch_sysvar_data()
-    assert mock_client.method_calls[-1] == call.get_all_system_variables(include_internal=True)
+    await central.fetch_sysvar_data(scheduled=True)
+    assert mock_client.method_calls[-1] == call.get_all_system_variables(
+        include_internal=DEFAULT_INCLUDE_INTERNAL_SYSVARS
+    )
 
     assert len(mock_client.method_calls) == 39
     await central.load_and_refresh_entity_data(paramset_key=ParamsetKey.MASTER)

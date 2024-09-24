@@ -33,6 +33,10 @@ from hahomematic.client.xml_rpc import XmlRpcProxy
 from hahomematic.const import (
     CALLBACK_TYPE,
     DATETIME_FORMAT_MILLIS,
+    DEFAULT_INCLUDE_INTERNAL_PROGRAMS,
+    DEFAULT_INCLUDE_INTERNAL_SYSVARS,
+    DEFAULT_PROGRAM_SCAN_ENABLED,
+    DEFAULT_SYSVAR_SCAN_ENABLED,
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
     ENTITY_EVENTS,
@@ -568,8 +572,8 @@ class CentralUnit(PayloadMixin):
 
     async def _init_hub(self) -> None:
         """Init the hub."""
-        await self._hub.fetch_program_data()
-        await self._hub.fetch_sysvar_data()
+        await self._hub.fetch_program_data(scheduled=True)
+        await self._hub.fetch_sysvar_data(scheduled=True)
 
     @loop_check
     def fire_interface_event(
@@ -1040,13 +1044,13 @@ class CentralUnit(PayloadMixin):
             return await client.execute_program(pid=pid)
         return False
 
-    async def fetch_sysvar_data(self, include_internal: bool = True) -> None:
+    async def fetch_sysvar_data(self, scheduled: bool) -> None:
         """Fetch sysvar data for the hub."""
-        await self._hub.fetch_sysvar_data(include_internal=include_internal)
+        await self._hub.fetch_sysvar_data(scheduled=scheduled)
 
-    async def fetch_program_data(self, include_internal: bool = False) -> None:
+    async def fetch_program_data(self, scheduled: bool) -> None:
         """Fetch program data for the hub."""
-        await self._hub.fetch_program_data(include_internal=include_internal)
+        await self._hub.fetch_program_data(scheduled=scheduled)
 
     @measure_execution_time
     async def load_and_refresh_entity_data(self, paramset_key: ParamsetKey | None = None) -> None:
@@ -1412,6 +1416,10 @@ class CentralConfig:
         callback_port: int | None = None,
         json_port: int | None = None,
         un_ignore_list: list[str] | None = None,
+        program_scan_enabled: bool = DEFAULT_PROGRAM_SCAN_ENABLED,
+        include_internal_programs: bool = DEFAULT_INCLUDE_INTERNAL_PROGRAMS,
+        sysvar_scan_enabled: bool = DEFAULT_SYSVAR_SCAN_ENABLED,
+        include_internal_sysvars: bool = DEFAULT_INCLUDE_INTERNAL_SYSVARS,
         start_direct: bool = False,
         base_path: str | None = None,
     ) -> None:
@@ -1432,6 +1440,10 @@ class CentralConfig:
         self.callback_port: Final = callback_port
         self.json_port: Final = json_port
         self.un_ignore_list: Final = un_ignore_list
+        self.program_scan_enabled: Final = program_scan_enabled
+        self.include_internal_programs: Final = include_internal_programs
+        self.sysvar_scan_enabled: Final = sysvar_scan_enabled
+        self.include_internal_sysvars: Final = include_internal_sysvars
         self.start_direct: Final = start_direct
         self._json_rpc_client: JsonRpcAioHttpClient | None = None
         self._base_path: Final = base_path
