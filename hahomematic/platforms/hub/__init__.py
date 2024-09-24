@@ -42,24 +42,39 @@ class Hub:
         self._sema_fetch_sysvars: Final = asyncio.Semaphore()
         self._sema_fetch_programs: Final = asyncio.Semaphore()
         self._central: Final = central
+        self._config: Final = central.config
 
-    async def fetch_sysvar_data(self, include_internal: bool = True) -> None:
+    async def fetch_sysvar_data(self, scheduled: bool) -> None:
         """Fetch sysvar data for the hub."""
-        async with self._sema_fetch_sysvars:
-            if self._central.available:
-                await self._update_sysvar_entities(include_internal=include_internal)
+        if self._config.sysvar_scan_enabled:
+            _LOGGER.debug(
+                "FETCH_SYSVAR_DATA: % fetching of system variables for %s",
+                "Scheduled" if scheduled else "Manual",
+                self._central.name,
+            )
+            async with self._sema_fetch_sysvars:
+                if self._central.available:
+                    await self._update_sysvar_entities()
 
-    async def fetch_program_data(self, include_internal: bool = False) -> None:
+    async def fetch_program_data(self, scheduled: bool) -> None:
         """Fetch program data for the hub."""
-        async with self._sema_fetch_programs:
-            if self._central.available:
-                await self._update_program_entities(include_internal=include_internal)
+        if self._config.program_scan_enabled:
+            _LOGGER.debug(
+                "FETCH_PROGRAM_DATA: % fetching of programs for %s",
+                "Scheduled" if scheduled else "Manual",
+                self._central.name,
+            )
+            async with self._sema_fetch_programs:
+                if self._central.available:
+                    await self._update_program_entities()
 
-    async def _update_program_entities(self, include_internal: bool) -> None:
+    async def _update_program_entities(self) -> None:
         """Retrieve all program data and update program values."""
         programs: tuple[ProgramData, ...] = ()
         if client := self._central.primary_client:
-            programs = await client.get_all_programs(include_internal=include_internal)
+            programs = await client.get_all_programs(
+                include_internal=self._config.include_internal_programs
+            )
         if not programs:
             _LOGGER.debug(
                 "UPDATE_PROGRAM_ENTITIES: No programs received for %s",
@@ -89,11 +104,13 @@ class Hub:
                 new_hub_entities=_get_new_hub_entities(entities=new_programs),
             )
 
-    async def _update_sysvar_entities(self, include_internal: bool = True) -> None:
+    async def _update_sysvar_entities(self) -> None:
         """Retrieve all variable data and update hmvariable values."""
         variables: tuple[SystemVariableData, ...] = ()
         if client := self._central.primary_client:
-            variables = await client.get_all_system_variables(include_internal=include_internal)
+            variables = await client.get_all_system_variables(
+                include_internal=self._config.include_internal_sysvars
+            )
         if not variables:
             _LOGGER.debug(
                 "UPDATE_SYSVAR_ENTITIES: No sysvars received for %s",
