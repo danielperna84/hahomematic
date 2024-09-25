@@ -1,3 +1,7 @@
+# Version 2024.9.11 (2024-09-25)
+
+- Remove CED for ELV-SH-WUA / HmIP-WUA
+
 # Version 2024.9.10 (2024-09-22)
 
 - Add name to channel
