@@ -122,8 +122,6 @@ class CentralUnit(PayloadMixin):
         self._model: str | None = None
         self._looper = Looper()
         self._xml_rpc_server: xmlrpc.XmlRpcServer | None = None
-        self._xml_rpc_server_ip_addr: str = IP_ANY_V4
-        self._xml_rpc_server_port: int = PORT_ANY
         self._json_rpc_client: Final = central_config.json_rpc_client
 
         # Caches for CCU data
@@ -162,11 +160,19 @@ class CentralUnit(PayloadMixin):
         self._version: str | None = None
         # store last event received datetime by interface
         self.last_events: Final[dict[str, datetime]] = {}
+        self._callback_ip_addr: str = IP_ANY_V4
+        self._listen_ip_addr: str = IP_ANY_V4
+        self._listen_port: int = PORT_ANY
 
     @property
     def available(self) -> bool:
         """Return the availability of the central."""
         return all(client.available for client in self._clients.values())
+
+    @property
+    def callback_ip_addr(self) -> str:
+        """Return the xml rpc server callback ip address."""
+        return self._callback_ip_addr
 
     @info_property
     def central_url(self) -> str:
@@ -254,6 +260,16 @@ class CentralUnit(PayloadMixin):
         return self._primary_client
 
     @property
+    def listen_ip_addr(self) -> str:
+        """Return the xml rpc server listening ip address."""
+        return self._listen_ip_addr
+
+    @property
+    def listen_port(self) -> int:
+        """Return the xml rpc listening server port."""
+        return self._listen_port
+
+    @property
     def looper(self) -> Looper:
         """Return the loop support."""
         return self._looper
@@ -312,16 +328,6 @@ class CentralUnit(PayloadMixin):
             self._version = max(versions) if versions else None
         return self._version
 
-    @property
-    def xml_rpc_server_ip_addr(self) -> str:
-        """Return the xml rpc server ip address."""
-        return self._xml_rpc_server_ip_addr
-
-    @property
-    def xml_rpc_server_port(self) -> int:
-        """Return the xml rpc server port."""
-        return self._xml_rpc_server_port
-
     def add_sysvar_entity(self, sysvar_entity: GenericSystemVariable) -> None:
         """Add new program button."""
         if (ccu_var_name := sysvar_entity.ccu_var_name) is not None:
@@ -354,6 +360,7 @@ class CentralUnit(PayloadMixin):
 
     async def start(self) -> None:
         """Start processing of the central unit."""
+
         if self._started:
             _LOGGER.debug("START: Central %s already started", self.name)
             return
@@ -362,27 +369,33 @@ class CentralUnit(PayloadMixin):
                 port=tuple(self._config.interface_configs)[0].port
             )
         ):
-            self._xml_rpc_server_ip_addr = ip_addr
+            self._callback_ip_addr = ip_addr
+            self._listen_ip_addr = (
+                self._config.listen_ip_addr if self._config.listen_ip_addr else ip_addr
+            )
 
+        listen_port: int = (
+            self._config.listen_port
+            if self._config.listen_port
+            else self._config.callback_port or self._config.default_callback_port
+        )
         try:
-            self._xml_rpc_server = (
-                xmlrpc.create_xml_rpc_server(
-                    ip_addr=ip_addr,
-                    port=self._config.callback_port or self._config.default_callback_port,
+            if (
+                xml_rpc_server := xmlrpc.create_xml_rpc_server(
+                    ip_addr=self._listen_ip_addr, port=listen_port
                 )
                 if self._config.enable_server
                 else None
-            )
+            ):
+                self._xml_rpc_server = xml_rpc_server
+                self._listen_port = xml_rpc_server.listen_port
+                self._xml_rpc_server.add_central(self)
         except OSError as oserr:
             message = (
                 f"START: Failed to start central unit {self.name}: {reduce_args(args=oserr.args)}"
             )
             _LOGGER.warning(message)
             raise HaHomematicException(message) from oserr
-
-        if self._xml_rpc_server:
-            self._xml_rpc_server.add_central(self)
-        self._xml_rpc_server_port = self._xml_rpc_server.port if self._xml_rpc_server else 0
 
         await self._parameter_visibility.load()
         if self._config.start_direct:
@@ -1415,6 +1428,8 @@ class CentralConfig:
         callback_host: str | None = None,
         callback_port: int | None = None,
         json_port: int | None = None,
+        listen_ip_addr: str | None = None,
+        listen_port: int | None = None,
         un_ignore_list: list[str] | None = None,
         program_scan_enabled: bool = DEFAULT_PROGRAM_SCAN_ENABLED,
         include_internal_programs: bool = DEFAULT_INCLUDE_INTERNAL_PROGRAMS,
@@ -1439,6 +1454,8 @@ class CentralConfig:
         self.callback_host: Final = callback_host
         self.callback_port: Final = callback_port
         self.json_port: Final = json_port
+        self.listen_ip_addr: Final = listen_ip_addr
+        self.listen_port: Final = listen_port
         self.un_ignore_list: Final = un_ignore_list
         self.program_scan_enabled: Final = program_scan_enabled
         self.include_internal_programs: Final = include_internal_programs

@@ -1136,9 +1136,9 @@ class _ClientConfig:
         )
         self.init_url: Final[str] = f"http://{central.config.callback_host
             if central.config.callback_host
-            else central.xml_rpc_server_ip_addr}:{central.config.callback_port
+            else central.callback_ip_addr}:{central.config.callback_port
             if central.config.callback_port
-            else central.xml_rpc_server_port}"
+            else central.listen_port}"
         self.xml_rpc_uri: Final = build_xml_rpc_uri(
             host=central.config.host,
             port=interface_config.port,

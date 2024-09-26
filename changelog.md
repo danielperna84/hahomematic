@@ -1,3 +1,7 @@
+# Version 2024.9.12 (2024-09-26)
+
+- Add config option for listen ip address and port
+
 # Version 2024.9.11 (2024-09-25)
 
 - Remove CED for ELV-SH-WUA / HmIP-WUA
