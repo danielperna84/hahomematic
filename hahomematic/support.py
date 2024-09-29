@@ -132,10 +132,9 @@ def check_or_create_directory(directory: str) -> bool:
         try:
             os.makedirs(directory)
         except OSError as ose:
-            message = f"CHECK_OR_CREATE_DIRECTORY failed: Unable to create directory {directory} ('{ose.strerror}')"
-            _LOGGER.error(message)
-            raise HaHomematicException(message) from ose
-
+            raise HaHomematicException(
+                f"CHECK_OR_CREATE_DIRECTORY failed: Unable to create directory {directory} ('{ose.strerror}')"
+            ) from ose
     return True
 
 
@@ -263,10 +262,10 @@ def get_ip_addr(host: str, port: int) -> str | None:
     """Get local_ip from socket."""
     try:
         socket.gethostbyname(host)
-    except Exception as exc:
-        message = f"GET_LOCAL_IP: Can't resolve host for {host}:{port}"
-        _LOGGER.warning(message)
-        raise HaHomematicException(message) from exc
+    except Exception as ex:
+        raise HaHomematicException(
+            f"GET_LOCAL_IP: Can't resolve host for {host}:{port}: {reduce_args(args=ex.args)}"
+        ) from ex
     tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     tmp_socket.settimeout(TIMEOUT)
     tmp_socket.connect((host, port))
