@@ -1,3 +1,7 @@
+# Version 2024.9.13 (2024-09-29)
+
+- Make UPDATEABLE optional due to homegear support
+
 # Version 2024.9.12 (2024-09-26)
 
 - Add config option for listen ip address and port
