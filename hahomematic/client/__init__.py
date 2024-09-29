@@ -483,8 +483,7 @@ class Client(ABC):
                 if supports_rx_mode(command_rx_mode=rx_mode, rx_modes=device.rx_modes):
                     await self._proxy.setValue(channel_address, parameter, checked_value, rx_mode)
                 else:
-                    _LOGGER.warning("SET_VALUE failed: unsupported rx_mode: %s", rx_mode)
-                    return set()
+                    raise HaHomematicException(f"Unsupported rx_mode: {rx_mode}")
             else:
                 await self._proxy.setValue(channel_address, parameter, checked_value)
             # store the send value in the last_value_send_cache
@@ -512,7 +511,7 @@ class Client(ABC):
                 parameter,
                 value,
             )
-            return set()
+            raise
 
     def _check_set_value(
         self, channel_address: str, paramset_key: ParamsetKey, parameter: str, value: Any
@@ -662,7 +661,7 @@ class Client(ABC):
                 paramset_key,
                 values,
             )
-            return set()
+            raise
 
     def _check_put_paramset(
         self, channel_address: str, paramset_key: ParamsetKey, values: dict[str, Any]

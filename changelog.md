@@ -1,6 +1,7 @@
 # Version 2024.9.13 (2024-09-29)
 
 - Make UPDATEABLE optional due to homegear support
+- Raise exception on set_value, put_paramset
 
 # Version 2024.9.12 (2024-09-26)
 
