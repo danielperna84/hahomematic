@@ -41,6 +41,7 @@ from hahomematic.const import (
 from hahomematic.exceptions import BaseHomematicException, ClientException, NoConnection
 from hahomematic.performance import measure_execution_time
 from hahomematic.platforms.device import HmDevice
+from hahomematic.platforms.entity import service
 from hahomematic.platforms.support import convert_value
 from hahomematic.support import (
     build_headers,
@@ -321,22 +322,27 @@ class Client(ABC):
         """Send ping to CCU to generate PONG event."""
 
     @abstractmethod
+    @service
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear.."""
 
     @abstractmethod
+    @service
     async def set_system_variable(self, name: str, value: Any) -> bool:
         """Set a system variable on CCU / Homegear."""
 
     @abstractmethod
+    @service
     async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
 
     @abstractmethod
+    @service
     async def get_system_variable(self, name: str) -> str:
         """Get single system variable from CCU / Homegear."""
 
     @abstractmethod
+    @service
     async def get_all_system_variables(
         self, include_internal: bool
     ) -> tuple[SystemVariableData, ...]:
@@ -388,6 +394,7 @@ class Client(ABC):
             )
         return None
 
+    @service
     async def set_install_mode(
         self,
         on: bool = True,
@@ -412,6 +419,7 @@ class Client(ABC):
             raise ClientException(message) from ex
         return True
 
+    @service
     async def get_install_mode(self) -> int:
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
         try:
@@ -421,6 +429,7 @@ class Client(ABC):
             _LOGGER.warning(message)
             raise ClientException(message) from ex
 
+    @service
     async def get_link_peers(self, address: str) -> tuple[str, ...] | None:
         """Return a list of link pers."""
         try:
@@ -520,6 +529,7 @@ class Client(ABC):
             operation=Operations.WRITE,
         )
 
+    @service
     async def set_value(
         self,
         channel_address: str,
@@ -549,6 +559,7 @@ class Client(ABC):
             check_against_pd=check_against_pd,
         )
 
+    @service
     async def get_paramset(self, address: str, paramset_key: ParamsetKey | str) -> dict[str, Any]:
         """
         Return a paramset from CCU.
@@ -569,6 +580,7 @@ class Client(ABC):
             raise ClientException(message) from ex
 
     @measure_execution_time
+    @service
     async def put_paramset(
         self,
         channel_address: str,
@@ -770,6 +782,7 @@ class Client(ABC):
             )
         return all_paramsets
 
+    @service
     async def update_device_firmware(self, device_address: str) -> bool:
         """Update the firmware of a homematic device."""
         if device := self.central.get_device(address=device_address):
@@ -911,23 +924,28 @@ class ClientCCU(Client):
         self.modified_at = INIT_DATETIME
         return False
 
+    @service
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU."""
         return await self._json_rpc_client.execute_program(pid=pid)
 
     @measure_execution_time
+    @service
     async def set_system_variable(self, name: str, value: Any) -> bool:
         """Set a system variable on CCU / Homegear."""
         return await self._json_rpc_client.set_system_variable(name=name, value=value)
 
+    @service
     async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
         return await self._json_rpc_client.delete_system_variable(name=name)
 
+    @service
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
         return await self._json_rpc_client.get_system_variable(name=name)
 
+    @service
     async def get_all_system_variables(
         self, include_internal: bool
     ) -> tuple[SystemVariableData, ...]:
@@ -1027,11 +1045,13 @@ class ClientHomegear(Client):
         self.modified_at = INIT_DATETIME
         return False
 
+    @service
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on Homegear."""
         return True
 
     @measure_execution_time
+    @service
     async def set_system_variable(self, name: str, value: Any) -> bool:
         """Set a system variable on CCU / Homegear."""
         try:
@@ -1042,6 +1062,7 @@ class ClientHomegear(Client):
             raise ClientException(message) from ex
         return True
 
+    @service
     async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
         try:
@@ -1052,6 +1073,7 @@ class ClientHomegear(Client):
             raise ClientException(message) from ex
         return True
 
+    @service
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
         try:
@@ -1061,6 +1083,7 @@ class ClientHomegear(Client):
             _LOGGER.warning(message)
             raise ClientException(message) from ex
 
+    @service
     async def get_all_system_variables(
         self, include_internal: bool
     ) -> tuple[SystemVariableData, ...]:

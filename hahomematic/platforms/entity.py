@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from datetime import datetime
 from functools import partial, wraps
 from inspect import getfullargspec
 import logging
-from typing import Any, Final, cast
+from typing import Any, Concatenate, Final, cast
 
 import voluptuous as vol
 
@@ -39,7 +39,7 @@ from hahomematic.const import (
     ParameterType,
     ParamsetKey,
 )
-from hahomematic.exceptions import HaHomematicException
+from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property, state_property
 from hahomematic.platforms.support import (
@@ -846,13 +846,13 @@ def bind_collector(
                 )
             return return_value
 
-        wrapper.service_call = True  # type: ignore[attr-defined]
+        wrapper.__service = True  # type: ignore[attr-defined] # pylint: disable=protected-access
         return wrapper  # type: ignore[return-value]
 
     return decorator
 
 
-def service_call() -> Callable:
+def service2() -> Callable:
     """Mark function as service call."""
 
     def decorator[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
@@ -863,10 +863,34 @@ def service_call() -> Callable:
             """Wrap method."""
             return await func(*args, **kwargs)
 
-        wrapper.service_call = True  # type: ignore[attr-defined]
+        wrapper.__service = True  # type: ignore[attr-defined] # pylint: disable=protected-access
         return wrapper  # type: ignore[return-value]
 
     return decorator
+
+
+def service[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
+    """Mark function as service call."""
+    func.__service = True  # type: ignore[attr-defined] # pylint: disable=protected-access
+    return func
+
+
+def exception_wrap[_CallableT: Callable[..., Any], **_P, _R](
+    async_func: Callable[Concatenate[_CallableT, _P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[_CallableT, _P], Coroutine[Any, Any, _R]]:
+    """Define a wrapper to catch exceptions and raise HomeAssistant errors."""
+
+    async def _wrap(self: _CallableT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+        try:
+            return await async_func(self, *args, **kwargs)
+        except BaseHomematicException as bhe:
+            logging.getLogger(self.__module__).warning(reduce_args(args=bhe.args))
+            raise HaHomematicException(bhe) from bhe
+        except Exception as ex:
+            raise HaHomematicException(ex) from ex
+
+    _wrap.__service = True  # type: ignore[attr-defined] # pylint: disable=protected-access
+    return _wrap
 
 
 def get_service_calls(obj: object) -> dict[str, Callable]:
@@ -876,5 +900,5 @@ def get_service_calls(obj: object) -> dict[str, Callable]:
         for name in dir(obj)
         if not name.startswith("_")
         and callable(getattr(obj, name))
-        and hasattr(getattr(obj, name), "service_call")
+        and hasattr(getattr(obj, name), "__service")
     }

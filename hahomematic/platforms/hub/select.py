@@ -11,7 +11,7 @@ from typing import Final
 
 from hahomematic.const import HmPlatform
 from hahomematic.platforms.decorators import state_property
-from hahomematic.platforms.entity import service_call
+from hahomematic.platforms.entity import service
 from hahomematic.platforms.hub.entity import GenericSystemVariable
 from hahomematic.platforms.support import get_value_from_value_list
 
@@ -33,7 +33,7 @@ class HmSysvarSelect(GenericSystemVariable):
             return value
         return None
 
-    @service_call()
+    @service
     async def send_variable(self, value: int | str) -> None:
         """Set the value of the entity."""
         # We allow setting the value via index as well, just in case.
