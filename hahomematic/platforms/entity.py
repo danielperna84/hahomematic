@@ -846,7 +846,7 @@ def bind_collector(
                 )
             return return_value
 
-        setattr(func, "__service", True)
+        setattr(func, "ha_service", True)
         return wrapper  # type: ignore[return-value]
 
     return decorator
@@ -874,7 +874,7 @@ def service(level: int = logging.ERROR) -> Callable:
                     )
                 raise
 
-        setattr(func, "__service", True)
+        setattr(wrapper, "ha_service", True)
         return wrapper
 
     return decorator
@@ -887,5 +887,5 @@ def get_service_calls(obj: object) -> dict[str, Callable]:
         for name in dir(obj)
         if not name.startswith("_")
         and callable(getattr(obj, name))
-        and hasattr(getattr(obj, name), "__service")
+        and hasattr(getattr(obj, name), "ha_service")
     }
