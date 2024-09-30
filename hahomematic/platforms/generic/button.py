@@ -21,7 +21,7 @@ class HmButton(GenericEntity[None, bool]):
     _platform = HmPlatform.BUTTON
     _validate_state_change = False
 
-    @service
+    @service()
     async def press(self) -> None:
         """Handle the button press."""
         await self.send_value(value=True)

@@ -520,7 +520,7 @@ class HmDevice(PayloadMixin):
         if refresh_after_update_intervals:
             self._central.looper.create_task(target=refresh_data(), name="refresh_firmware_data")
 
-        return update_result
+        return update_result  # type: ignore[no-any-return]
 
     async def load_value_cache(self) -> None:
         """Init the parameter cache."""

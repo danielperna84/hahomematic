@@ -64,7 +64,7 @@ class HmProgramButton(GenericHubEntity):
         if do_update:
             self.fire_entity_updated_callback()
 
-    @service
+    @service()
     async def press(self) -> None:
         """Handle the button press."""
         await self.central.execute_program(pid=self.pid)

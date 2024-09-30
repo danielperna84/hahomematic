@@ -146,7 +146,7 @@ class GenericSystemVariable(GenericHubEntity):
 
         self.fire_entity_updated_callback()
 
-    @service
+    @service()
     async def send_variable(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
         if client := self.central.primary_client:

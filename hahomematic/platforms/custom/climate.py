@@ -228,17 +228,17 @@ class BaseClimateEntity(CustomEntity):
     ) -> None:
         """Set new preset mode."""
 
-    @service
+    @service()
     async def enable_away_mode_by_calendar(
         self, start: datetime, end: datetime, away_temperature: float
     ) -> None:
         """Enable the away mode by calendar on thermostat."""
 
-    @service
+    @service()
     async def enable_away_mode_by_duration(self, hours: int, away_temperature: float) -> None:
         """Enable the away mode by duration on thermostat."""
 
-    @service
+    @service()
     async def disable_away_mode(self) -> None:
         """Disable the away mode on thermostat."""
 
@@ -373,7 +373,7 @@ class CeRfThermostat(BaseClimateEntity):
         elif preset_mode == PresetMode.ECO:
             await self._e_lowering_mode.send_value(value=True, collector=collector)
 
-    @service
+    @service()
     async def enable_away_mode_by_calendar(
         self, start: datetime, end: datetime, away_temperature: float
     ) -> None:
@@ -385,7 +385,7 @@ class CeRfThermostat(BaseClimateEntity):
             value=_party_mode_code(start=start, end=end, away_temperature=away_temperature),
         )
 
-    @service
+    @service()
     async def enable_away_mode_by_duration(self, hours: int, away_temperature: float) -> None:
         """Enable the away mode by duration on thermostat."""
         start = datetime.now() - timedelta(minutes=10)
@@ -394,7 +394,7 @@ class CeRfThermostat(BaseClimateEntity):
             start=start, end=end, away_temperature=away_temperature
         )
 
-    @service
+    @service()
     async def disable_away_mode(self) -> None:
         """Disable the away mode on thermostat."""
         start = datetime.now() - timedelta(hours=11)
@@ -551,7 +551,7 @@ class CeIpThermostat(BaseClimateEntity):
             if profile_idx := self._profiles.get(preset_mode):
                 await self._e_active_profile.send_value(value=profile_idx, collector=collector)
 
-    @service
+    @service()
     async def enable_away_mode_by_calendar(
         self, start: datetime, end: datetime, away_temperature: float
     ) -> None:
@@ -567,7 +567,7 @@ class CeIpThermostat(BaseClimateEntity):
             },
         )
 
-    @service
+    @service()
     async def enable_away_mode_by_duration(self, hours: int, away_temperature: float) -> None:
         """Enable the away mode by duration on thermostat."""
         start = datetime.now() - timedelta(minutes=10)
@@ -576,7 +576,7 @@ class CeIpThermostat(BaseClimateEntity):
             start=start, end=end, away_temperature=away_temperature
         )
 
-    @service
+    @service()
     async def disable_away_mode(self) -> None:
         """Disable the away mode on thermostat."""
         await self._client.put_paramset(

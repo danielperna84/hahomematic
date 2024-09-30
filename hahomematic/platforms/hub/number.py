@@ -22,7 +22,7 @@ class HmSysvarNumber(GenericSystemVariable):
     _platform = HmPlatform.HUB_NUMBER
     _is_extended = True
 
-    @service
+    @service()
     async def send_variable(self, value: float) -> None:
         """Set the value of the entity."""
         if value is not None and self.max is not None and self.min is not None:

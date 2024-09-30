@@ -90,7 +90,7 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
                 event_data=self.get_event_data(new_value),
             )
 
-    @service
+    @service()
     async def send_value(
         self,
         value: InputParameterT,

@@ -33,7 +33,7 @@ class HmSysvarSelect(GenericSystemVariable):
             return value
         return None
 
-    @service
+    @service()
     async def send_variable(self, value: int | str) -> None:
         """Set the value of the entity."""
         # We allow setting the value via index as well, just in case.

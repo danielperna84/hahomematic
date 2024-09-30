@@ -1046,7 +1046,7 @@ class CentralUnit(PayloadMixin):
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear."""
         if client := self.primary_client:
-            return await client.execute_program(pid=pid)
+            return await client.execute_program(pid=pid)  # type: ignore[no-any-return]
         return False
 
     async def fetch_sysvar_data(self, scheduled: bool) -> None:
@@ -1093,7 +1093,7 @@ class CentralUnit(PayloadMixin):
                 self.name,
             )
             return False
-        return await self.get_client(interface_id=interface_id).set_install_mode(
+        return await self.get_client(interface_id=interface_id).set_install_mode(  # type: ignore[no-any-return]
             on=on, t=t, mode=mode, device_address=device_address
         )
 
