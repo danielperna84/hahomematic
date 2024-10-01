@@ -42,7 +42,7 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 from hahomematic.platforms.custom import definition as hmed, entity as hmce
-from hahomematic.platforms.decorators import info_property, state_property
+from hahomematic.platforms.decorators import info_property, service, state_property
 from hahomematic.platforms.entity import BaseParameterEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity
@@ -478,15 +478,16 @@ class HmDevice(PayloadMixin):
             for entity in self.generic_entities:
                 entity.fire_entity_updated_callback()
 
+    @service()
     async def export_device_definition(self) -> None:
         """Export the device definition for current device."""
         try:
             device_exporter = _DefinitionExporter(device=self)
             await device_exporter.export_data()
         except Exception as ex:
-            message = f"EXPORT_DEVICE_DEFINITION failed: {reduce_args(args=ex.args)}"
-            _LOGGER.warning(message)
-            raise HaHomematicException(message) from ex
+            raise HaHomematicException(
+                f"EXPORT_DEVICE_DEFINITION failed: {reduce_args(args=ex.args)}"
+            ) from ex
 
     def refresh_firmware_data(self) -> None:
         """Refresh firmware data of the device."""
