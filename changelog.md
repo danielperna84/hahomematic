@@ -3,6 +3,7 @@
 - Make UPDATEABLE optional due to homegear support
 - Raise exception on set_value, put_paramset
 - Improve logging when raising exception
+- Log exception at the most outer service
 
 # Version 2024.9.12 (2024-09-26)
 
