@@ -18,7 +18,7 @@ def measure_execution_time[_CallableT: Callable[..., Any]](func: _CallableT) -> 
     is_enabled = _LOGGER.isEnabledFor(level=logging.DEBUG)
 
     @wraps(func)
-    async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+    async def async_measure_wrapper(*args: Any, **kwargs: Any) -> Any:
         """Wrap method."""
         if is_enabled:
             start = datetime.now()
@@ -36,7 +36,7 @@ def measure_execution_time[_CallableT: Callable[..., Any]](func: _CallableT) -> 
                 )
 
     @wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
+    def measure_wrapper(*args: Any, **kwargs: Any) -> Any:
         """Wrap method."""
         if is_enabled:
             start = datetime.now()
@@ -54,5 +54,5 @@ def measure_execution_time[_CallableT: Callable[..., Any]](func: _CallableT) -> 
                 )
 
     if asyncio.iscoroutinefunction(func):
-        return async_wrapper  # type: ignore[return-value]
-    return wrapper  # type: ignore[return-value]
+        return async_measure_wrapper  # type: ignore[return-value]
+    return measure_wrapper  # type: ignore[return-value]

@@ -9,8 +9,13 @@ from slugify import slugify
 
 from hahomematic import central as hmcu
 from hahomematic.const import HUB_PATH, SYSVAR_ADDRESS, HubData, SystemVariableData
-from hahomematic.platforms.decorators import config_property, state_property
-from hahomematic.platforms.entity import CallbackEntity, get_service_calls, service_call
+from hahomematic.platforms.decorators import (
+    config_property,
+    get_service_calls,
+    service,
+    state_property,
+)
+from hahomematic.platforms.entity import CallbackEntity
 from hahomematic.platforms.support import PayloadMixin, generate_unique_id
 from hahomematic.support import parse_sys_var
 
@@ -146,7 +151,7 @@ class GenericSystemVariable(GenericHubEntity):
 
         self.fire_entity_updated_callback()
 
-    @service_call()
+    @service()
     async def send_variable(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
         if client := self.central.primary_client:

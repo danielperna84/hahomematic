@@ -38,8 +38,9 @@ from hahomematic.const import (
     SystemInformation,
     SystemVariableData,
 )
-from hahomematic.exceptions import BaseHomematicException, HaHomematicException, NoConnection
+from hahomematic.exceptions import BaseHomematicException, ClientException, NoConnection
 from hahomematic.performance import measure_execution_time
+from hahomematic.platforms.decorators import service
 from hahomematic.platforms.device import HmDevice
 from hahomematic.platforms.support import convert_value
 from hahomematic.support import (
@@ -321,22 +322,27 @@ class Client(ABC):
         """Send ping to CCU to generate PONG event."""
 
     @abstractmethod
+    @service()
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear.."""
 
     @abstractmethod
+    @service()
     async def set_system_variable(self, name: str, value: Any) -> bool:
         """Set a system variable on CCU / Homegear."""
 
     @abstractmethod
+    @service()
     async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
 
     @abstractmethod
+    @service()
     async def get_system_variable(self, name: str) -> str:
         """Get single system variable from CCU / Homegear."""
 
     @abstractmethod
+    @service()
     async def get_all_system_variables(
         self, include_internal: bool
     ) -> tuple[SystemVariableData, ...]:
@@ -388,6 +394,7 @@ class Client(ABC):
             )
         return None
 
+    @service()
     async def set_install_mode(
         self,
         on: bool = True,
@@ -407,22 +414,28 @@ class Client(ABC):
 
             await self._proxy.setInstallMode(*args)
         except BaseHomematicException as ex:
-            _LOGGER.warning("SET_INSTALL_MODE failed: %s [%s]", ex.name, reduce_args(args=ex.args))
-            return False
+            raise ClientException(f"SET_INSTALL_MODE failed: {reduce_args(args=ex.args)}") from ex
         return True
 
+    @service()
     async def get_install_mode(self) -> int:
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
         try:
             return await self._proxy.getInstallMode()  # type: ignore[no-any-return]
         except BaseHomematicException as ex:
-            _LOGGER.warning("GET_INSTALL_MODE failed: %s [%s]", ex.name, reduce_args(args=ex.args))
-        return 0
+            raise ClientException(f"GET_INSTALL_MODE failed: {reduce_args(args=ex.args)}") from ex
 
+    @service()
     async def get_link_peers(self, address: str) -> tuple[str, ...] | None:
         """Return a list of link pers."""
-        return tuple(await self._proxy.getLinkPeers(address))
+        try:
+            return tuple(await self._proxy.getLinkPeers(address))
+        except BaseHomematicException as ex:
+            raise ClientException(
+                f"GET_LINK_PEERS failed with for: {address}: {reduce_args(args=ex.args)}"
+            ) from ex
 
+    @service(log_level=logging.NOTSET)
     async def get_value(
         self,
         channel_address: str,
@@ -446,17 +459,12 @@ class Client(ABC):
             )
             return paramset.get(parameter)
         except BaseHomematicException as ex:
-            _LOGGER.debug(
-                "GET_VALUE failed with %s [%s]: %s, %s, %s",
-                ex.name,
-                reduce_args(args=ex.args),
-                channel_address,
-                parameter,
-                paramset_key,
-            )
-            raise
+            raise ClientException(
+                f"GET_VALUE failed with for: {channel_address}/{parameter}/{paramset_key}: {reduce_args(args=ex.args)}"
+            ) from ex
 
     @measure_execution_time
+    @service()
     async def _set_value(
         self,
         channel_address: str,
@@ -483,8 +491,7 @@ class Client(ABC):
                 if supports_rx_mode(command_rx_mode=rx_mode, rx_modes=device.rx_modes):
                     await self._proxy.setValue(channel_address, parameter, checked_value, rx_mode)
                 else:
-                    _LOGGER.warning("SET_VALUE failed: unsupported rx_mode: %s", rx_mode)
-                    return set()
+                    raise ClientException(f"Unsupported rx_mode: {rx_mode}")
             else:
                 await self._proxy.setValue(channel_address, parameter, checked_value)
             # store the send value in the last_value_send_cache
@@ -504,15 +511,9 @@ class Client(ABC):
                 )
             return entity_keys  # noqa: TRY300
         except BaseHomematicException as ex:
-            _LOGGER.warning(
-                "SET_VALUE failed with %s [%s]: %s, %s, %s",
-                ex.name,
-                reduce_args(args=ex.args),
-                channel_address,
-                parameter,
-                value,
-            )
-            return set()
+            raise ClientException(
+                f"SET_VALUE failed for {channel_address}/{parameter}/{value}: {reduce_args(args=ex.args)}"
+            ) from ex
 
     def _check_set_value(
         self, channel_address: str, paramset_key: ParamsetKey, parameter: str, value: Any
@@ -538,7 +539,7 @@ class Client(ABC):
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
         if paramset_key == ParamsetKey.VALUES:
-            return await self._set_value(
+            return await self._set_value(  # type: ignore[no-any-return]
                 channel_address=channel_address,
                 parameter=parameter,
                 value=value,
@@ -546,7 +547,7 @@ class Client(ABC):
                 rx_mode=rx_mode,
                 check_against_pd=check_against_pd,
             )
-        return await self.put_paramset(
+        return await self.put_paramset(  # type: ignore[no-any-return]
             channel_address=channel_address,
             paramset_key=paramset_key,
             values={parameter: value},
@@ -555,6 +556,7 @@ class Client(ABC):
             check_against_pd=check_against_pd,
         )
 
+    @service()
     async def get_paramset(self, address: str, paramset_key: ParamsetKey | str) -> dict[str, Any]:
         """
         Return a paramset from CCU.
@@ -570,16 +572,12 @@ class Client(ABC):
             )
             return await self._proxy_read.getParamset(address, paramset_key)  # type: ignore[no-any-return]
         except BaseHomematicException as ex:
-            _LOGGER.debug(
-                "GET_PARAMSET failed with %s [%s]: %s, %s",
-                ex.name,
-                reduce_args(args=ex.args),
-                address,
-                paramset_key,
-            )
-            raise
+            raise ClientException(
+                f"GET_PARAMSET failed with for {address}/{paramset_key}: {reduce_args(args=ex.args)}"
+            ) from ex
 
     @measure_execution_time
+    @service()
     async def put_paramset(
         self,
         channel_address: str,
@@ -614,7 +612,7 @@ class Client(ABC):
                         values=values,
                     )
                 else:
-                    raise HaHomematicException(
+                    raise ClientException(
                         "Parameter paramset_key is neither a valid ParamsetKey nor a channel address."
                     )
 
@@ -627,7 +625,7 @@ class Client(ABC):
                         channel_address, paramset_key, checked_values, rx_mode
                     )
                 else:
-                    raise HaHomematicException(f"Unsupported rx_mode: {rx_mode}")
+                    raise ClientException(f"Unsupported rx_mode: {rx_mode}")
             else:
                 await self._proxy.putParamset(channel_address, paramset_key, checked_values)
 
@@ -654,15 +652,9 @@ class Client(ABC):
                 )
             return entity_keys  # noqa: TRY300
         except BaseHomematicException as ex:
-            _LOGGER.warning(
-                "PUT_PARAMSET failed: %s [%s] %s, %s, %s",
-                ex.name,
-                reduce_args(args=ex.args),
-                channel_address,
-                paramset_key,
-                values,
-            )
-            return set()
+            raise ClientException(
+                f"PUT_PARAMSET failed for {channel_address}/{paramset_key}/{values}: {reduce_args(args=ex.args)}"
+            ) from ex
 
     def _check_put_paramset(
         self, channel_address: str, paramset_key: ParamsetKey, values: dict[str, Any]
@@ -703,12 +695,12 @@ class Client(ABC):
                 not bool(pd_operation := int(parameter_data["OPERATIONS"]) & operation)
                 and pd_operation
             ):
-                raise HaHomematicException(
+                raise ClientException(
                     f"Parameter {parameter} does not support the requested operation {operation.value}"
                 )
 
             return convert_value(value=value, target_type=pd_type, value_list=pd_value_list)
-        raise HaHomematicException(
+        raise ClientException(
             f"Parameter {parameter} could not be found: {self.interface_id}/{channel_address}/{paramset_key}"
         )
 
@@ -787,6 +779,7 @@ class Client(ABC):
             )
         return all_paramsets
 
+    @service()
     async def update_device_firmware(self, device_address: str) -> bool:
         """Update the firmware of a homematic device."""
         if device := self.central.get_device(address=device_address):
@@ -811,13 +804,10 @@ class Client(ABC):
                     "success" if result else "failed",
                 )
             except BaseHomematicException as ex:
-                _LOGGER.warning(
-                    "UPDATE_DEVICE_FIRMWARE failed: %s [%s]",
-                    ex.name,
-                    reduce_args(args=ex.args),
-                )
-            else:
-                return result
+                raise ClientException(
+                    f"UPDATE_DEVICE_FIRMWARE failed]: {reduce_args(args=ex.args)}"
+                ) from ex
+            return result
         return False
 
     async def update_paramset_descriptions(self, device_address: str) -> None:
@@ -931,23 +921,28 @@ class ClientCCU(Client):
         self.modified_at = INIT_DATETIME
         return False
 
+    @service()
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU."""
         return await self._json_rpc_client.execute_program(pid=pid)
 
     @measure_execution_time
+    @service()
     async def set_system_variable(self, name: str, value: Any) -> bool:
         """Set a system variable on CCU / Homegear."""
         return await self._json_rpc_client.set_system_variable(name=name, value=value)
 
+    @service()
     async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
         return await self._json_rpc_client.delete_system_variable(name=name)
 
+    @service()
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
         return await self._json_rpc_client.get_system_variable(name=name)
 
+    @service()
     async def get_all_system_variables(
         self, include_internal: bool
     ) -> tuple[SystemVariableData, ...]:
@@ -1047,42 +1042,45 @@ class ClientHomegear(Client):
         self.modified_at = INIT_DATETIME
         return False
 
+    @service()
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on Homegear."""
         return True
 
     @measure_execution_time
+    @service()
     async def set_system_variable(self, name: str, value: Any) -> bool:
         """Set a system variable on CCU / Homegear."""
         try:
             await self._proxy.setSystemVariable(name, value)
         except BaseHomematicException as ex:
-            _LOGGER.warning(
-                "SET_SYSTEM_VARIABLE failed: %s [%s]", ex.name, reduce_args(args=ex.args)
-            )
-            return False
+            raise ClientException(
+                f"SET_SYSTEM_VARIABLE failed: {reduce_args(args=ex.args)}"
+            ) from ex
         return True
 
+    @service()
     async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
         try:
             await self._proxy.deleteSystemVariable(name)
         except BaseHomematicException as ex:
-            _LOGGER.warning(
-                "DELETE_SYSTEM_VARIABLE failed: %s [%s]", ex.name, reduce_args(args=ex.args)
-            )
-            return False
+            raise ClientException(
+                f"DELETE_SYSTEM_VARIABLE failed: {reduce_args(args=ex.args)}"
+            ) from ex
         return True
 
+    @service()
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
         try:
             return await self._proxy.getSystemVariable(name)
         except BaseHomematicException as ex:
-            _LOGGER.warning(
-                "GET_SYSTEM_VARIABLE failed: %s [%s]", ex.name, reduce_args(args=ex.args)
-            )
+            raise ClientException(
+                f"GET_SYSTEM_VARIABLE failed: {reduce_args(args=ex.args)}"
+            ) from ex
 
+    @service()
     async def get_all_system_variables(
         self, include_internal: bool
     ) -> tuple[SystemVariableData, ...]:
@@ -1093,9 +1091,9 @@ class ClientHomegear(Client):
                 for name, value in hg_variables.items():
                     variables.append(SystemVariableData(name=name, value=value))
         except BaseHomematicException as ex:
-            _LOGGER.warning(
-                "GET_ALL_SYSTEM_VARIABLES failed: %s [%s]", ex.name, reduce_args(args=ex.args)
-            )
+            raise ClientException(
+                f"GET_ALL_SYSTEM_VARIABLES failed: {reduce_args(args=ex.args)}"
+            ) from ex
         return tuple(variables)
 
     async def get_all_programs(self, include_internal: bool) -> tuple[ProgramData, ...]:
@@ -1168,8 +1166,8 @@ class _ClientConfig:
             raise NoConnection(f"No connection to {self.interface_id}")
         except BaseHomematicException:
             raise
-        except Exception as exc:
-            raise NoConnection(f"Unable to connect {reduce_args(args=exc.args)}.") from exc
+        except Exception as ex:
+            raise NoConnection(f"Unable to connect {reduce_args(args=ex.args)}.") from ex
 
     async def get_xml_rpc_proxy(self, auth_enabled: bool | None = None) -> XmlRpcProxy:
         """Return a XmlRPC proxy for backend communication."""

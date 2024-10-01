@@ -40,9 +40,9 @@ from hahomematic.const import (
     ProductGroup,
     RxMode,
 )
-from hahomematic.exceptions import BaseHomematicException
+from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 from hahomematic.platforms.custom import definition as hmed, entity as hmce
-from hahomematic.platforms.decorators import info_property, state_property
+from hahomematic.platforms.decorators import info_property, service, state_property
 from hahomematic.platforms.entity import BaseParameterEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity
@@ -478,10 +478,16 @@ class HmDevice(PayloadMixin):
             for entity in self.generic_entities:
                 entity.fire_entity_updated_callback()
 
+    @service()
     async def export_device_definition(self) -> None:
         """Export the device definition for current device."""
-        device_exporter = _DefinitionExporter(device=self)
-        await device_exporter.export_data()
+        try:
+            device_exporter = _DefinitionExporter(device=self)
+            await device_exporter.export_data()
+        except Exception as ex:
+            raise HaHomematicException(
+                f"EXPORT_DEVICE_DEFINITION failed: {reduce_args(args=ex.args)}"
+            ) from ex
 
     def refresh_firmware_data(self) -> None:
         """Refresh firmware data of the device."""
@@ -515,7 +521,7 @@ class HmDevice(PayloadMixin):
         if refresh_after_update_intervals:
             self._central.looper.create_task(target=refresh_data(), name="refresh_firmware_data")
 
-        return update_result
+        return update_result  # type: ignore[no-any-return]
 
     async def load_value_cache(self) -> None:
         """Init the parameter cache."""

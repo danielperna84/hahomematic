@@ -391,11 +391,9 @@ class CentralUnit(PayloadMixin):
                 self._listen_port = xml_rpc_server.listen_port
                 self._xml_rpc_server.add_central(self)
         except OSError as oserr:
-            message = (
+            raise HaHomematicException(
                 f"START: Failed to start central unit {self.name}: {reduce_args(args=oserr.args)}"
-            )
-            _LOGGER.warning(message)
-            raise HaHomematicException(message) from oserr
+            ) from oserr
 
         await self._parameter_visibility.load()
         if self._config.start_direct:
@@ -644,20 +642,14 @@ class CentralUnit(PayloadMixin):
 
     async def validate_config_and_get_system_information(self) -> SystemInformation:
         """Validate the central configuration."""
-        try:
-            if len(self._config.interface_configs) == 0:
-                raise NoClients("validate_config: No clients defined.")
+        if len(self._config.interface_configs) == 0:
+            raise NoClients("validate_config: No clients defined.")
 
-            system_information = SystemInformation()
-            for interface_config in self._config.interface_configs:
-                client = await hmcl.create_client(central=self, interface_config=interface_config)
-                if not system_information.serial:
-                    system_information = client.system_information
-        except NoClients:
-            raise
-        except Exception as ex:
-            _LOGGER.warning(ex)
-            raise
+        system_information = SystemInformation()
+        for interface_config in self._config.interface_configs:
+            client = await hmcl.create_client(central=self, interface_config=interface_config)
+            if not system_information.serial:
+                system_information = client.system_information
         return system_information
 
     def get_client(self, interface_id: str) -> hmcl.Client:
@@ -1054,7 +1046,7 @@ class CentralUnit(PayloadMixin):
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear."""
         if client := self.primary_client:
-            return await client.execute_program(pid=pid)
+            return await client.execute_program(pid=pid)  # type: ignore[no-any-return]
         return False
 
     async def fetch_sysvar_data(self, scheduled: bool) -> None:
@@ -1101,7 +1093,7 @@ class CentralUnit(PayloadMixin):
                 self.name,
             )
             return False
-        return await self.get_client(interface_id=interface_id).set_install_mode(
+        return await self.get_client(interface_id=interface_id).set_install_mode(  # type: ignore[no-any-return]
             on=on, t=t, mode=mode, device_address=device_address
         )
 
@@ -1535,9 +1527,10 @@ class CentralConfig:
         try:
             self.check_config()
             return CentralUnit(self)
-        except BaseHomematicException as bhex:
-            _LOGGER.warning("CREATE_CENTRAL: Not able to create a central: %s", bhex)
-            raise
+        except BaseHomematicException as ex:
+            raise HaHomematicException(
+                f"CREATE_CENTRAL: Not able to create a central: : {reduce_args(args=ex.args)}"
+            ) from ex
 
 
 class CentralConnectionState:

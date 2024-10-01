@@ -7,7 +7,7 @@ See https://www.home-assistant.io/integrations/boton/.
 from __future__ import annotations
 
 from hahomematic.const import HmPlatform
-from hahomematic.platforms.entity import service_call
+from hahomematic.platforms.decorators import service
 from hahomematic.platforms.generic.entity import GenericEntity
 
 
@@ -21,7 +21,7 @@ class HmButton(GenericEntity[None, bool]):
     _platform = HmPlatform.BUTTON
     _validate_state_change = False
 
-    @service_call()
+    @service()
     async def press(self) -> None:
         """Handle the button press."""
         await self.send_value(value=True)
