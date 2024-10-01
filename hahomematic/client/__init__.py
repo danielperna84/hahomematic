@@ -435,7 +435,7 @@ class Client(ABC):
                 f"GET_LINK_PEERS failed with for: {address}: {reduce_args(args=ex.args)}"
             ) from ex
 
-    @service(level=logging.NOTSET)
+    @service(log_level=logging.NOTSET)
     async def get_value(
         self,
         channel_address: str,

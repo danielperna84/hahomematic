@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from contextvars import Token
 from datetime import datetime
 from enum import Enum
 from functools import wraps
 import logging
 from typing import Any, ParamSpec, TypeVar
 
+import hahomematic
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.support import reduce_args
 
@@ -129,7 +131,7 @@ def get_public_attributes_for_state_property(data_object: Any) -> dict[str, Any]
     )
 
 
-def service(level: int = logging.ERROR) -> Callable:
+def service(log_level: int = logging.ERROR) -> Callable:
     """Mark function as service call and log exceptions."""
 
     def service_decorator(func: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:
@@ -138,12 +140,20 @@ def service(level: int = logging.ERROR) -> Callable:
         @wraps(func)
         async def service_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             """Wrap service to log exception."""
+            token: Token | None = None
+            if not hahomematic.IN_SERVICE_VAR.get():
+                token = hahomematic.IN_SERVICE_VAR.set(True)
             try:
-                return await func(*args, **kwargs)
+                return_value = await func(*args, **kwargs)
+                if token:
+                    hahomematic.IN_SERVICE_VAR.reset(token)
+                return return_value  # noqa: TRY300
             except BaseHomematicException as bhe:
-                if level > logging.NOTSET:
+                if token:
+                    hahomematic.IN_SERVICE_VAR.reset(token)
+                if not hahomematic.IN_SERVICE_VAR.get() and log_level > logging.NOTSET:
                     logging.getLogger(args[0].__module__).log(
-                        level=level, msg=reduce_args(args=bhe.args)
+                        level=log_level, msg=reduce_args(args=bhe.args)
                     )
                 raise
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping
+from contextvars import Token
 from datetime import datetime
 from functools import partial, wraps
 from inspect import getfullargspec
@@ -12,6 +13,7 @@ from typing import Any, Final, cast
 
 import voluptuous as vol
 
+import hahomematic
 from hahomematic import central as hmcu, client as hmcl, support as hms
 from hahomematic.async_support import loop_check
 from hahomematic.config import WAIT_FOR_CALLBACK
@@ -750,9 +752,8 @@ class CallParameterCollector:
         """Init the generator."""
         self._client: Final = client
         self._central: Final = client.central
-        self._paramsets: Final[
-            dict[ParamsetKey, dict[int, dict[str, dict[str, Any]]]]
-        ] = {}  # {"VALUES": {50: {"00021BE9957782:3": {"STATE3": True}}}}
+        # {"VALUES": {50: {"00021BE9957782:3": {"STATE3": True}}}}
+        self._paramsets: Final[dict[ParamsetKey, dict[int, dict[str, dict[str, Any]]]]] = {}
 
     def add_entity(
         self,
@@ -833,16 +834,25 @@ def bind_collector(
         @wraps(func)
         async def bind_wrapper(*args: Any, **kwargs: Any) -> Any:
             """Wrap method to add collector."""
+            token: Token | None = None
+            if not hahomematic.IN_SERVICE_VAR.get():
+                token = hahomematic.IN_SERVICE_VAR.set(True)
             try:
                 if not enabled:
-                    return await func(*args, **kwargs)
+                    return_value = await func(*args, **kwargs)
+                    if token:
+                        hahomematic.IN_SERVICE_VAR.reset(token)
+                    return return_value
                 try:
                     collector_exists = args[argument_index] is not None
                 except IndexError:
                     collector_exists = kwargs.get(_COLLECTOR_ARGUMENT_NAME) is not None
 
                 if collector_exists:
-                    return await func(*args, **kwargs)
+                    return_value = await func(*args, **kwargs)
+                    if token:
+                        hahomematic.IN_SERVICE_VAR.reset(token)
+                    return return_value
                 collector = CallParameterCollector(client=args[0].channel.device.client)
                 kwargs[_COLLECTOR_ARGUMENT_NAME] = collector
                 return_value = await func(*args, **kwargs)
@@ -851,12 +861,18 @@ def bind_collector(
                     use_command_queue=use_command_queue,
                     use_put_paramset=use_put_paramset,
                 )
+                if token:
+                    hahomematic.IN_SERVICE_VAR.reset(token)
                 return return_value  # noqa:TRY300
             except BaseHomematicException as bhe:
-                if log_level > logging.NOTSET:
+                if token:
+                    hahomematic.IN_SERVICE_VAR.reset(token)
+                in_service = hahomematic.IN_SERVICE_VAR.get()
+                if not in_service and log_level > logging.NOTSET:
                     logging.getLogger(args[0].__module__).log(
                         level=log_level, msg=reduce_args(args=bhe.args)
                     )
+
             return None
 
         setattr(bind_wrapper, "ha_service", True)
