@@ -18,8 +18,8 @@ from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig
-from hahomematic.platforms.decorators import config_property, state_property
-from hahomematic.platforms.entity import CallParameterCollector, bind_collector, service
+from hahomematic.platforms.decorators import config_property, service, state_property
+from hahomematic.platforms.entity import CallParameterCollector, bind_collector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
 from hahomematic.platforms.generic.number import HmFloat, HmInteger

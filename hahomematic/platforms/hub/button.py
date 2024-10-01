@@ -10,8 +10,7 @@ from typing import Final
 
 from hahomematic import central as hmcu
 from hahomematic.const import PROGRAM_ADDRESS, HmPlatform, HubData, ProgramData
-from hahomematic.platforms.decorators import state_property
-from hahomematic.platforms.entity import get_service_calls, service
+from hahomematic.platforms.decorators import get_service_calls, service, state_property
 from hahomematic.platforms.hub.entity import GenericHubEntity
 
 

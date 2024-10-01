@@ -12,8 +12,8 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import ED, DeviceProfile, Field
 from hahomematic.platforms.custom.support import CustomConfig
-from hahomematic.platforms.decorators import state_property
-from hahomematic.platforms.entity import BaseEntity, CallParameterCollector, get_service_calls
+from hahomematic.platforms.decorators import get_service_calls, state_property
+from hahomematic.platforms.entity import BaseEntity, CallParameterCollector
 from hahomematic.platforms.generic import entity as hmge
 from hahomematic.platforms.support import (
     EntityNameData,

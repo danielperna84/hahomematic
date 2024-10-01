@@ -2,10 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from functools import wraps
+import logging
+from typing import Any, ParamSpec, TypeVar
+
+from hahomematic.exceptions import BaseHomematicException
+from hahomematic.support import reduce_args
+
+P = ParamSpec("P")
+T = TypeVar("T")
 
 
 # pylint: disable=invalid-name
@@ -119,3 +127,38 @@ def get_public_attributes_for_state_property(data_object: Any) -> dict[str, Any]
     return get_public_attributes_by_class_decorator(
         data_object=data_object, class_decorator=state_property
     )
+
+
+def service(level: int = logging.ERROR) -> Callable:
+    """Mark function as service call and log exceptions."""
+
+    def service_decorator(func: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:
+        """Decorate service."""
+
+        @wraps(func)
+        async def service_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+            """Wrap service to log exception."""
+            try:
+                return await func(*args, **kwargs)
+            except BaseHomematicException as bhe:
+                if level > logging.NOTSET:
+                    logging.getLogger(args[0].__module__).log(
+                        level=level, msg=reduce_args(args=bhe.args)
+                    )
+                raise
+
+        setattr(service_wrapper, "ha_service", True)
+        return service_wrapper
+
+    return service_decorator
+
+
+def get_service_calls(obj: object) -> dict[str, Callable]:
+    """Get all methods decorated with the "bind_collector" or "service_call"  decorator."""
+    return {
+        name: getattr(obj, name)
+        for name in dir(obj)
+        if not name.startswith("_")
+        and callable(getattr(obj, name))
+        and hasattr(getattr(obj, name), "ha_service")
+    }

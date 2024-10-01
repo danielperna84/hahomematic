@@ -7,7 +7,7 @@ See https://www.home-assistant.io/integrations/boton/.
 from __future__ import annotations
 
 from hahomematic.const import HmPlatform
-from hahomematic.platforms.entity import service
+from hahomematic.platforms.decorators import service
 from hahomematic.platforms.generic.entity import GenericEntity
 
 

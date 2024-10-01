@@ -20,8 +20,8 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.decorators import config_property, state_property
-from hahomematic.platforms.entity import CallbackEntity, get_service_calls
+from hahomematic.platforms.decorators import config_property, get_service_calls, state_property
+from hahomematic.platforms.entity import CallbackEntity
 from hahomematic.platforms.support import PayloadMixin, generate_unique_id
 
 

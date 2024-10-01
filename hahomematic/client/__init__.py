@@ -40,8 +40,8 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import BaseHomematicException, ClientException, NoConnection
 from hahomematic.performance import measure_execution_time
+from hahomematic.platforms.decorators import service
 from hahomematic.platforms.device import HmDevice
-from hahomematic.platforms.entity import service
 from hahomematic.platforms.support import convert_value
 from hahomematic.support import (
     build_headers,
@@ -435,7 +435,7 @@ class Client(ABC):
                 f"GET_LINK_PEERS failed with for: {address}: {reduce_args(args=ex.args)}"
             ) from ex
 
-    @service(level=logging.DEBUG)
+    @service(level=logging.NOTSET)
     async def get_value(
         self,
         channel_address: str,

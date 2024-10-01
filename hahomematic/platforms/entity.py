@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime
 from functools import partial, wraps
 from inspect import getfullargspec
 import logging
-from typing import Any, Final, ParamSpec, TypeVar, cast
+from typing import Any, Final, cast
 
 import voluptuous as vol
 
@@ -41,7 +41,7 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.decorators import config_property, state_property
+from hahomematic.platforms.decorators import config_property, get_service_calls, state_property
 from hahomematic.platforms.support import (
     EntityNameData,
     GenericParameterType,
@@ -750,7 +750,9 @@ class CallParameterCollector:
         """Init the generator."""
         self._client: Final = client
         self._central: Final = client.central
-        self._paramsets: Final[dict[ParamsetKey, dict[int, dict[str, dict[str, Any]]]]] = {}
+        self._paramsets: Final[
+            dict[ParamsetKey, dict[int, dict[str, dict[str, Any]]]]
+        ] = {}  # {"VALUES": {50: {"00021BE9957782:3": {"STATE3": True}}}}
 
     def add_entity(
         self,
@@ -816,26 +818,31 @@ def bind_collector(
     use_command_queue: bool = False,
     use_put_paramset: bool = True,
     enabled: bool = True,
+    log_level: int = logging.ERROR,
 ) -> Callable:
-    """Decorate function to automatically add collector if not set."""
+    """
+    Decorate function to automatically add collector if not set.
 
-    def decorator[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
+    Additionally, thrown exceptions are logged.
+    """
+
+    def bind_decorator[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
         """Decorate function to automatically add collector if not set."""
         argument_index = getfullargspec(func).args.index(_COLLECTOR_ARGUMENT_NAME)
 
         @wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        async def bind_wrapper(*args: Any, **kwargs: Any) -> Any:
             """Wrap method to add collector."""
-            if not enabled:
-                return await func(*args, **kwargs)
             try:
-                collector_exists = args[argument_index] is not None
-            except IndexError:
-                collector_exists = kwargs.get(_COLLECTOR_ARGUMENT_NAME) is not None
+                if not enabled:
+                    return await func(*args, **kwargs)
+                try:
+                    collector_exists = args[argument_index] is not None
+                except IndexError:
+                    collector_exists = kwargs.get(_COLLECTOR_ARGUMENT_NAME) is not None
 
-            if collector_exists:
-                return_value = await func(*args, **kwargs)
-            else:
+                if collector_exists:
+                    return await func(*args, **kwargs)
                 collector = CallParameterCollector(client=args[0].channel.device.client)
                 kwargs[_COLLECTOR_ARGUMENT_NAME] = collector
                 return_value = await func(*args, **kwargs)
@@ -844,48 +851,15 @@ def bind_collector(
                     use_command_queue=use_command_queue,
                     use_put_paramset=use_put_paramset,
                 )
-            return return_value
-
-        setattr(func, "ha_service", True)
-        return wrapper  # type: ignore[return-value]
-
-    return decorator
-
-
-P = ParamSpec("P")
-T = TypeVar("T")
-
-
-def service(level: int = logging.ERROR) -> Callable:
-    """Mark function as service call and log exceptions."""
-
-    def decorator(func: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:
-        """Decorate service."""
-
-        @wraps(func)
-        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-            """Wrap service to log exception."""
-            try:
-                return await func(*args, **kwargs)
+                return return_value  # noqa:TRY300
             except BaseHomematicException as bhe:
-                if level > logging.NOTSET:
+                if log_level > logging.NOTSET:
                     logging.getLogger(args[0].__module__).log(
-                        level=level, msg=reduce_args(args=bhe.args)
+                        level=log_level, msg=reduce_args(args=bhe.args)
                     )
-                raise
+            return None
 
-        setattr(wrapper, "ha_service", True)
-        return wrapper
+        setattr(bind_wrapper, "ha_service", True)
+        return bind_wrapper  # type: ignore[return-value]
 
-    return decorator
-
-
-def get_service_calls(obj: object) -> dict[str, Callable]:
-    """Get all methods decorated with the "bind_collector" or "service_call"  decorator."""
-    return {
-        name: getattr(obj, name)
-        for name in dir(obj)
-        if not name.startswith("_")
-        and callable(getattr(obj, name))
-        and hasattr(getattr(obj, name), "ha_service")
-    }
+    return bind_decorator
