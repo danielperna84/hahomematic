@@ -17,6 +17,7 @@ from typing import Final
 
 from hahomematic import central as hmcu
 
+# context var for storing if call is running within a service
 IN_SERVICE_VAR: ContextVar[bool] = ContextVar("in_service_var", default=False)
 
 if sys.stdout.isatty():
