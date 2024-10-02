@@ -772,14 +772,12 @@ class CallParameterCollector:
             entity.parameter
         ] = value
 
-    async def send_data(
-        self, wait_for_callback: int | None, use_command_queue: bool, use_put_paramset: bool
-    ) -> bool:
+    async def send_data(self, wait_for_callback: int | None, use_command_queue: bool) -> bool:
         """Send data to backend."""
         for paramset_key, paramsets in self._paramsets.items():  # pylint: disable=too-many-nested-blocks
             for paramset_no in dict(sorted(paramsets.items())).values():
                 for channel_address, paramset in paramset_no.items():
-                    if use_put_paramset is False or len(paramset.values()) == 1:
+                    if len(paramset.values()) == 1:
                         for parameter, value in paramset.items():
                             set_value_command = partial(
                                 self._client.set_value,
@@ -817,7 +815,6 @@ class CallParameterCollector:
 def bind_collector(
     wait_for_callback: int | None = WAIT_FOR_CALLBACK,
     use_command_queue: bool = False,
-    use_put_paramset: bool = True,
     enabled: bool = True,
     log_level: int = logging.ERROR,
 ) -> Callable:
@@ -859,7 +856,6 @@ def bind_collector(
                 await collector.send_data(
                     wait_for_callback=wait_for_callback,
                     use_command_queue=use_command_queue,
-                    use_put_paramset=use_put_paramset,
                 )
                 if token:
                     hahomematic.IN_SERVICE_VAR.reset(token)

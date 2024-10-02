@@ -176,7 +176,7 @@ class CeCover(CustomEntity):
             return
         await self._set_level(level=self._closed_level, collector=collector)
 
-    @bind_collector()
+    @bind_collector(enabled=False)
     async def stop(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion."""
         await self._e_stop.send_value(value=True, collector=collector)
@@ -550,7 +550,7 @@ class CeGarage(CustomEntity):
             return
         await self._e_door_command.send_value(value=GarageDoorCommand.CLOSE, collector=collector)
 
-    @bind_collector()
+    @bind_collector(enabled=False)
     async def stop(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion."""
         await self._e_door_command.send_value(value=GarageDoorCommand.STOP, collector=collector)
