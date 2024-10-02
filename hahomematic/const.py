@@ -23,6 +23,7 @@ DEFAULT_RECONNECT_WAIT: Final = 120  # wait with reconnect after a first ping wa
 DEFAULT_SYSVAR_SCAN_ENABLED: Final = True
 DEFAULT_TIMEOUT: Final = 60  # default timeout for a connection
 DEFAULT_TLS: Final = False
+DEFAULT_USE_COMMAND_QUEUE: Final = None
 DEFAULT_VERIFY_TLS: Final = False
 DEFAULT_WAIT_FOR_CALLBACK: Final[int | None] = None
 MAX_WAIT_FOR_CALLBACK: Final[int] = 600

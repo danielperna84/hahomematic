@@ -38,6 +38,7 @@ from hahomematic.const import (
     DEFAULT_PROGRAM_SCAN_ENABLED,
     DEFAULT_SYSVAR_SCAN_ENABLED,
     DEFAULT_TLS,
+    DEFAULT_USE_COMMAND_QUEUE,
     DEFAULT_VERIFY_TLS,
     ENTITY_EVENTS,
     ENTITY_KEY,
@@ -1423,6 +1424,7 @@ class CentralConfig:
         listen_ip_addr: str | None = None,
         listen_port: int | None = None,
         un_ignore_list: list[str] | None = None,
+        use_command_queue: bool | None = DEFAULT_USE_COMMAND_QUEUE,
         program_scan_enabled: bool = DEFAULT_PROGRAM_SCAN_ENABLED,
         include_internal_programs: bool = DEFAULT_INCLUDE_INTERNAL_PROGRAMS,
         sysvar_scan_enabled: bool = DEFAULT_SYSVAR_SCAN_ENABLED,
@@ -1449,6 +1451,7 @@ class CentralConfig:
         self.listen_ip_addr: Final = listen_ip_addr
         self.listen_port: Final = listen_port
         self.un_ignore_list: Final = un_ignore_list
+        self.use_command_queue: Final = use_command_queue
         self.program_scan_enabled: Final = program_scan_enabled
         self.include_internal_programs: Final = include_internal_programs
         self.sysvar_scan_enabled: Final = sysvar_scan_enabled
