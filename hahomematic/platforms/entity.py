@@ -20,6 +20,7 @@ from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import (
     CALLBACK_TYPE,
     DEFAULT_CUSTOM_ID,
+    DEFAULT_USE_COMMAND_QUEUE,
     ENTITY_KEY,
     EVENT_ADDRESS,
     EVENT_CHANNEL_NO,
@@ -51,7 +52,7 @@ from hahomematic.platforms.support import (
     convert_value,
     generate_unique_id,
 )
-from hahomematic.support import get_entity_key, reduce_args
+from hahomematic.support import get_device_address, get_entity_key, reduce_args
 import hahomematic.validator as val
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -772,8 +773,15 @@ class CallParameterCollector:
             entity.parameter
         ] = value
 
-    async def send_data(self, wait_for_callback: int | None, use_command_queue: bool) -> bool:
+    async def send_data(
+        self, wait_for_callback: int | None, use_command_queue: bool | None
+    ) -> bool:
         """Send data to backend."""
+        use_cq = (
+            use_command_queue
+            if use_command_queue is not None
+            else self._central.config.use_command_queue
+        )
         for paramset_key, paramsets in self._paramsets.items():  # pylint: disable=too-many-nested-blocks
             for paramset_no in dict(sorted(paramsets.items())).values():
                 for channel_address, paramset in paramset_no.items():
@@ -787,9 +795,9 @@ class CallParameterCollector:
                                 value=value,
                                 wait_for_callback=wait_for_callback,
                             )
-                            if use_command_queue:
+                            if use_cq:
                                 await self._central.command_queue_handler.put(
-                                    address=channel_address,
+                                    address=get_device_address(address=channel_address),
                                     command=set_value_command,
                                 )
                             elif not await set_value_command():
@@ -802,9 +810,9 @@ class CallParameterCollector:
                             values=paramset,
                             wait_for_callback=wait_for_callback,
                         )
-                        if use_command_queue:
+                        if use_cq:
                             await self._central.command_queue_handler.put(
-                                address=channel_address,
+                                address=get_device_address(address=channel_address),
                                 command=put_paramset_command,
                             )
                         elif not await put_paramset_command():
@@ -814,7 +822,7 @@ class CallParameterCollector:
 
 def bind_collector(
     wait_for_callback: int | None = WAIT_FOR_CALLBACK,
-    use_command_queue: bool = False,
+    use_command_queue: bool | None = DEFAULT_USE_COMMAND_QUEUE,
     enabled: bool = True,
     log_level: int = logging.ERROR,
 ) -> Callable:
