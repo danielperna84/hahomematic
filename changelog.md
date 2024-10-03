@@ -1,4 +1,4 @@
-# Version 2024.10.1 (2024-10-03)
+# Version 2024.10.0 (2024-10-03)
 
 - Add config option for max read workers
 - Disable collector for stop events
