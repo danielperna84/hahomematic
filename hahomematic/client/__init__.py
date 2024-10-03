@@ -15,6 +15,7 @@ from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT, WAIT_FOR_
 from hahomematic.const import (
     DATETIME_FORMAT_MILLIS,
     DEFAULT_CUSTOM_ID,
+    DEFAULT_MAX_WORKERS,
     ENTITY_KEY,
     EVENT_AVAILABLE,
     EVENT_SECONDS_SINCE_LAST_EVENT,
@@ -89,7 +90,8 @@ class Client(ABC):
             auth_enabled=self.system_information.auth_enabled
         )
         self._proxy_read = await self._config.get_xml_rpc_proxy(
-            auth_enabled=self.system_information.auth_enabled
+            auth_enabled=self.system_information.auth_enabled,
+            max_workers=self._config.max_read_workers,
         )
 
     @property
@@ -1129,6 +1131,7 @@ class _ClientConfig:
         self.interface_config: Final = interface_config
         self.interface: Final = interface_config.interface
         self.interface_id: Final = interface_config.interface_id
+        self.max_read_workers: Final[int] = central.config.max_read_workers
         self.has_credentials: Final[bool] = (
             central.config.username is not None and central.config.password is not None
         )
@@ -1169,7 +1172,9 @@ class _ClientConfig:
         except Exception as ex:
             raise NoConnection(f"Unable to connect {reduce_args(args=ex.args)}.") from ex
 
-    async def get_xml_rpc_proxy(self, auth_enabled: bool | None = None) -> XmlRpcProxy:
+    async def get_xml_rpc_proxy(
+        self, auth_enabled: bool | None = None, max_workers: int = DEFAULT_MAX_WORKERS
+    ) -> XmlRpcProxy:
         """Return a XmlRPC proxy for backend communication."""
         central_config = self.central.config
         xml_rpc_headers = (
@@ -1181,7 +1186,7 @@ class _ClientConfig:
             else []
         )
         xml_proxy = XmlRpcProxy(
-            max_workers=1,
+            max_workers=max_workers,
             interface_id=self.interface_id,
             connection_state=central_config.connection_state,
             uri=self.xml_rpc_uri,
@@ -1194,22 +1199,7 @@ class _ClientConfig:
 
     async def _get_simple_xml_rpc_proxy(self) -> XmlRpcProxy:
         """Return a XmlRPC proxy for backend communication."""
-        central_config = self.central.config
-        xml_rpc_headers = build_headers(
-            username=central_config.username,
-            password=central_config.password,
-        )
-        xml_proxy = XmlRpcProxy(
-            max_workers=0,
-            interface_id=self.interface_id,
-            connection_state=central_config.connection_state,
-            uri=self.xml_rpc_uri,
-            headers=xml_rpc_headers,
-            tls=central_config.tls,
-            verify_tls=central_config.verify_tls,
-        )
-        await xml_proxy.do_init()
-        return xml_proxy
+        return await self.get_xml_rpc_proxy(auth_enabled=True, max_workers=0)
 
 
 class InterfaceConfig:

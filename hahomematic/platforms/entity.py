@@ -772,52 +772,32 @@ class CallParameterCollector:
             entity.parameter
         ] = value
 
-    async def send_data(
-        self, wait_for_callback: int | None, use_command_queue: bool, use_put_paramset: bool
-    ) -> bool:
+    async def send_data(self, wait_for_callback: int | None) -> bool:
         """Send data to backend."""
-        for paramset_key, paramsets in self._paramsets.items():  # pylint: disable=too-many-nested-blocks
+        for paramset_key, paramsets in self._paramsets.items():
             for paramset_no in dict(sorted(paramsets.items())).values():
                 for channel_address, paramset in paramset_no.items():
-                    if use_put_paramset is False or len(paramset.values()) == 1:
+                    if len(paramset.values()) == 1:
                         for parameter, value in paramset.items():
-                            set_value_command = partial(
-                                self._client.set_value,
+                            await self._client.set_value(
                                 channel_address=channel_address,
                                 paramset_key=paramset_key,
                                 parameter=parameter,
                                 value=value,
                                 wait_for_callback=wait_for_callback,
                             )
-                            if use_command_queue:
-                                await self._central.command_queue_handler.put(
-                                    address=channel_address,
-                                    command=set_value_command,
-                                )
-                            elif not await set_value_command():
-                                return False  # pragma: no cover
                     else:
-                        put_paramset_command = partial(
-                            self._client.put_paramset,
+                        await self._client.put_paramset(
                             channel_address=channel_address,
                             paramset_key=paramset_key,
                             values=paramset,
                             wait_for_callback=wait_for_callback,
                         )
-                        if use_command_queue:
-                            await self._central.command_queue_handler.put(
-                                address=channel_address,
-                                command=put_paramset_command,
-                            )
-                        elif not await put_paramset_command():
-                            return False  # pragma: no cover
         return True
 
 
 def bind_collector(
     wait_for_callback: int | None = WAIT_FOR_CALLBACK,
-    use_command_queue: bool = False,
-    use_put_paramset: bool = True,
     enabled: bool = True,
     log_level: int = logging.ERROR,
 ) -> Callable:
@@ -856,11 +836,7 @@ def bind_collector(
                 collector = CallParameterCollector(client=args[0].channel.device.client)
                 kwargs[_COLLECTOR_ARGUMENT_NAME] = collector
                 return_value = await func(*args, **kwargs)
-                await collector.send_data(
-                    wait_for_callback=wait_for_callback,
-                    use_command_queue=use_command_queue,
-                    use_put_paramset=use_put_paramset,
-                )
+                await collector.send_data(wait_for_callback=wait_for_callback)
                 if token:
                     hahomematic.IN_SERVICE_VAR.reset(token)
                 return return_value  # noqa:TRY300

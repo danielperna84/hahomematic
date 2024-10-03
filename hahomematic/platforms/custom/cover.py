@@ -176,7 +176,7 @@ class CeCover(CustomEntity):
             return
         await self._set_level(level=self._closed_level, collector=collector)
 
-    @bind_collector()
+    @bind_collector(enabled=False)
     async def stop(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion."""
         await self._e_stop.send_value(value=True, collector=collector)
@@ -339,7 +339,8 @@ class CeBlind(CeCover):
         if self._e_combined.is_hmtype and (
             combined_parameter := self._get_combined_value(level=level, tilt_level=tilt_level)
         ):
-            await self._e_combined.send_value(value=combined_parameter, collector=collector)
+            # don't use collector for blind combined parameter
+            await self._e_combined.send_value(value=combined_parameter, collector=None)
             return
 
         await self._e_level_2.send_value(value=tilt_level, collector=collector)
@@ -373,10 +374,9 @@ class CeBlind(CeCover):
         async with self._command_processing_lock:
             await self._stop(collector=collector)
 
-    @bind_collector()
+    @bind_collector(enabled=False)
     async def _stop(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion. Do only call with _command_processing_lock held."""
-        self.central.command_queue_handler.empty_queue(address=self._channel.address)
         await super().stop(collector=collector)
 
     @bind_collector(enabled=False)
@@ -550,7 +550,7 @@ class CeGarage(CustomEntity):
             return
         await self._e_door_command.send_value(value=GarageDoorCommand.CLOSE, collector=collector)
 
-    @bind_collector()
+    @bind_collector(enabled=False)
     async def stop(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion."""
         await self._e_door_command.send_value(value=GarageDoorCommand.STOP, collector=collector)
