@@ -1,5 +1,6 @@
 # Version 2024.10.1 (2024-10-03)
 
+- Add config option for max read workers
 - Disable collector for stop events
 - Improve logging when raising exception
 - Log exception at the most outer service
