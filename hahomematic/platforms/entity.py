@@ -20,7 +20,6 @@ from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import (
     CALLBACK_TYPE,
     DEFAULT_CUSTOM_ID,
-    DEFAULT_USE_COMMAND_QUEUE,
     ENTITY_KEY,
     EVENT_ADDRESS,
     EVENT_CHANNEL_NO,
@@ -52,7 +51,7 @@ from hahomematic.platforms.support import (
     convert_value,
     generate_unique_id,
 )
-from hahomematic.support import get_device_address, get_entity_key, reduce_args
+from hahomematic.support import get_entity_key, reduce_args
 import hahomematic.validator as val
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -773,56 +772,32 @@ class CallParameterCollector:
             entity.parameter
         ] = value
 
-    async def send_data(
-        self, wait_for_callback: int | None, use_command_queue: bool | None
-    ) -> bool:
+    async def send_data(self, wait_for_callback: int | None) -> bool:
         """Send data to backend."""
-        use_cq = (
-            use_command_queue
-            if use_command_queue is not None
-            else self._central.config.use_command_queue
-        )
-        for paramset_key, paramsets in self._paramsets.items():  # pylint: disable=too-many-nested-blocks
+        for paramset_key, paramsets in self._paramsets.items():
             for paramset_no in dict(sorted(paramsets.items())).values():
                 for channel_address, paramset in paramset_no.items():
                     if len(paramset.values()) == 1:
                         for parameter, value in paramset.items():
-                            set_value_command = partial(
-                                self._client.set_value,
+                            await self._client.set_value(
                                 channel_address=channel_address,
                                 paramset_key=paramset_key,
                                 parameter=parameter,
                                 value=value,
                                 wait_for_callback=wait_for_callback,
                             )
-                            if use_cq:
-                                await self._central.command_queue_handler.put(
-                                    address=get_device_address(address=channel_address),
-                                    command=set_value_command,
-                                )
-                            elif not await set_value_command():
-                                return False  # pragma: no cover
                     else:
-                        put_paramset_command = partial(
-                            self._client.put_paramset,
+                        await self._client.put_paramset(
                             channel_address=channel_address,
                             paramset_key=paramset_key,
                             values=paramset,
                             wait_for_callback=wait_for_callback,
                         )
-                        if use_cq:
-                            await self._central.command_queue_handler.put(
-                                address=get_device_address(address=channel_address),
-                                command=put_paramset_command,
-                            )
-                        elif not await put_paramset_command():
-                            return False  # pragma: no cover
         return True
 
 
 def bind_collector(
     wait_for_callback: int | None = WAIT_FOR_CALLBACK,
-    use_command_queue: bool | None = DEFAULT_USE_COMMAND_QUEUE,
     enabled: bool = True,
     log_level: int = logging.ERROR,
 ) -> Callable:
@@ -861,10 +836,7 @@ def bind_collector(
                 collector = CallParameterCollector(client=args[0].channel.device.client)
                 kwargs[_COLLECTOR_ARGUMENT_NAME] = collector
                 return_value = await func(*args, **kwargs)
-                await collector.send_data(
-                    wait_for_callback=wait_for_callback,
-                    use_command_queue=use_command_queue,
-                )
+                await collector.send_data(wait_for_callback=wait_for_callback)
                 if token:
                     hahomematic.IN_SERVICE_VAR.reset(token)
                 return return_value  # noqa:TRY300

@@ -26,7 +26,6 @@ from hahomematic.caches.dynamic import CentralDataCache, DeviceDetailsCache
 from hahomematic.caches.persistent import DeviceDescriptionCache, ParamsetDescriptionCache
 from hahomematic.caches.visibility import ParameterVisibilityCache
 from hahomematic.central import xml_rpc_server as xmlrpc
-from hahomematic.central.command_queue import CommandQueueHandler
 from hahomematic.central.decorators import callback_backend_system, callback_event
 from hahomematic.client.json_rpc import JsonRpcAioHttpClient
 from hahomematic.client.xml_rpc import XmlRpcProxy
@@ -35,10 +34,10 @@ from hahomematic.const import (
     DATETIME_FORMAT_MILLIS,
     DEFAULT_INCLUDE_INTERNAL_PROGRAMS,
     DEFAULT_INCLUDE_INTERNAL_SYSVARS,
+    DEFAULT_MAX_READ_WORKERS,
     DEFAULT_PROGRAM_SCAN_ENABLED,
     DEFAULT_SYSVAR_SCAN_ENABLED,
     DEFAULT_TLS,
-    DEFAULT_USE_COMMAND_QUEUE,
     DEFAULT_VERIFY_TLS,
     ENTITY_EVENTS,
     ENTITY_KEY,
@@ -156,7 +155,6 @@ class CentralUnit(PayloadMixin):
 
         CENTRAL_INSTANCES[self.name] = self
         self._connection_checker: Final = ConnectionChecker(central=self)
-        self._command_queue_handler: Final = CommandQueueHandler()
         self._hub: Hub = Hub(central=self)
         self._version: str | None = None
         # store last event received datetime by interface
@@ -184,11 +182,6 @@ class CentralUnit(PayloadMixin):
     def clients(self) -> tuple[hmcl.Client, ...]:
         """Return all clients."""
         return tuple(self._clients.values())
-
-    @property
-    def command_queue_handler(self) -> CommandQueueHandler:
-        """Return the que handler for send commands."""
-        return self._command_queue_handler
 
     @property
     def config(self) -> CentralConfig:
@@ -435,8 +428,6 @@ class CentralUnit(PayloadMixin):
         _LOGGER.debug("STOP: Removing instance")
         if self.name in CENTRAL_INSTANCES:
             del CENTRAL_INSTANCES[self.name]
-
-        await self._command_queue_handler.stop()
 
         # wait until tasks are finished
         await self.looper.block_till_done()
@@ -1423,8 +1414,8 @@ class CentralConfig:
         json_port: int | None = None,
         listen_ip_addr: str | None = None,
         listen_port: int | None = None,
+        max_read_workers: int = DEFAULT_MAX_READ_WORKERS,
         un_ignore_list: list[str] | None = None,
-        use_command_queue: bool | None = DEFAULT_USE_COMMAND_QUEUE,
         program_scan_enabled: bool = DEFAULT_PROGRAM_SCAN_ENABLED,
         include_internal_programs: bool = DEFAULT_INCLUDE_INTERNAL_PROGRAMS,
         sysvar_scan_enabled: bool = DEFAULT_SYSVAR_SCAN_ENABLED,
@@ -1450,8 +1441,8 @@ class CentralConfig:
         self.json_port: Final = json_port
         self.listen_ip_addr: Final = listen_ip_addr
         self.listen_port: Final = listen_port
+        self.max_read_workers = max_read_workers
         self.un_ignore_list: Final = un_ignore_list
-        self.use_command_queue: Final = use_command_queue
         self.program_scan_enabled: Final = program_scan_enabled
         self.include_internal_programs: Final = include_internal_programs
         self.sysvar_scan_enabled: Final = sysvar_scan_enabled
