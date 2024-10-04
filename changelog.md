@@ -4,7 +4,7 @@
 - Disable collector for stop events
 - Improve logging when raising exception
 - Log exception at the most outer service
-- Make UPDATEABLE optional due to homegear support
+- Make UPDATEABLE and DEFAULT optional due to homegear support
 - Raise exception on set_value, put_paramset
 - Remove command queue
 

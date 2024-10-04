@@ -93,7 +93,7 @@ class HmDevice(PayloadMixin):
         self._device_updated_callbacks: Final[list[Callable]] = []
         self._firmware_update_callbacks: Final[list[Callable]] = []
         self._model: Final = self._description["TYPE"]
-        self._is_updatable: Final = self._description.get("UPDATABLE", False)
+        self._is_updatable: Final = self._description.get("UPDATABLE") or False
         self._rx_modes: Final = get_rx_modes(mode=self._description.get("RX_MODE", 0))
         self._sub_model: Final = self._description.get("SUBTYPE")
         self._ignore_for_custom_entity: Final[bool] = (
