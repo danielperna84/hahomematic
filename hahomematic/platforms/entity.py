@@ -430,7 +430,7 @@ class BaseParameterEntity[
         )
         self._max: ParameterT = self._convert_value(parameter_data["MAX"])
         self._min: ParameterT = self._convert_value(parameter_data["MIN"])
-        self._default: ParameterT = self._convert_value(parameter_data["DEFAULT"])
+        self._default: ParameterT = self._convert_value(parameter_data.get("DEFAULT")) or self._min
         flags: int = parameter_data["FLAGS"]
         self._visible: bool = flags & Flag.VISIBLE == Flag.VISIBLE
         self._service: bool = flags & Flag.SERVICE == Flag.SERVICE
