@@ -1,10 +1,15 @@
+# Version 2024.10.1 (2024-10-04)
+
+- Fix rx_mode lazy_config
+- Make DEFAULT optional due to homegear support
+
 # Version 2024.10.0 (2024-10-03)
 
 - Add config option for max read workers
 - Disable collector for stop events
 - Improve logging when raising exception
 - Log exception at the most outer service
-- Make UPDATEABLE and DEFAULT optional due to homegear support
+- Make UPDATEABLE optional due to homegear support
 - Raise exception on set_value, put_paramset
 - Remove command queue
 
