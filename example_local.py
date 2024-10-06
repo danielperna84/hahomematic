@@ -11,7 +11,7 @@ from unittest.mock import patch
 from hahomematic import config, const
 from hahomematic.central import CentralConfig
 from hahomematic.client import InterfaceConfig, _ClientConfig
-from hahomematic.platforms.custom.definition import validate_entity_definition
+from hahomematic.platforms.custom import validate_entity_definition
 from hahomematic_support.client_local import ClientLocal, LocalRessources
 
 logging.basicConfig(level=logging.INFO)

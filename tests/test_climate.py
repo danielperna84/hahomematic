@@ -13,7 +13,7 @@ from hahomematic.central import CentralUnit
 from hahomematic.client import Client
 from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import EntityUsage, ParamsetKey
-from hahomematic.platforms.custom.climate import (
+from hahomematic.platforms.custom import (
     CeIpThermostat,
     CeRfThermostat,
     CeSimpleRfThermostat,

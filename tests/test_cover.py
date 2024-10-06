@@ -12,16 +12,12 @@ from hahomematic.central import CentralUnit
 from hahomematic.client import Client
 from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import EntityUsage, ParamsetKey
+from hahomematic.platforms.custom import CeBlind, CeCover, CeGarage, CeIpBlind, CeWindowDrive
 from hahomematic.platforms.custom.cover import (
     _CLOSED_LEVEL,
     _OPEN_LEVEL,
     _OPEN_TILT_LEVEL,
     _WD_CLOSED_LEVEL,
-    CeBlind,
-    CeCover,
-    CeGarage,
-    CeIpBlind,
-    CeWindowDrive,
     GarageDoorActivity,
 )
 

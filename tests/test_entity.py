@@ -11,11 +11,11 @@ from hahomematic.caches.visibility import check_ignore_parameters_is_clean
 from hahomematic.central import CentralUnit
 from hahomematic.client import Client
 from hahomematic.const import CallSource, EntityUsage
-from hahomematic.platforms.custom.definition import (
+from hahomematic.platforms.custom import (
+    CeSwitch,
     get_required_parameters,
     validate_entity_definition,
 )
-from hahomematic.platforms.custom.switch import CeSwitch
 from hahomematic.platforms.generic import HmSensor, HmSwitch
 
 from tests import const, helper

@@ -16,7 +16,7 @@ from hahomematic.const import (
     Parameter,
     ParamsetKey,
 )
-from hahomematic.platforms.custom.definition import get_required_parameters
+from hahomematic.platforms.custom import get_required_parameters
 from hahomematic.support import element_matches_key, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)

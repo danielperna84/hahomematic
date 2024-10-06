@@ -72,8 +72,7 @@ from hahomematic.exceptions import (
 )
 from hahomematic.performance import measure_execution_time
 from hahomematic.platforms import create_entities_and_events
-from hahomematic.platforms.custom import create_custom_entities
-from hahomematic.platforms.custom.entity import CustomEntity
+from hahomematic.platforms.custom import CustomEntity, create_custom_entities
 from hahomematic.platforms.decorators import info_property
 from hahomematic.platforms.device import HmDevice
 from hahomematic.platforms.entity import BaseParameterEntity, CallbackEntity
@@ -105,8 +104,6 @@ INTERFACE_EVENT_SCHEMA = vol.Schema(
         ),
     }
 )
-
-__all__ = ["CentralUnit", "CentralConfig", "CentralConnectionState"]
 
 
 class CentralUnit(PayloadMixin):

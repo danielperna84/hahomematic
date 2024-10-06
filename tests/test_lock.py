@@ -11,7 +11,7 @@ from hahomematic.central import CentralUnit
 from hahomematic.client import Client
 from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import EntityUsage
-from hahomematic.platforms.custom.lock import CeIpLock, CeRfLock
+from hahomematic.platforms.custom import CeIpLock, CeRfLock
 
 from tests import const, helper
 

@@ -16,7 +16,7 @@ from hahomematic import const as hahomematic_const
 from hahomematic.central import CentralConfig, CentralUnit
 from hahomematic.client import Client, InterfaceConfig, _ClientConfig
 from hahomematic.const import BackendSystemEvent, InterfaceName
-from hahomematic.platforms.custom.entity import CustomEntity
+from hahomematic.platforms.custom import CustomEntity
 from hahomematic.platforms.decorators import get_public_attributes_by_class_decorator
 from hahomematic_support.client_local import ClientLocal, LocalRessources
 

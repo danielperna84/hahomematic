@@ -18,7 +18,12 @@ from hahomematic.platforms.custom.climate import (
     PresetMode,
 )
 from hahomematic.platforms.custom.cover import CeBlind, CeCover, CeGarage, CeIpBlind, CeWindowDrive
-from hahomematic.platforms.custom.definition import entity_definition_exists, get_custom_configs
+from hahomematic.platforms.custom.definition import (
+    entity_definition_exists,
+    get_custom_configs,
+    get_required_parameters,
+    validate_entity_definition,
+)
 from hahomematic.platforms.custom.light import (
     CeColorDimmer,
     CeColorDimmerEffect,
@@ -71,6 +76,8 @@ __all__ = [
     "PRESET_MODE_PREFIX",
     "PresetMode",
     "SirenOnArgs",
+    "get_required_parameters",
+    "validate_entity_definition",
 ]
 
 _LOGGER: Final = logging.getLogger(__name__)
