@@ -2,6 +2,7 @@
 
 - Fix rx_mode lazy_config
 - Make DEFAULT optional due to homegear support
+- Move context var to own module
 
 # Version 2024.10.0 (2024-10-03)
 

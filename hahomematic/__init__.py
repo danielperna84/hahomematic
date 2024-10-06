@@ -8,7 +8,6 @@ https://github.com/danielperna84/hahomematic
 from __future__ import annotations
 
 import asyncio
-from contextvars import ContextVar
 import logging
 import signal
 import sys
@@ -16,9 +15,6 @@ import threading
 from typing import Final
 
 from hahomematic import central as hmcu
-
-# context var for storing if call is running within a service
-IN_SERVICE_VAR: ContextVar[bool] = ContextVar("in_service_var", default=False)
 
 if sys.stdout.isatty():
     logging.basicConfig(level=logging.INFO)

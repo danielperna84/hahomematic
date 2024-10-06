@@ -13,7 +13,6 @@ from typing import Any, Final, cast
 
 import voluptuous as vol
 
-import hahomematic
 from hahomematic import central as hmcu, client as hmcl, support as hms
 from hahomematic.async_support import loop_check
 from hahomematic.config import WAIT_FOR_CALLBACK
@@ -41,6 +40,7 @@ from hahomematic.const import (
     ParameterType,
     ParamsetKey,
 )
+from hahomematic.context import IN_SERVICE_VAR
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property, get_service_calls, state_property
@@ -815,13 +815,13 @@ def bind_collector(
         async def bind_wrapper(*args: Any, **kwargs: Any) -> Any:
             """Wrap method to add collector."""
             token: Token | None = None
-            if not hahomematic.IN_SERVICE_VAR.get():
-                token = hahomematic.IN_SERVICE_VAR.set(True)
+            if not IN_SERVICE_VAR.get():
+                token = IN_SERVICE_VAR.set(True)
             try:
                 if not enabled:
                     return_value = await func(*args, **kwargs)
                     if token:
-                        hahomematic.IN_SERVICE_VAR.reset(token)
+                        IN_SERVICE_VAR.reset(token)
                     return return_value
                 try:
                     collector_exists = args[argument_index] is not None
@@ -831,19 +831,19 @@ def bind_collector(
                 if collector_exists:
                     return_value = await func(*args, **kwargs)
                     if token:
-                        hahomematic.IN_SERVICE_VAR.reset(token)
+                        IN_SERVICE_VAR.reset(token)
                     return return_value
                 collector = CallParameterCollector(client=args[0].channel.device.client)
                 kwargs[_COLLECTOR_ARGUMENT_NAME] = collector
                 return_value = await func(*args, **kwargs)
                 await collector.send_data(wait_for_callback=wait_for_callback)
                 if token:
-                    hahomematic.IN_SERVICE_VAR.reset(token)
+                    IN_SERVICE_VAR.reset(token)
                 return return_value  # noqa:TRY300
             except BaseHomematicException as bhe:
                 if token:
-                    hahomematic.IN_SERVICE_VAR.reset(token)
-                in_service = hahomematic.IN_SERVICE_VAR.get()
+                    IN_SERVICE_VAR.reset(token)
+                in_service = IN_SERVICE_VAR.get()
                 if not in_service and log_level > logging.NOTSET:
                     logging.getLogger(args[0].__module__).log(
                         level=log_level, msg=reduce_args(args=bhe.args)
