@@ -27,10 +27,10 @@ from hahomematic.platforms.hub.switch import HmSysvarSwitch
 from hahomematic.platforms.hub.text import HmSysvarText
 
 __all__ = [
-    "HmSysvarBinarySensor",
-    "HmProgramButton",
     "GenericHubEntity",
     "GenericSystemVariable",
+    "HmProgramButton",
+    "HmSysvarBinarySensor",
     "HmSysvarNumber",
     "HmSysvarSelect",
     "HmSysvarSensor",

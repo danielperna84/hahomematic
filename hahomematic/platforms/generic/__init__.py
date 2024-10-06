@@ -40,6 +40,7 @@ _SWITCH_ENTITY_TO_SENSOR: Final[Mapping[str | tuple[str, ...], Parameter]] = {
 GenericEntity = hmge.GenericEntity
 __all__ = [
     "BaseNumber",
+    "GenericEntity",
     "HmAction",
     "HmBinarySensor",
     "HmButton",
@@ -49,7 +50,6 @@ __all__ = [
     "HmSensor",
     "HmSwitch",
     "HmText",
-    "GenericEntity",
 ]
 
 
