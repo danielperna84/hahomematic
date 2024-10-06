@@ -427,9 +427,9 @@ def _make_value_hashable(value: Any) -> Any:
 def get_rx_modes(mode: int) -> tuple[RxMode, ...]:
     """Convert int to rx modes."""
     rx_modes: set[RxMode] = set()
-    if mode == 10:
+    if mode & RxMode.LAZY_CONFIG:
+        mode -= RxMode.LAZY_CONFIG
         rx_modes.add(RxMode.LAZY_CONFIG)
-        return tuple(rx_modes)
     if mode & RxMode.WAKEUP:
         mode -= RxMode.WAKEUP
         rx_modes.add(RxMode.WAKEUP)

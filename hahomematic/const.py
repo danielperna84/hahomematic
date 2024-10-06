@@ -398,7 +398,7 @@ class RxMode(IntEnum):
     BURST = 2
     CONFIG = 4
     WAKEUP = 8
-    LAZY_CONFIG = 10
+    LAZY_CONFIG = 16
 
 
 class CommandRxMode(StrEnum):
