@@ -18,10 +18,8 @@ from hahomematic.platforms.custom import (
     CeDimmer,
     CeIpFixedColorLight,
     CeIpRGBWLight,
-    ColorBehaviour,
-    FixedColor,
-    TimeUnit,
 )
+from hahomematic.platforms.custom.light import ColorBehaviour, FixedColor, TimeUnit
 
 from tests import const, helper
 

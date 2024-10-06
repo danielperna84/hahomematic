@@ -19,9 +19,9 @@ from hahomematic.platforms.custom import (
     CeSimpleRfThermostat,
     HvacAction,
     HvacMode,
-    ModeHmIP,
     PresetMode,
 )
+from hahomematic.platforms.custom.climate import ModeHmIP
 
 from tests import const, helper
 
