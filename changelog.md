@@ -1,3 +1,7 @@
+# Version 2024.10.2 (2024-10-06)
+
+- Simplify imports
+
 # Version 2024.10.1 (2024-10-04)
 
 - Fix rx_mode lazy_config
