@@ -11,17 +11,15 @@ from hahomematic.central import CentralUnit
 from hahomematic.client import Client
 from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import EntityUsage, ParamsetKey
-from hahomematic.platforms.custom.light import (
+from hahomematic.platforms.custom import (
     CeColorDimmer,
     CeColorDimmerEffect,
     CeColorTempDimmer,
     CeDimmer,
     CeIpFixedColorLight,
     CeIpRGBWLight,
-    ColorBehaviour,
-    FixedColor,
-    TimeUnit,
 )
+from hahomematic.platforms.custom.light import ColorBehaviour, FixedColor, TimeUnit
 
 from tests import const, helper
 

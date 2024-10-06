@@ -10,8 +10,8 @@ import pytest
 from hahomematic.central import CentralUnit
 from hahomematic.client import Client
 from hahomematic.const import EntityUsage
-from hahomematic.platforms.generic.sensor import HmSensor
-from hahomematic.platforms.hub.sensor import HmSysvarSensor
+from hahomematic.platforms.generic import HmSensor
+from hahomematic.platforms.hub import HmSysvarSensor
 
 from tests import const, helper
 

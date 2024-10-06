@@ -10,7 +10,7 @@ import pytest
 from hahomematic.central import CentralUnit
 from hahomematic.client import Client
 from hahomematic.const import EntityUsage
-from hahomematic.platforms.generic.action import HmAction
+from hahomematic.platforms.generic import HmAction
 
 from tests import helper
 

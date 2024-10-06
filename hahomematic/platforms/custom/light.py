@@ -19,11 +19,14 @@ from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import state_property
 from hahomematic.platforms.entity import CallParameterCollector, bind_collector
-from hahomematic.platforms.generic import entity as hmge
-from hahomematic.platforms.generic.action import HmAction
-from hahomematic.platforms.generic.number import HmFloat, HmInteger
-from hahomematic.platforms.generic.select import HmSelect
-from hahomematic.platforms.generic.sensor import HmSensor
+from hahomematic.platforms.generic import (
+    GenericEntity,
+    HmAction,
+    HmFloat,
+    HmInteger,
+    HmSelect,
+    HmSensor,
+)
 from hahomematic.platforms.support import OnTimeMixin
 
 _DIMMER_OFF: Final = 0.0
@@ -477,7 +480,7 @@ class CeIpRGBWLight(CeDimmer):
         return None
 
     @property
-    def _relevant_entities(self) -> tuple[hmge.GenericEntity, ...]:
+    def _relevant_entities(self) -> tuple[GenericEntity, ...]:
         """Returns the list of relevant entities. To be overridden by subclasses."""
         if self._e_device_operation_mode.value == DeviceOperationMode.RGBW:
             return self._e_hue, self._e_level, self._e_saturation, self._e_color_temperature_kelvin
@@ -636,7 +639,7 @@ class CeIpDrgDaliLight(CeDimmer):
         return None
 
     @property
-    def _relevant_entities(self) -> tuple[hmge.GenericEntity, ...]:
+    def _relevant_entities(self) -> tuple[GenericEntity, ...]:
         """Returns the list of relevant entities. To be overridden by subclasses."""
         return (self._e_level,)
 

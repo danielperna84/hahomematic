@@ -19,9 +19,7 @@ from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import state_property
 from hahomematic.platforms.entity import CallParameterCollector, bind_collector
-from hahomematic.platforms.generic.action import HmAction
-from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
-from hahomematic.platforms.generic.switch import HmSwitch
+from hahomematic.platforms.generic import HmAction, HmBinarySensor, HmSwitch
 from hahomematic.platforms.support import OnTimeMixin
 
 _LOGGER: Final = logging.getLogger(__name__)

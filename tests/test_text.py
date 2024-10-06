@@ -10,8 +10,8 @@ import pytest
 from hahomematic.central import CentralUnit
 from hahomematic.client import Client
 from hahomematic.const import EntityUsage
-from hahomematic.platforms.generic.text import HmText
-from hahomematic.platforms.hub.text import HmSysvarText
+from hahomematic.platforms.generic import HmText
+from hahomematic.platforms.hub import HmSysvarText
 
 from tests import helper
 

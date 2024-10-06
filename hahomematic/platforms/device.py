@@ -45,7 +45,7 @@ from hahomematic.platforms.custom import definition as hmed, entity as hmce
 from hahomematic.platforms.decorators import info_property, service, state_property
 from hahomematic.platforms.entity import BaseParameterEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
-from hahomematic.platforms.generic.entity import GenericEntity
+from hahomematic.platforms.generic import GenericEntity
 from hahomematic.platforms.support import (
     ChannelNameData,
     PayloadMixin,

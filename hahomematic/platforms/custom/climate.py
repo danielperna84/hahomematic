@@ -20,12 +20,15 @@ from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig
 from hahomematic.platforms.decorators import config_property, service, state_property
 from hahomematic.platforms.entity import CallParameterCollector, bind_collector
-from hahomematic.platforms.generic.action import HmAction
-from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
-from hahomematic.platforms.generic.number import HmFloat, HmInteger
-from hahomematic.platforms.generic.select import HmSelect
-from hahomematic.platforms.generic.sensor import HmSensor
-from hahomematic.platforms.generic.switch import HmSwitch
+from hahomematic.platforms.generic import (
+    HmAction,
+    HmBinarySensor,
+    HmFloat,
+    HmInteger,
+    HmSelect,
+    HmSensor,
+    HmSwitch,
+)
 
 _LOGGER: Final = logging.getLogger(__name__)
 

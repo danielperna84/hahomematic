@@ -26,6 +26,18 @@ from hahomematic.platforms.hub.sensor import HmSysvarSensor
 from hahomematic.platforms.hub.switch import HmSysvarSwitch
 from hahomematic.platforms.hub.text import HmSysvarText
 
+__all__ = [
+    "GenericHubEntity",
+    "GenericSystemVariable",
+    "HmProgramButton",
+    "HmSysvarBinarySensor",
+    "HmSysvarNumber",
+    "HmSysvarSelect",
+    "HmSysvarSensor",
+    "HmSysvarSwitch",
+    "HmSysvarText",
+]
+
 _LOGGER: Final = logging.getLogger(__name__)
 
 _EXCLUDED: Final = [

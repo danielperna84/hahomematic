@@ -12,7 +12,7 @@ from aiohttp import ClientSession, TCPConnector
 from hahomematic import config, const
 from hahomematic.central import CentralConfig
 from hahomematic.client import InterfaceConfig
-from hahomematic.platforms.custom.definition import validate_entity_definition
+from hahomematic.platforms.custom import validate_entity_definition
 
 logging.basicConfig(level=logging.DEBUG)
 _LOGGER = logging.getLogger(__name__)

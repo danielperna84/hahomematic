@@ -11,7 +11,7 @@ from hahomematic.central import CentralUnit
 from hahomematic.client import Client
 from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import EntityUsage
-from hahomematic.platforms.custom.siren import CeIpSiren, CeIpSirenSmoke
+from hahomematic.platforms.custom import CeIpSiren, CeIpSirenSmoke
 
 from tests import const, helper
 
