@@ -22,7 +22,7 @@ from hahomematic.platforms.generic import entity as hmge
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
 from hahomematic.platforms.generic.button import HmButton
-from hahomematic.platforms.generic.number import HmFloat, HmInteger
+from hahomematic.platforms.generic.number import BaseNumber, HmFloat, HmInteger
 from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.generic.switch import HmSwitch
@@ -39,6 +39,7 @@ _SWITCH_ENTITY_TO_SENSOR: Final[Mapping[str | tuple[str, ...], Parameter]] = {
 
 GenericEntity = hmge.GenericEntity
 __all__ = [
+    "BaseNumber",
     "HmAction",
     "HmBinarySensor",
     "HmButton",

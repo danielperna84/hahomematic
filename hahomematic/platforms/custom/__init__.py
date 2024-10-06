@@ -2,12 +2,76 @@
 
 from __future__ import annotations
 
-import importlib
 import logging
 from typing import Final
 
 from hahomematic.platforms import device as hmd
+from hahomematic.platforms.custom import entity as hmce
+from hahomematic.platforms.custom.climate import (
+    PRESET_MODE_PREFIX,
+    BaseClimateEntity,
+    CeIpThermostat,
+    CeRfThermostat,
+    CeSimpleRfThermostat,
+    HvacAction,
+    HvacMode,
+    PresetMode,
+)
+from hahomematic.platforms.custom.cover import CeBlind, CeCover, CeGarage, CeIpBlind, CeWindowDrive
 from hahomematic.platforms.custom.definition import entity_definition_exists, get_custom_configs
+from hahomematic.platforms.custom.light import (
+    CeColorDimmer,
+    CeColorDimmerEffect,
+    CeColorTempDimmer,
+    CeDimmer,
+    CeIpDrgDaliLight,
+    CeIpFixedColorLight,
+    CeIpRGBWLight,
+    LightOffArgs,
+    LightOnArgs,
+)
+from hahomematic.platforms.custom.lock import BaseLock, CeButtonLock, CeIpLock, CeRfLock, LockState
+from hahomematic.platforms.custom.siren import BaseSiren, CeIpSiren, CeIpSirenSmoke, SirenOnArgs
+from hahomematic.platforms.custom.switch import CeSwitch
+
+CustomEntity = hmce.CustomEntity
+
+__all__ = [
+    "BaseClimateEntity",
+    "BaseLock",
+    "BaseSiren",
+    "CeBlind",
+    "CeButtonLock",
+    "CeColorDimmer",
+    "CeColorDimmerEffect",
+    "CeColorTempDimmer",
+    "CeCover",
+    "CeDimmer",
+    "CeGarage",
+    "CeIpBlind",
+    "CeIpDrgDaliLight",
+    "CeIpFixedColorLight",
+    "CeIpLock",
+    "CeIpRGBWLight",
+    "CeIpSiren",
+    "CeIpSirenSmoke",
+    "CeIpThermostat",
+    "CeRfLock",
+    "CeRfThermostat",
+    "CeSimpleRfThermostat",
+    "CeSwitch",
+    "CeWindowDrive",
+    "CustomEntity",
+    "HvacAction",
+    "HvacMode",
+    "LightOffArgs",
+    "LightOnArgs",
+    "LockState",
+    "LockState",
+    "PRESET_MODE_PREFIX",
+    "PresetMode",
+    "SirenOnArgs",
+]
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -35,21 +99,3 @@ def create_custom_entities(device: hmd.HmDevice) -> None:
         for custom_config in get_custom_configs(model=device.model):
             for channel in device.channels.values():
                 custom_config.make_ce_func(channel, custom_config)
-
-
-def _importlibs() -> None:
-    """
-    Ensure that all platforms are loaded.
-
-    This ensures that the platform.DEVICES are loaded into ALL_DEVICES,
-    and platform.BLACKLISTED_DEVICES are loaded into ALL_BLACKLISTED_DEVICES.
-    """
-    importlib.import_module("hahomematic.platforms.custom.climate")
-    importlib.import_module("hahomematic.platforms.custom.cover")
-    importlib.import_module("hahomematic.platforms.custom.light")
-    importlib.import_module("hahomematic.platforms.custom.lock")
-    importlib.import_module("hahomematic.platforms.custom.siren")
-    importlib.import_module("hahomematic.platforms.custom.switch")
-
-
-_importlibs()
