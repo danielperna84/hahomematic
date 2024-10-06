@@ -78,10 +78,8 @@ from hahomematic.platforms.decorators import info_property
 from hahomematic.platforms.device import HmDevice
 from hahomematic.platforms.entity import BaseParameterEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
-from hahomematic.platforms.generic.entity import GenericEntity
-from hahomematic.platforms.hub import Hub
-from hahomematic.platforms.hub.button import HmProgramButton
-from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
+from hahomematic.platforms.generic import GenericEntity
+from hahomematic.platforms.hub import GenericHubEntity, GenericSystemVariable, HmProgramButton, Hub
 from hahomematic.platforms.support import PayloadMixin
 from hahomematic.support import (
     check_config,
@@ -107,6 +105,8 @@ INTERFACE_EVENT_SCHEMA = vol.Schema(
         ),
     }
 )
+
+__all__ = ["CentralUnit", "CentralConfig", "CentralConnectionState"]
 
 
 class CentralUnit(PayloadMixin):

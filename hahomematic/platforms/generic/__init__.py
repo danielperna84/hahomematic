@@ -37,6 +37,20 @@ _SWITCH_ENTITY_TO_SENSOR: Final[Mapping[str | tuple[str, ...], Parameter]] = {
     ("HmIP-eTRV", "HmIP-HEATING"): Parameter.LEVEL,
 }
 
+GenericEntity = hmge.GenericEntity
+__all__ = [
+    "HmAction",
+    "HmBinarySensor",
+    "HmButton",
+    "HmFloat",
+    "HmInteger",
+    "HmSelect",
+    "HmSensor",
+    "HmSwitch",
+    "HmText",
+    "GenericEntity",
+]
+
 
 def create_entity_and_append_to_channel(
     channel: hmd.HmChannel,

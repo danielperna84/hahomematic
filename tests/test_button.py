@@ -10,8 +10,8 @@ import pytest
 from hahomematic.central import CentralUnit
 from hahomematic.client import Client
 from hahomematic.const import EntityUsage, ProgramData
-from hahomematic.platforms.generic.button import HmButton
-from hahomematic.platforms.hub.button import HmProgramButton
+from hahomematic.platforms.generic import HmButton
+from hahomematic.platforms.hub import HmProgramButton
 
 from tests import helper
 

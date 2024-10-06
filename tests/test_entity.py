@@ -16,8 +16,7 @@ from hahomematic.platforms.custom.definition import (
     validate_entity_definition,
 )
 from hahomematic.platforms.custom.switch import CeSwitch
-from hahomematic.platforms.generic.sensor import HmSensor
-from hahomematic.platforms.generic.switch import HmSwitch
+from hahomematic.platforms.generic import HmSensor, HmSwitch
 
 from tests import const, helper
 

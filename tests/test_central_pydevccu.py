@@ -13,7 +13,7 @@ from hahomematic.platforms.decorators import (
     get_public_attributes_for_info_property,
     get_public_attributes_for_state_property,
 )
-from hahomematic.platforms.generic.entity import GenericEntity
+from hahomematic.platforms.generic import GenericEntity
 
 from tests import const
 

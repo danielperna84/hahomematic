@@ -12,8 +12,8 @@ from hahomematic.client import Client
 from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.custom.switch import CeSwitch
-from hahomematic.platforms.generic.switch import HmSwitch
-from hahomematic.platforms.hub.switch import HmSysvarSwitch
+from hahomematic.platforms.generic import HmSwitch
+from hahomematic.platforms.hub import HmSysvarSwitch
 
 from tests import helper
 
