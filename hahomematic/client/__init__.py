@@ -54,6 +54,8 @@ from hahomematic.support import (
     supports_rx_mode,
 )
 
+__all__ = ["Client", "InterfaceConfig", "create_client", "get_client"]
+
 _LOGGER: Final = logging.getLogger(__name__)
 
 _JSON_ADDRESS: Final = "address"
@@ -505,7 +507,7 @@ class Client(ABC):
                     address=get_device_address(address=channel_address)
                 )
             ):
-                await wait_for_state_change_or_timeout(
+                await _wait_for_state_change_or_timeout(
                     device=device,
                     entity_keys=entity_keys,
                     values={parameter: checked_value},
@@ -646,7 +648,7 @@ class Client(ABC):
                     address=get_device_address(address=channel_address)
                 )
             ):
-                await wait_for_state_change_or_timeout(
+                await _wait_for_state_change_or_timeout(
                     device=device,
                     entity_keys=entity_keys,
                     values=checked_values,
@@ -1246,7 +1248,7 @@ def get_client(interface_id: str) -> Client | None:
 
 
 @measure_execution_time
-async def wait_for_state_change_or_timeout(
+async def _wait_for_state_change_or_timeout(
     device: HmDevice, entity_keys: set[ENTITY_KEY], values: dict[str, Any], wait_for_callback: int
 ) -> None:
     """Wait for an entity to change state."""

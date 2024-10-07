@@ -18,10 +18,10 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.generic import entity as hmge
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
 from hahomematic.platforms.generic.button import HmButton
+from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.generic.number import BaseNumber, HmFloat, HmInteger
 from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.generic.sensor import HmSensor
@@ -29,15 +29,6 @@ from hahomematic.platforms.generic.switch import HmSwitch
 from hahomematic.platforms.generic.text import HmText
 from hahomematic.platforms.support import is_binary_sensor
 
-_LOGGER: Final = logging.getLogger(__name__)
-_BUTTON_ACTIONS: Final[tuple[str, ...]] = ("RESET_MOTION", "RESET_PRESENCE")
-
-# Entities that should be wrapped in a new entity on a new platform.
-_SWITCH_ENTITY_TO_SENSOR: Final[Mapping[str | tuple[str, ...], Parameter]] = {
-    ("HmIP-eTRV", "HmIP-HEATING"): Parameter.LEVEL,
-}
-
-GenericEntity = hmge.GenericEntity
 __all__ = [
     "BaseNumber",
     "GenericEntity",
@@ -50,7 +41,16 @@ __all__ = [
     "HmSensor",
     "HmSwitch",
     "HmText",
+    "create_entity_and_append_to_channel",
 ]
+
+_LOGGER: Final = logging.getLogger(__name__)
+_BUTTON_ACTIONS: Final[tuple[str, ...]] = ("RESET_MOTION", "RESET_PRESENCE")
+
+# Entities that should be wrapped in a new entity on a new platform.
+_SWITCH_ENTITY_TO_SENSOR: Final[Mapping[str | tuple[str, ...], Parameter]] = {
+    ("HmIP-eTRV", "HmIP-HEATING"): Parameter.LEVEL,
+}
 
 
 def create_entity_and_append_to_channel(
@@ -68,7 +68,7 @@ def create_entity_and_append_to_channel(
     )
     p_type = parameter_data["TYPE"]
     p_operations = parameter_data["OPERATIONS"]
-    entity_t: type[hmge.GenericEntity] | None = None
+    entity_t: type[GenericEntity] | None = None
     if p_operations & Operations.WRITE:
         if p_type == ParameterType.ACTION:
             if p_operations == Operations.WRITE:
@@ -123,7 +123,7 @@ def create_entity_and_append_to_channel(
             entity.force_to_sensor()
 
 
-def _check_switch_to_sensor(entity: hmge.GenericEntity) -> bool:
+def _check_switch_to_sensor(entity: GenericEntity) -> bool:
     """Check if parameter of a device should be wrapped to a different platform."""
     if entity.device.central.parameter_visibility.parameter_is_un_ignored(
         model=entity.device.model,

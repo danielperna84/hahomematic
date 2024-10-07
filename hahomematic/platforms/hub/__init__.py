@@ -36,6 +36,7 @@ __all__ = [
     "HmSysvarSensor",
     "HmSysvarSwitch",
     "HmSysvarText",
+    "Hub",
 ]
 
 _LOGGER: Final = logging.getLogger(__name__)

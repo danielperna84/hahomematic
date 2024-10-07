@@ -54,6 +54,14 @@ from hahomematic.platforms.support import (
 from hahomematic.support import get_entity_key, reduce_args
 import hahomematic.validator as val
 
+__all__ = [
+    "BaseEntity",
+    "BaseParameterEntity",
+    "CallParameterCollector",
+    "CallbackEntity",
+    "bind_collector",
+]
+
 _LOGGER: Final = logging.getLogger(__name__)
 
 _CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
