@@ -64,7 +64,7 @@ from hahomematic.support import (
     reduce_args,
 )
 
-__all__ = ["HmChannel", "HmDevice", "ValueCache"]
+__all__ = ["HmChannel", "HmDevice"]
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -120,7 +120,7 @@ class HmDevice(PayloadMixin):
             address: HmChannel(device=self, channel_address=address)
             for address in channel_addresses
         }
-        self._value_cache: Final[ValueCache] = ValueCache(device=self)
+        self._value_cache: Final[_ValueCache] = _ValueCache(device=self)
         self._rooms: Final = central.device_details.get_device_rooms(device_address=device_address)
         self._update_entity: Final = HmUpdate(device=self) if self.is_updatable else None
         _LOGGER.debug(
@@ -330,7 +330,7 @@ class HmDevice(PayloadMixin):
         return self._update_entity
 
     @property
-    def value_cache(self) -> ValueCache:
+    def value_cache(self) -> _ValueCache:
         """Return the value_cache of the device."""
         return self._value_cache
 
@@ -851,7 +851,7 @@ class HmChannel(PayloadMixin):
         )
 
 
-class ValueCache:
+class _ValueCache:
     """A Cache to temporarily stored values."""
 
     _NO_VALUE_CACHE_ENTRY: Final = "NO_VALUE_CACHE_ENTRY"
