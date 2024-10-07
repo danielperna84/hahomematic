@@ -89,7 +89,7 @@ from hahomematic.support import (
     reduce_args,
 )
 
-__all__ = ["CentralConfig", "CentralUnit"]
+__all__ = ["CentralConfig", "CentralUnit", "INTERFACE_EVENT_SCHEMA"]
 
 _LOGGER: Final = logging.getLogger(__name__)
 

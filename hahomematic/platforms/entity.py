@@ -13,7 +13,7 @@ from typing import Any, Final, cast
 
 import voluptuous as vol
 
-from hahomematic import central as hmcu, client as hmcl, support as hms
+from hahomematic import central as hmcu, client as hmcl, support as hms, validator as val
 from hahomematic.async_support import loop_check
 from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import (
@@ -52,13 +52,13 @@ from hahomematic.platforms.support import (
     generate_unique_id,
 )
 from hahomematic.support import get_entity_key, reduce_args
-import hahomematic.validator as val
 
 __all__ = [
     "BaseEntity",
     "BaseParameterEntity",
     "CallParameterCollector",
     "CallbackEntity",
+    "EVENT_DATA_SCHEMA",
     "bind_collector",
 ]
 

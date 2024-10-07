@@ -1,4 +1,8 @@
-# Version 2024.10.2 (2024-10-06)
+# Version 2024.10.3 (2024-10-07)
+
+- Add missing import entries
+
+# Version 2024.10.2 (2024-10-07)
 
 - Simplify entity imports
 
