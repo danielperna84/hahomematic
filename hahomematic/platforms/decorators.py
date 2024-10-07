@@ -16,7 +16,6 @@ from hahomematic.support import reduce_args
 
 __all__ = [
     "config_property",
-    "get_public_attributes_by_class_decorator",
     "get_public_attributes_for_config_property",
     "get_public_attributes_for_info_property",
     "get_public_attributes_for_state_property",
@@ -99,7 +98,7 @@ class state_property[_GETTER, _SETTER](generic_property[_GETTER, _SETTER]):
     """Decorate to mark own value properties."""
 
 
-def get_public_attributes_by_class_decorator(
+def _get_public_attributes_by_class_decorator(
     data_object: Any, class_decorator: type
 ) -> dict[str, Any]:
     """Return the object attributes by decorator."""
@@ -124,21 +123,21 @@ def _get_text_value(value: Any) -> Any:
 
 def get_public_attributes_for_config_property(data_object: Any) -> dict[str, Any]:
     """Return the object attributes by decorator config_property."""
-    return get_public_attributes_by_class_decorator(
+    return _get_public_attributes_by_class_decorator(
         data_object=data_object, class_decorator=config_property
     )
 
 
 def get_public_attributes_for_info_property(data_object: Any) -> dict[str, Any]:
     """Return the object attributes by decorator info_property."""
-    return get_public_attributes_by_class_decorator(
+    return _get_public_attributes_by_class_decorator(
         data_object=data_object, class_decorator=info_property
     )
 
 
 def get_public_attributes_for_state_property(data_object: Any) -> dict[str, Any]:
     """Return the object attributes by decorator state_property."""
-    return get_public_attributes_by_class_decorator(
+    return _get_public_attributes_by_class_decorator(
         data_object=data_object, class_decorator=state_property
     )
 
