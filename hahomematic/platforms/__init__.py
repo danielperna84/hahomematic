@@ -18,6 +18,8 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.event import create_event_and_append_to_channel
 from hahomematic.platforms.generic import create_entity_and_append_to_channel
 
+__all__ = ["create_entities_and_events"]
+
 _LOGGER: Final = logging.getLogger(__name__)
 
 

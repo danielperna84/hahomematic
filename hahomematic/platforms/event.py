@@ -22,6 +22,14 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.entity import BaseParameterEntity
 from hahomematic.platforms.support import EntityNameData, get_event_name
 
+__all__ = [
+    "ClickEvent",
+    "DeviceErrorEvent",
+    "GenericEvent",
+    "ImpulseEvent",
+    "create_event_and_append_to_channel",
+]
+
 _LOGGER: Final = logging.getLogger(__name__)
 
 

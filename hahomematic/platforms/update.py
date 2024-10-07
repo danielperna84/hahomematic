@@ -24,6 +24,8 @@ from hahomematic.platforms.decorators import config_property, get_service_calls,
 from hahomematic.platforms.entity import CallbackEntity
 from hahomematic.platforms.support import PayloadMixin, generate_unique_id
 
+__all__ = ["HmUpdate"]
+
 
 class HmUpdate(CallbackEntity, PayloadMixin):
     """

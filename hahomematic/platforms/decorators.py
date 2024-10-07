@@ -14,6 +14,18 @@ from hahomematic.context import IN_SERVICE_VAR
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.support import reduce_args
 
+__all__ = [
+    "config_property",
+    "get_public_attributes_by_class_decorator",
+    "get_public_attributes_for_config_property",
+    "get_public_attributes_for_info_property",
+    "get_public_attributes_for_state_property",
+    "get_service_calls",
+    "info_property",
+    "service",
+    "state_property",
+]
+
 P = ParamSpec("P")
 T = TypeVar("T")
 

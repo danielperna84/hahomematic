@@ -89,6 +89,8 @@ from hahomematic.support import (
     reduce_args,
 )
 
+__all__ = ["CentralConfig", "CentralUnit"]
+
 _LOGGER: Final = logging.getLogger(__name__)
 
 # {instance_name, central}
@@ -151,7 +153,7 @@ class CentralUnit(PayloadMixin):
         self._homematic_callbacks: Final[set[Callable]] = set()
 
         CENTRAL_INSTANCES[self.name] = self
-        self._connection_checker: Final = ConnectionChecker(central=self)
+        self._connection_checker: Final = _ConnectionChecker(central=self)
         self._hub: Hub = Hub(central=self)
         self._version: str | None = None
         # store last event received datetime by interface
@@ -1323,7 +1325,7 @@ class CentralUnit(PayloadMixin):
         return f"central name: {self.name}"
 
 
-class ConnectionChecker(threading.Thread):
+class _ConnectionChecker(threading.Thread):
     """Periodically check Connection to CCU / Homegear."""
 
     def __init__(self, central: CentralUnit) -> None:

@@ -64,6 +64,8 @@ from hahomematic.support import (
     reduce_args,
 )
 
+__all__ = ["HmChannel", "HmDevice", "ValueCache"]
+
 _LOGGER: Final = logging.getLogger(__name__)
 
 

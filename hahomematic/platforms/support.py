@@ -27,6 +27,25 @@ from hahomematic.platforms.decorators import (
 )
 from hahomematic.support import to_bool
 
+__all__ = [
+    "ChannelNameData",
+    "EntityNameData",
+    "GenericParameterType",
+    "OnTimeMixin",
+    "PayloadMixin",
+    "check_channel_is_the_only_primary_channel",
+    "convert_value",
+    "generate_channel_unique_id",
+    "generate_unique_id",
+    "get_channel_name_data",
+    "get_custom_entity_name",
+    "get_device_name",
+    "get_entity_name_data",
+    "get_event_name",
+    "get_index_of_value_from_value_list",
+    "get_value_from_value_list",
+    "is_binary_sensor",
+]
 _LOGGER: Final = logging.getLogger(__name__)
 
 GenericParameterType: TypeAlias = bool | int | float | str | None
