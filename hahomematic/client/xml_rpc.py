@@ -30,7 +30,7 @@ _TLS: Final = "tls"
 _VERIFY_TLS: Final = "verify_tls"
 
 
-class XmlRpcMethod(StrEnum):
+class _XmlRpcMethod(StrEnum):
     """Enum for homematic json rpc methods types."""
 
     GET_VERSION = "getVersion"
@@ -41,11 +41,11 @@ class XmlRpcMethod(StrEnum):
 
 
 _VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION: Final[tuple[str, ...]] = (
-    XmlRpcMethod.GET_VERSION,
-    XmlRpcMethod.HOMEGEAR_INIT,
-    XmlRpcMethod.INIT,
-    XmlRpcMethod.PING,
-    XmlRpcMethod.SYSTEM_LIST_METHODS,
+    _XmlRpcMethod.GET_VERSION,
+    _XmlRpcMethod.HOMEGEAR_INIT,
+    _XmlRpcMethod.INIT,
+    _XmlRpcMethod.PING,
+    _XmlRpcMethod.SYSTEM_LIST_METHODS,
 )
 
 _SSL_ERROR_CODES: Final[dict[int, str]] = {
@@ -97,7 +97,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         """Init the xml rpc proxy."""
         if supported_methods := await self.system.listMethods():
             # ping is missing in VirtualDevices interface but can be used.
-            supported_methods.append(XmlRpcMethod.PING)
+            supported_methods.append(_XmlRpcMethod.PING)
             self._supported_methods = tuple(supported_methods)
 
     @property

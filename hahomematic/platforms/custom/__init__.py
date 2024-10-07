@@ -74,6 +74,7 @@ __all__ = [
     "PRESET_MODE_PREFIX",
     "PresetMode",
     "SirenOnArgs",
+    "create_custom_entities",
     "get_required_parameters",
     "validate_entity_definition",
 ]

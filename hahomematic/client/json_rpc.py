@@ -72,7 +72,7 @@ _VALUE: Final = "value"
 _VALUE_LIST: Final = "valueList"
 
 
-class JsonRpcMethod(StrEnum):
+class _JsonRpcMethod(StrEnum):
     """Enum for homematic json rpc methods types."""
 
     CCU_GET_AUTH_ENABLED = "CCU.getAuthEnabled"
@@ -141,7 +141,7 @@ class JsonRpcAioHttpClient:
         """Renew JSON-RPC session or perform login."""
         if self._modified_within_seconds:
             return session_id
-        method = JsonRpcMethod.SESSION_RENEW
+        method = _JsonRpcMethod.SESSION_RENEW
         response = await self._do_post(
             session_id=session_id,
             method=method,
@@ -175,7 +175,7 @@ class JsonRpcAioHttpClient:
             CONF_USERNAME: self._username,
             CONF_PASSWORD: self._password,
         }
-        method = JsonRpcMethod.SESSION_LOGIN
+        method = _JsonRpcMethod.SESSION_LOGIN
         response = await self._do_post(
             session_id=False,
             method=method,
@@ -192,7 +192,7 @@ class JsonRpcAioHttpClient:
 
     async def _post(
         self,
-        method: JsonRpcMethod,
+        method: _JsonRpcMethod,
         extra_params: dict[str, str] | None = None,
         use_default_params: bool = True,
         keep_session: bool = True,
@@ -253,7 +253,7 @@ class JsonRpcAioHttpClient:
             for variable, value in extra_params.items():
                 script = script.replace(f"##{variable}##", value)
 
-        method = JsonRpcMethod.REGA_RUN_SCRIPT
+        method = _JsonRpcMethod.REGA_RUN_SCRIPT
         response = await self._do_post(
             session_id=session_id,
             method=method,
@@ -292,7 +292,7 @@ class JsonRpcAioHttpClient:
     async def _do_post(
         self,
         session_id: bool | str,
-        method: JsonRpcMethod,
+        method: _JsonRpcMethod,
         extra_params: dict[str, str] | None = None,
         use_default_params: bool = True,
     ) -> dict[str, Any] | Any:
@@ -396,7 +396,7 @@ class JsonRpcAioHttpClient:
             _LOGGER.debug("DO_LOGOUT: Not logged in. Not logging out.")
             return
 
-        method = JsonRpcMethod.SESSION_LOGOUT
+        method = _JsonRpcMethod.SESSION_LOGOUT
         params = {_SESSION_ID: session_id}
         try:
             await self._do_post(
@@ -420,7 +420,7 @@ class JsonRpcAioHttpClient:
             _ID: pid,
         }
         try:
-            response = await self._post(method=JsonRpcMethod.PROGRAM_EXECUTE, extra_params=params)
+            response = await self._post(method=_JsonRpcMethod.PROGRAM_EXECUTE, extra_params=params)
             _LOGGER.debug("EXECUTE_PROGRAM: Executing a program")
 
             if json_result := response[_P_RESULT]:
@@ -446,7 +446,7 @@ class JsonRpcAioHttpClient:
             if isinstance(value, bool):
                 params[_VALUE] = int(value)
                 response = await self._post(
-                    method=JsonRpcMethod.SYSVAR_SET_BOOL, extra_params=params
+                    method=_JsonRpcMethod.SYSVAR_SET_BOOL, extra_params=params
                 )
             elif isinstance(value, str):
                 if HTMLTAG_PATTERN.findall(value):
@@ -461,7 +461,7 @@ class JsonRpcAioHttpClient:
                 )
             else:
                 response = await self._post(
-                    method=JsonRpcMethod.SYSVAR_SET_FLOAT, extra_params=params
+                    method=_JsonRpcMethod.SYSVAR_SET_FLOAT, extra_params=params
                 )
 
             _LOGGER.debug("SET_SYSTEM_VARIABLE: Setting System variable")
@@ -487,7 +487,7 @@ class JsonRpcAioHttpClient:
         params = {_NAME: name}
         try:
             response = await self._post(
-                method=JsonRpcMethod.SYSVAR_DELETE_SYSVAR_BY_NAME,
+                method=_JsonRpcMethod.SYSVAR_DELETE_SYSVAR_BY_NAME,
                 extra_params=params,
             )
 
@@ -510,7 +510,7 @@ class JsonRpcAioHttpClient:
         try:
             params = {_NAME: name}
             response = await self._post(
-                method=JsonRpcMethod.SYSVAR_GET_VALUE_BY_NAME,
+                method=_JsonRpcMethod.SYSVAR_GET_VALUE_BY_NAME,
                 extra_params=params,
             )
 
@@ -536,7 +536,7 @@ class JsonRpcAioHttpClient:
         variables: list[SystemVariableData] = []
         try:
             response = await self._post(
-                method=JsonRpcMethod.SYSVAR_GET_ALL,
+                method=_JsonRpcMethod.SYSVAR_GET_ALL,
             )
 
             _LOGGER.debug("GET_ALL_SYSTEM_VARIABLES: Getting all system variables")
@@ -621,7 +621,7 @@ class JsonRpcAioHttpClient:
 
         try:
             response = await self._post(
-                method=JsonRpcMethod.ROOM_GET_ALL,
+                method=_JsonRpcMethod.ROOM_GET_ALL,
             )
 
             _LOGGER.debug("GET_ALL_CHANNEL_IDS_PER_ROOM: Getting all rooms")
@@ -650,7 +650,7 @@ class JsonRpcAioHttpClient:
 
         try:
             response = await self._post(
-                method=JsonRpcMethod.SUBSECTION_GET_ALL,
+                method=_JsonRpcMethod.SUBSECTION_GET_ALL,
             )
 
             _LOGGER.debug("GET_ALL_CHANNEL_IDS_PER_FUNCTION: Getting all functions")
@@ -679,7 +679,7 @@ class JsonRpcAioHttpClient:
 
         try:
             response = await self._post(
-                method=JsonRpcMethod.DEVICE_LIST_ALL_DETAIL,
+                method=_JsonRpcMethod.DEVICE_LIST_ALL_DETAIL,
             )
 
             _LOGGER.debug("GET_DEVICE_DETAILS: Getting the device details")
@@ -733,7 +733,7 @@ class JsonRpcAioHttpClient:
 
         try:
             response = await self._post(
-                method=JsonRpcMethod.PROGRAM_GET_ALL,
+                method=_JsonRpcMethod.PROGRAM_GET_ALL,
             )
 
             _LOGGER.debug("GET_ALL_PROGRAMS: Getting all programs")
@@ -775,7 +775,7 @@ class JsonRpcAioHttpClient:
         try:
             response = await self._do_post(
                 session_id=session_id,
-                method=JsonRpcMethod.SYSTEM_LIST_METHODS,
+                method=_JsonRpcMethod.SYSTEM_LIST_METHODS,
             )
 
             _LOGGER.debug("GET_SUPPORTED_METHODS: Getting the supported methods")
@@ -795,7 +795,7 @@ class JsonRpcAioHttpClient:
         if self._supported_methods is None:
             self._supported_methods = await self._get_supported_methods()
         if unsupport_methods := tuple(
-            method for method in JsonRpcMethod if method not in self._supported_methods
+            method for method in _JsonRpcMethod if method not in self._supported_methods
         ):
             _LOGGER.warning(
                 "CHECK_SUPPORTED_METHODS: methods not supported by backend: %s",
@@ -828,7 +828,7 @@ class JsonRpcAioHttpClient:
         iid = "GET_AUTH_ENABLED"
         _LOGGER.debug("GET_AUTH_ENABLED: Getting the flag auth_enabled")
         try:
-            response = await self._post(method=JsonRpcMethod.CCU_GET_AUTH_ENABLED)
+            response = await self._post(method=_JsonRpcMethod.CCU_GET_AUTH_ENABLED)
             if (json_result := response[_P_RESULT]) is not None:
                 return bool(json_result)
         except InternalBackendException as ibe:
@@ -847,7 +847,7 @@ class JsonRpcAioHttpClient:
         _LOGGER.debug("GET_AVAILABLE_INTERFACES: Getting all available interfaces")
 
         response = await self._post(
-            method=JsonRpcMethod.INTERFACE_LIST_INTERFACES,
+            method=_JsonRpcMethod.INTERFACE_LIST_INTERFACES,
         )
 
         if json_result := response[_P_RESULT]:
@@ -858,7 +858,7 @@ class JsonRpcAioHttpClient:
         """Get the auth_enabled flag of the backend."""
         _LOGGER.debug("GET_HTTPS_REDIRECT_ENABLED: Getting the flag https_redirect_enabled")
 
-        response = await self._post(method=JsonRpcMethod.CCU_GET_HTTPS_REDIRECT_ENABLED)
+        response = await self._post(method=_JsonRpcMethod.CCU_GET_HTTPS_REDIRECT_ENABLED)
         if (json_result := response[_P_RESULT]) is not None:
             return bool(json_result)
         return None

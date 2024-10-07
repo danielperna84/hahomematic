@@ -41,6 +41,7 @@ __all__ = [
     "HmSensor",
     "HmSwitch",
     "HmText",
+    "create_entity_and_append_to_channel",
 ]
 
 _LOGGER: Final = logging.getLogger(__name__)
