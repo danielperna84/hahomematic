@@ -6,7 +6,6 @@ import logging
 from typing import Final
 
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.custom import entity as hmce
 from hahomematic.platforms.custom.climate import (
     PRESET_MODE_PREFIX,
     BaseClimateEntity,
@@ -24,6 +23,7 @@ from hahomematic.platforms.custom.definition import (
     get_required_parameters,
     validate_entity_definition,
 )
+from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.light import (
     CeColorDimmer,
     CeColorDimmerEffect,
@@ -38,8 +38,6 @@ from hahomematic.platforms.custom.light import (
 from hahomematic.platforms.custom.lock import BaseLock, CeButtonLock, CeIpLock, CeRfLock, LockState
 from hahomematic.platforms.custom.siren import BaseSiren, CeIpSiren, CeIpSirenSmoke, SirenOnArgs
 from hahomematic.platforms.custom.switch import CeSwitch
-
-CustomEntity = hmce.CustomEntity
 
 __all__ = [
     "BaseClimateEntity",
