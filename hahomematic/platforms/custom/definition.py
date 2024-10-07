@@ -9,7 +9,7 @@ from typing import Any, Final, cast
 
 import voluptuous as vol
 
-from hahomematic import support as hms
+from hahomematic import support as hms, validator as val
 from hahomematic.const import HmPlatform, Parameter
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
@@ -17,7 +17,6 @@ from hahomematic.platforms.custom.const import ED, DeviceProfile, Field
 from hahomematic.platforms.custom.support import CustomConfig
 from hahomematic.platforms.support import generate_unique_id
 from hahomematic.support import reduce_args
-import hahomematic.validator as val
 
 _LOGGER: Final = logging.getLogger(__name__)
 

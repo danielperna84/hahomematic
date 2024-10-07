@@ -10,7 +10,7 @@ import logging
 from typing import Any, Final, cast
 
 from hahomematic import central as hmcu, client as hmcl
-import hahomematic.central.xml_rpc_server as xmlrpc
+from hahomematic.central import xml_rpc_server as xmlrpc
 from hahomematic.const import BackendSystemEvent
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.support import reduce_args
