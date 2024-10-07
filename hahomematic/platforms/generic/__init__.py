@@ -29,15 +29,8 @@ from hahomematic.platforms.generic.switch import HmSwitch
 from hahomematic.platforms.generic.text import HmText
 from hahomematic.platforms.support import is_binary_sensor
 
-_LOGGER: Final = logging.getLogger(__name__)
-_BUTTON_ACTIONS: Final[tuple[str, ...]] = ("RESET_MOTION", "RESET_PRESENCE")
-
-# Entities that should be wrapped in a new entity on a new platform.
-_SWITCH_ENTITY_TO_SENSOR: Final[Mapping[str | tuple[str, ...], Parameter]] = {
-    ("HmIP-eTRV", "HmIP-HEATING"): Parameter.LEVEL,
-}
-
 GenericEntity = hmge.GenericEntity
+
 __all__ = [
     "BaseNumber",
     "GenericEntity",
@@ -51,6 +44,14 @@ __all__ = [
     "HmSwitch",
     "HmText",
 ]
+
+_LOGGER: Final = logging.getLogger(__name__)
+_BUTTON_ACTIONS: Final[tuple[str, ...]] = ("RESET_MOTION", "RESET_PRESENCE")
+
+# Entities that should be wrapped in a new entity on a new platform.
+_SWITCH_ENTITY_TO_SENSOR: Final[Mapping[str | tuple[str, ...], Parameter]] = {
+    ("HmIP-eTRV", "HmIP-HEATING"): Parameter.LEVEL,
+}
 
 
 def create_entity_and_append_to_channel(
