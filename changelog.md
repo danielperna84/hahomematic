@@ -1,3 +1,8 @@
+# Version 2024.10.4 (2024-10-09)
+
+- Add basic climate schedule services
+- Rename climate enums and constants to better distinguish from HA
+
 # Version 2024.10.3 (2024-10-07)
 
 - Add missing import entries

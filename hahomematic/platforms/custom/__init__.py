@@ -7,14 +7,16 @@ from typing import Final
 
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom.climate import (
-    PRESET_MODE_PREFIX,
     BaseClimateEntity,
     CeIpThermostat,
     CeRfThermostat,
     CeSimpleRfThermostat,
-    HvacAction,
-    HvacMode,
-    PresetMode,
+)
+from hahomematic.platforms.custom.const import (
+    HM_PRESET_MODE_PREFIX,
+    HmHvacAction,
+    HmHvacMode,
+    HmPresetMode,
 )
 from hahomematic.platforms.custom.cover import CeBlind, CeCover, CeGarage, CeIpBlind, CeWindowDrive
 from hahomematic.platforms.custom.definition import (
@@ -65,14 +67,14 @@ __all__ = [
     "CeSwitch",
     "CeWindowDrive",
     "CustomEntity",
-    "HvacAction",
-    "HvacMode",
+    "HM_PRESET_MODE_PREFIX",
+    "HmHvacAction",
+    "HmHvacMode",
+    "HmPresetMode",
     "LightOffArgs",
     "LightOnArgs",
     "LockState",
     "LockState",
-    "PRESET_MODE_PREFIX",
-    "PresetMode",
     "SirenOnArgs",
     "create_custom_entities",
     "get_required_parameters",

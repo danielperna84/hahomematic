@@ -99,10 +99,6 @@ _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[
     "HmIPW-STH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
 }
 
-# Some parameters are marked as INTERNAL in the paramset and not considered by default,
-# but some are required and should be added here.
-ALLOWED_INTERNAL_PARAMETERS: Final[tuple[Parameter, ...]] = (Parameter.DIRECTION,)
-
 # Ignore events for some devices
 _IGNORE_DEVICES_FOR_ENTITY_EVENTS: Final[Mapping[str, tuple[Parameter, ...]]] = {
     "HmIP-PS": CLICK_EVENTS,
