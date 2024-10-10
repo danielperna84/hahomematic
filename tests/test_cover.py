@@ -18,7 +18,7 @@ from hahomematic.platforms.custom.cover import (
     _OPEN_LEVEL,
     _OPEN_TILT_LEVEL,
     _WD_CLOSED_LEVEL,
-    GarageDoorActivity,
+    _GarageDoorActivity,
 )
 
 from tests import const, helper
@@ -843,11 +843,11 @@ async def test_cegarageho(
     assert cover.current_position == 100
 
     await central.event(
-        const.INTERFACE_ID, "VCU3574044:1", "SECTION", GarageDoorActivity.OPENING.value
+        const.INTERFACE_ID, "VCU3574044:1", "SECTION", _GarageDoorActivity.OPENING.value
     )
     assert cover.is_opening is True
     await central.event(
-        const.INTERFACE_ID, "VCU3574044:1", "SECTION", GarageDoorActivity.CLOSING.value
+        const.INTERFACE_ID, "VCU3574044:1", "SECTION", _GarageDoorActivity.CLOSING.value
     )
     assert cover.is_closing is True
 
@@ -959,9 +959,9 @@ async def test_cegaragetm(
     await central.event(const.INTERFACE_ID, "VCU6166407:1", "DOOR_STATE", 1)
     assert cover.current_position == 100
 
-    await central.event(const.INTERFACE_ID, "VCU6166407:1", "SECTION", GarageDoorActivity.OPENING)
+    await central.event(const.INTERFACE_ID, "VCU6166407:1", "SECTION", _GarageDoorActivity.OPENING)
     assert cover.is_opening is True
-    await central.event(const.INTERFACE_ID, "VCU6166407:1", "SECTION", GarageDoorActivity.CLOSING)
+    await central.event(const.INTERFACE_ID, "VCU6166407:1", "SECTION", _GarageDoorActivity.CLOSING)
     assert cover.is_closing is True
 
     await central.event(const.INTERFACE_ID, "VCU6166407:1", "SECTION", None)

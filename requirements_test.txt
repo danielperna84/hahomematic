@@ -1,11 +1,11 @@
 -r requirements.txt
 -r requirements_test_pre_commit.txt
 
-coverage==7.6.1
+coverage==7.6.2
 freezegun==1.5.1
 mypy-dev==1.12.0a5
 pip==24.2
-pre-commit==4.0.0
+pre-commit==4.0.1
 pur==7.3.2
 pydantic==2.9.2
 pydevccu==0.1.8
@@ -20,4 +20,4 @@ pytest-socket==0.7.0
 pytest-timeout==2.3.1
 pytest==8.3.3
 types-python-slugify==8.0.2.20240310
-uv==0.4.18
+uv==0.4.20

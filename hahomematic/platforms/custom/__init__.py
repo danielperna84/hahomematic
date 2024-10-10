@@ -7,13 +7,13 @@ from typing import Final
 
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom.climate import (
+    HM_PRESET_MODE_PREFIX,
+    PROFILE_DICT,
+    WEEKDAY_DICT,
     BaseClimateEntity,
     CeIpThermostat,
     CeRfThermostat,
     CeSimpleRfThermostat,
-)
-from hahomematic.platforms.custom.const import (
-    HM_PRESET_MODE_PREFIX,
     HmHvacAction,
     HmHvacMode,
     HmPresetMode,
@@ -74,8 +74,9 @@ __all__ = [
     "LightOffArgs",
     "LightOnArgs",
     "LockState",
-    "LockState",
     "SirenOnArgs",
+    "WEEKDAY_DICT",
+    "PROFILE_DICT",
     "create_custom_entities",
     "get_required_parameters",
     "validate_entity_definition",

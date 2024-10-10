@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime, timedelta
+from enum import IntEnum, StrEnum
 import logging
 from typing import Any, Final
 
@@ -15,25 +16,7 @@ from hahomematic.const import HmPlatform, ParamsetKey
 from hahomematic.exceptions import ClientException, HaHomematicException, ValidationException
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import (
-    CLIMATE_ENTRY_RANGE,
-    CLIMATE_TIME_RANGE,
-    HM_PRESET_MODE_PREFIX,
-    PROFILE_DICT,
-    SCHEDULE_DICT,
-    WEEKDAY_DICT,
-    ClimateEntryType,
-    ClimateModeHm,
-    ClimateModeHmIP,
-    ClimateProfile,
-    ClimateStateChangeArg,
-    ClimateWeekday,
-    DeviceProfile,
-    Field,
-    HmHvacAction,
-    HmHvacMode,
-    HmPresetMode,
-)
+from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig
 from hahomematic.platforms.decorators import config_property, service, state_property
@@ -56,8 +39,107 @@ _DEFAULT_TEMPERATURE_STEP: Final = 0.5
 _OFF_TEMPERATURE: Final = 4.5
 _PARTY_DATE_FORMAT: Final = "%Y_%m_%d %H:%M"
 _PARTY_INIT_DATE: Final = "2000_01_01 00:00"
-_TEMP_CELSIUS: Final = "°C"
 _RAW_SCHEDULE_DICT = dict[str, float | int]
+_TEMP_CELSIUS: Final = "°C"
+SCHEDULE_ENTRY_RANGE: Final = range(1, 13)
+SCHEDULE_TIME_RANGE: Final = range(1441)
+HM_PRESET_MODE_PREFIX: Final = "week_program_"
+
+
+class _ModeHm(StrEnum):
+    """Enum with the HM modes."""
+
+    AUTO = "AUTO-MODE"  # 0
+    AWAY = "PARTY-MODE"  # 2
+    BOOST = "BOOST-MODE"  # 3
+    MANU = "MANU-MODE"  # 1
+
+
+class _ModeHmIP(IntEnum):
+    """Enum with the HmIP modes."""
+
+    AUTO = 0
+    AWAY = 2
+    MANU = 1
+
+
+class _StateChangeArg(StrEnum):
+    """Enum with climate state change arguments."""
+
+    HVAC_MODE = "hvac_mode"
+    PRESET_MODE = "preset_mode"
+    TEMPERATURE = "temperature"
+
+
+class HmHvacAction(StrEnum):
+    """Enum with the hvac actions."""
+
+    COOL = "cooling"
+    HEAT = "heating"
+    IDLE = "idle"
+    OFF = "off"
+
+
+class HmHvacMode(StrEnum):
+    """Enum with the hvac modes."""
+
+    AUTO = "auto"
+    COOL = "cool"
+    HEAT = "heat"
+    OFF = "off"
+
+
+class HmPresetMode(StrEnum):
+    """Enum with preset modes."""
+
+    AWAY = "away"
+    BOOST = "boost"
+    COMFORT = "comfort"
+    ECO = "eco"
+    NONE = "none"
+    WEEK_PROGRAM_1 = "week_program_1"
+    WEEK_PROGRAM_2 = "week_program_2"
+    WEEK_PROGRAM_3 = "week_program_3"
+    WEEK_PROGRAM_4 = "week_program_4"
+    WEEK_PROGRAM_5 = "week_program_5"
+    WEEK_PROGRAM_6 = "week_program_6"
+
+
+class ScheduleEntryType(StrEnum):
+    """Enum for climate item type."""
+
+    ENDTIME = "ENDTIME"
+    TEMPERATURE = "TEMPERATURE"
+
+
+class ScheduleProfile(StrEnum):
+    """Enum for climate profiles."""
+
+    P1 = "P1"
+    P2 = "P2"
+    P3 = "P3"
+    P4 = "P4"
+    P5 = "P5"
+    P6 = "P6"
+
+
+class ScheduleWeekday(StrEnum):
+    """Enum for climate week days."""
+
+    MONDAY = "MONDAY"
+    TUESDAY = "TUESDAY"
+    WEDNESDAY = "WEDNESDAY"
+    THURSDAY = "THURSDAY"
+    FRIDAY = "FRIDAY"
+    SATURDAY = "SATURDAY"
+    SUNDAY = "SUNDAY"
+
+
+_SCHEDULE_DICT = dict[
+    ScheduleProfile, dict[ScheduleWeekday, dict[int, dict[ScheduleEntryType, int | float]]]
+]
+PROFILE_DICT = dict[ScheduleWeekday, dict[int, dict[ScheduleEntryType, int | float]]]
+WEEKDAY_DICT = dict[int, dict[ScheduleEntryType, int | float]]
 
 
 class BaseClimateEntity(CustomEntity):
@@ -207,21 +289,21 @@ class BaseClimateEntity(CustomEntity):
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
         if (
-            temperature := kwargs.get(ClimateStateChangeArg.TEMPERATURE)
+            temperature := kwargs.get(_StateChangeArg.TEMPERATURE)
         ) is not None and temperature != self.target_temperature:
             return True
         if (
-            hvac_mode := kwargs.get(ClimateStateChangeArg.HVAC_MODE)
+            hvac_mode := kwargs.get(_StateChangeArg.HVAC_MODE)
         ) is not None and hvac_mode != self.hvac_mode:
             return True
         if (
-            preset_mode := kwargs.get(ClimateStateChangeArg.PRESET_MODE)
+            preset_mode := kwargs.get(_StateChangeArg.PRESET_MODE)
         ) is not None and preset_mode != self.preset_mode:
             return True
         return super().is_state_change(**kwargs)
 
     @service()
-    async def get_profile(self, profile: ClimateProfile) -> PROFILE_DICT:
+    async def get_profile(self, profile: ScheduleProfile) -> PROFILE_DICT:
         """Return a schedule by climate profile."""
         if not self._schedule_supported:
             raise HaHomematicException(f"Schedule is not supported by device {self._device.name}")
@@ -230,8 +312,8 @@ class BaseClimateEntity(CustomEntity):
 
     @service()
     async def get_profile_weekday(
-        self, profile: ClimateProfile, weekday: ClimateWeekday
-    ) -> dict[int, dict[ClimateEntryType, int | float]]:
+        self, profile: ScheduleProfile, weekday: ScheduleWeekday
+    ) -> dict[int, dict[ScheduleEntryType, int | float]]:
         """Return a schedule by climate profile."""
         if not self._schedule_supported:
             raise HaHomematicException(f"Schedule is not supported by device {self._device.name}")
@@ -239,10 +321,10 @@ class BaseClimateEntity(CustomEntity):
         return schedule_data.get(profile, {}).get(weekday, {})
 
     async def _get_schedule(
-        self, profile: ClimateProfile | None = None, weekday: ClimateWeekday | None = None
-    ) -> SCHEDULE_DICT:
+        self, profile: ScheduleProfile | None = None, weekday: ScheduleWeekday | None = None
+    ) -> _SCHEDULE_DICT:
         """Get the schedule."""
-        schedule_data: SCHEDULE_DICT = {}
+        schedule_data: _SCHEDULE_DICT = {}
         try:
             raw_schedule = await self._client.get_paramset(
                 address=self._channel.address,
@@ -261,11 +343,11 @@ class BaseClimateEntity(CustomEntity):
             if len(line_split) != 4:
                 continue
             p, et, w, no = line_split
-            _profile = ClimateProfile(p)
+            _profile = ScheduleProfile(p)
             if profile and profile != _profile:
                 continue
-            _entry_type = ClimateEntryType(et)
-            _weekday = ClimateWeekday(w)
+            _entry_type = ScheduleEntryType(et)
+            _weekday = ScheduleWeekday(w)
             if weekday and weekday != _weekday:
                 continue
             _entry_no = int(no)
@@ -284,12 +366,12 @@ class BaseClimateEntity(CustomEntity):
     @service()
     async def set_profile(
         self,
-        profile: ClimateProfile,
-        profile_data: dict[ClimateWeekday, dict[int, dict[ClimateEntryType, int | float]]],
+        profile: ScheduleProfile,
+        profile_data: dict[ScheduleWeekday, dict[int, dict[ScheduleEntryType, int | float]]],
     ) -> None:
         """Set a profile to device."""
         self._validate_profile(profile=profile, profile_data=profile_data)
-        schedule_data: SCHEDULE_DICT = {}
+        schedule_data: _SCHEDULE_DICT = {}
         for weekday, weekday_data in profile_data.items():
             for entry_no, entry in weekday_data.items():
                 for entry_type, entry_value in entry.items():
@@ -310,13 +392,13 @@ class BaseClimateEntity(CustomEntity):
     @service()
     async def set_profile_weekday(
         self,
-        profile: ClimateProfile,
-        weekday: ClimateWeekday,
-        weekday_data: dict[int, dict[ClimateEntryType, int | float]],
+        profile: ScheduleProfile,
+        weekday: ScheduleWeekday,
+        weekday_data: dict[int, dict[ScheduleEntryType, int | float]],
     ) -> None:
         """Set a profile to device."""
         self._validate_profile_weekday(profile=profile, weekday=weekday, weekday_data=weekday_data)
-        schedule_data: SCHEDULE_DICT = {}
+        schedule_data: _SCHEDULE_DICT = {}
         for entry_no, entry in weekday_data.items():
             for entry_type, entry_value in entry.items():
                 _add_to_schedule_data(
@@ -335,11 +417,11 @@ class BaseClimateEntity(CustomEntity):
 
     def _validate_profile(
         self,
-        profile: ClimateProfile,
-        profile_data: dict[ClimateWeekday, dict[int, dict[ClimateEntryType, int | float]]],
+        profile: ScheduleProfile,
+        profile_data: dict[ScheduleWeekday, dict[int, dict[ScheduleEntryType, int | float]]],
     ) -> None:
         """Validate the profile."""
-        for day in ClimateWeekday:
+        for day in ScheduleWeekday:
             if day not in profile_data:
                 raise ValidationException(f"VALIDATE_PROFILE: {day} missing in profile")
 
@@ -350,35 +432,35 @@ class BaseClimateEntity(CustomEntity):
 
     def _validate_profile_weekday(
         self,
-        profile: ClimateProfile,
-        weekday: ClimateWeekday,
+        profile: ScheduleProfile,
+        weekday: ScheduleWeekday,
         weekday_data: WEEKDAY_DICT,
     ) -> None:
         """Validate the profile weekday."""
         previous_time = 0
-        for no in CLIMATE_ENTRY_RANGE:
+        for no in SCHEDULE_ENTRY_RANGE:
             if no not in weekday_data:
                 raise ValidationException(
                     f"VALIDATE_PROFILE: Entry no {no} is missing in profile: {profile}/weekday: {weekday}"
                 )
             entry = weekday_data[no]
-            for entry_type in ClimateEntryType:
+            for entry_type in ScheduleEntryType:
                 if entry_type not in entry:
                     raise ValidationException(
                         f"VALIDATE_PROFILE: Entry type {entry_type} is missing in profile: "
                         f"{profile}/weekday: {weekday}/entry_no: {no}"
                     )
-                temperature = weekday_data[no][ClimateEntryType.TEMPERATURE]
+                temperature = weekday_data[no][ScheduleEntryType.TEMPERATURE]
                 if not self.min_temp <= temperature <= self.max_temp:
                     raise ValidationException(
                         f"VALIDATE_PROFILE: Temperature {temperature} not in valid range (min: {self.min_temp}, "
                         f"max: {self.max_temp}) for profile: {profile}/weekday: {weekday}/entry_no: {no}"
                     )
-                if time := int(weekday_data[no][ClimateEntryType.ENDTIME]):
-                    if time not in CLIMATE_TIME_RANGE:
+                if time := int(weekday_data[no][ScheduleEntryType.ENDTIME]):
+                    if time not in SCHEDULE_TIME_RANGE:
                         raise ValidationException(
-                            f"VALIDATE_PROFILE: Time {time} must be between {CLIMATE_TIME_RANGE.start} and "
-                            f"{CLIMATE_TIME_RANGE.stop-1} for profile: {profile}/weekday: {weekday}/entry_no: {no}"
+                            f"VALIDATE_PROFILE: Time {time} must be between {SCHEDULE_TIME_RANGE.start} and "
+                            f"{SCHEDULE_TIME_RANGE.stop - 1} for profile: {profile}/weekday: {weekday}/entry_no: {no}"
                         )
                     if time < previous_time:
                         raise ValidationException(
@@ -434,7 +516,7 @@ class CeRfThermostat(BaseClimateEntity):
         """Return hvac operation mode."""
         if self.target_temperature and self.target_temperature <= _OFF_TEMPERATURE:
             return HmHvacMode.OFF
-        if self._e_control_mode.value == ClimateModeHm.MANU:
+        if self._e_control_mode.value == _ModeHm.MANU:
             return HmHvacMode.HEAT
         return HmHvacMode.AUTO
 
@@ -448,9 +530,9 @@ class CeRfThermostat(BaseClimateEntity):
         """Return the current preset mode."""
         if self._e_control_mode.value is None:
             return HmPresetMode.NONE
-        if self._e_control_mode.value == ClimateModeHm.BOOST:
+        if self._e_control_mode.value == _ModeHm.BOOST:
             return HmPresetMode.BOOST
-        if self._e_control_mode.value == ClimateModeHm.AWAY:
+        if self._e_control_mode.value == _ModeHm.AWAY:
             return HmPresetMode.AWAY
         return HmPresetMode.NONE
 
@@ -603,9 +685,9 @@ class CeIpThermostat(BaseClimateEntity):
         """Return hvac operation mode."""
         if self.target_temperature and self.target_temperature <= _OFF_TEMPERATURE:
             return HmHvacMode.OFF
-        if self._e_set_point_mode.value == ClimateModeHmIP.MANU:
+        if self._e_set_point_mode.value == _ModeHmIP.MANU:
             return HmHvacMode.HEAT if self._is_heating_mode else HmHvacMode.COOL
-        if self._e_set_point_mode.value == ClimateModeHmIP.AUTO:
+        if self._e_set_point_mode.value == _ModeHmIP.AUTO:
             return HmHvacMode.AUTO
         return HmHvacMode.AUTO
 
@@ -623,7 +705,7 @@ class CeIpThermostat(BaseClimateEntity):
         """Return the current preset mode."""
         if self._e_boost_mode.value:
             return HmPresetMode.BOOST
-        if self._e_set_point_mode.value == ClimateModeHmIP.AWAY:
+        if self._e_set_point_mode.value == _ModeHmIP.AWAY:
             return HmPresetMode.AWAY
         if self.hvac_mode == HmHvacMode.AUTO:
             return self._current_profile_name if self._current_profile_name else HmPresetMode.NONE
@@ -654,14 +736,14 @@ class CeIpThermostat(BaseClimateEntity):
             await self.set_preset_mode(preset_mode=HmPresetMode.NONE, collector=collector)
 
         if hvac_mode == HmHvacMode.AUTO:
-            await self._e_control_mode.send_value(value=ClimateModeHmIP.AUTO, collector=collector)
+            await self._e_control_mode.send_value(value=_ModeHmIP.AUTO, collector=collector)
         elif hvac_mode in (HmHvacMode.HEAT, HmHvacMode.COOL):
-            await self._e_control_mode.send_value(value=ClimateModeHmIP.MANU, collector=collector)
+            await self._e_control_mode.send_value(value=_ModeHmIP.MANU, collector=collector)
             await self.set_temperature(
                 temperature=self._min_or_target_temperature, collector=collector
             )
         elif hvac_mode == HmHvacMode.OFF:
-            await self._e_control_mode.send_value(value=ClimateModeHmIP.MANU, collector=collector)
+            await self._e_control_mode.send_value(value=_ModeHmIP.MANU, collector=collector)
             await self.set_temperature(temperature=_OFF_TEMPERATURE, collector=collector)
 
     @bind_collector()
@@ -691,7 +773,7 @@ class CeIpThermostat(BaseClimateEntity):
             channel_address=self._channel.address,
             paramset_key=ParamsetKey.VALUES,
             values={
-                "SET_POINT_MODE": ClimateModeHmIP.AWAY,
+                "SET_POINT_MODE": _ModeHmIP.AWAY,
                 "SET_POINT_TEMPERATURE": away_temperature,
                 "PARTY_TIME_START": start.strftime(_PARTY_DATE_FORMAT),
                 "PARTY_TIME_END": end.strftime(_PARTY_DATE_FORMAT),
@@ -714,7 +796,7 @@ class CeIpThermostat(BaseClimateEntity):
             channel_address=self._channel.address,
             paramset_key=ParamsetKey.VALUES,
             values={
-                "SET_POINT_MODE": ClimateModeHmIP.AWAY,
+                "SET_POINT_MODE": _ModeHmIP.AWAY,
                 "PARTY_TIME_START": _PARTY_INIT_DATE,
                 "PARTY_TIME_END": _PARTY_INIT_DATE,
             },
@@ -744,7 +826,7 @@ class CeIpThermostat(BaseClimateEntity):
         return profiles
 
 
-def _get_raw_paramset(schedule_data: SCHEDULE_DICT) -> _RAW_SCHEDULE_DICT:
+def _get_raw_paramset(schedule_data: _SCHEDULE_DICT) -> _RAW_SCHEDULE_DICT:
     """Return the raw paramset."""
     raw_paramset: _RAW_SCHEDULE_DICT = {}
     for profile, profile_data in schedule_data.items():
@@ -758,11 +840,11 @@ def _get_raw_paramset(schedule_data: SCHEDULE_DICT) -> _RAW_SCHEDULE_DICT:
 
 
 def _add_to_schedule_data(
-    schedule_data: SCHEDULE_DICT,
-    profile: ClimateProfile,
-    weekday: ClimateWeekday,
+    schedule_data: _SCHEDULE_DICT,
+    profile: ScheduleProfile,
+    weekday: ScheduleWeekday,
     entry_no: int,
-    entry_type: ClimateEntryType,
+    entry_type: ScheduleEntryType,
     entry_value: float | int,
 ) -> None:
     """Add or update schedule entry."""
