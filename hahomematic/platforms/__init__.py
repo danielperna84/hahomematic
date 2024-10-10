@@ -5,13 +5,13 @@ from __future__ import annotations
 import logging
 from typing import Final
 
-from hahomematic.caches.visibility import ALLOWED_INTERNAL_PARAMETERS
 from hahomematic.const import (
     CLICK_EVENTS,
     DEVICE_ERROR_EVENTS,
     IMPULSE_EVENTS,
     Flag,
     Operations,
+    Parameter,
     ParamsetKey,
 )
 from hahomematic.platforms import device as hmd
@@ -20,6 +20,9 @@ from hahomematic.platforms.generic import create_entity_and_append_to_channel
 
 __all__ = ["create_entities_and_events"]
 
+# Some parameters are marked as INTERNAL in the paramset and not considered by default,
+# but some are required and should be added here.
+_ALLOWED_INTERNAL_PARAMETERS: Final[tuple[Parameter, ...]] = (Parameter.DIRECTION,)
 _LOGGER: Final = logging.getLogger(__name__)
 
 
@@ -82,7 +85,7 @@ def create_entities_and_events(device: hmd.HmDevice) -> None:
                     and not parameter_data["OPERATIONS"] & Operations.WRITE
                 ) or (
                     parameter_data["FLAGS"] & Flag.INTERNAL
-                    and parameter not in ALLOWED_INTERNAL_PARAMETERS
+                    and parameter not in _ALLOWED_INTERNAL_PARAMETERS
                     and not parameter_is_un_ignored
                 ):
                     _LOGGER.debug(

@@ -40,6 +40,14 @@ class UnsupportedException(BaseHomematicException):
         super().__init__("UnsupportedException", *args)
 
 
+class ValidationException(BaseHomematicException):
+    """hahomematic validation exception."""
+
+    def __init__(self, *args: Any) -> None:
+        """Init the ValidationException."""
+        super().__init__("ValidationException", *args)
+
+
 class NoConnection(BaseHomematicException):
     """hahomematic NoConnection exception."""
 
