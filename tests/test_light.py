@@ -19,7 +19,7 @@ from hahomematic.platforms.custom import (
     CeIpFixedColorLight,
     CeIpRGBWLight,
 )
-from hahomematic.platforms.custom.light import ColorBehaviour, FixedColor, TimeUnit
+from hahomematic.platforms.custom.light import _ColorBehaviour, _FixedColor, _TimeUnit
 
 from tests import const, helper
 
@@ -433,7 +433,7 @@ async def test_ceipfixedcolorlight(
     assert light.effects == ()
     assert light.brightness == 0
     assert light.is_on is False
-    assert light.color_name == FixedColor.BLACK
+    assert light.color_name == _FixedColor.BLACK
     assert light.channel_color_name is None
     assert light.channel_brightness is None
     assert light.channel_hs_color is None
@@ -463,7 +463,7 @@ async def test_ceipfixedcolorlight(
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert light.brightness == 0
-    assert light.color_name == FixedColor.WHITE
+    assert light.color_name == _FixedColor.WHITE
 
     await light.turn_on(hs_color=(350, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -472,7 +472,7 @@ async def test_ceipfixedcolorlight(
         values={"COLOR": 4, "LEVEL": 1.0},
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
-    assert light.color_name == FixedColor.RED
+    assert light.color_name == _FixedColor.RED
 
     await light.turn_on(hs_color=(0.0, 0.0))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -481,7 +481,7 @@ async def test_ceipfixedcolorlight(
         values={"COLOR": 7, "LEVEL": 1.0},
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
-    assert light.color_name == FixedColor.WHITE
+    assert light.color_name == _FixedColor.WHITE
 
     await light.turn_on(hs_color=(60.0, 50.0))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -490,7 +490,7 @@ async def test_ceipfixedcolorlight(
         values={"COLOR": 6, "LEVEL": 1.0},
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
-    assert light.color_name == FixedColor.YELLOW
+    assert light.color_name == _FixedColor.YELLOW
 
     await light.turn_on(hs_color=(120, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -499,7 +499,7 @@ async def test_ceipfixedcolorlight(
         values={"COLOR": 2, "LEVEL": 1.0},
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
-    assert light.color_name == FixedColor.GREEN
+    assert light.color_name == _FixedColor.GREEN
 
     await light.turn_on(hs_color=(180, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -508,7 +508,7 @@ async def test_ceipfixedcolorlight(
         values={"COLOR": 3, "LEVEL": 1.0},
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
-    assert light.color_name == FixedColor.TURQUOISE
+    assert light.color_name == _FixedColor.TURQUOISE
 
     await light.turn_on(hs_color=(240, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -517,7 +517,7 @@ async def test_ceipfixedcolorlight(
         values={"COLOR": 1, "LEVEL": 1.0},
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
-    assert light.color_name == FixedColor.BLUE
+    assert light.color_name == _FixedColor.BLUE
 
     await light.turn_on(hs_color=(300, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -526,14 +526,14 @@ async def test_ceipfixedcolorlight(
         values={"COLOR": 5, "LEVEL": 1.0},
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
-    assert light.color_name == FixedColor.PURPLE
+    assert light.color_name == _FixedColor.PURPLE
 
     await central.event(const.INTERFACE_ID, "VCU3716619:7", "LEVEL", 0.5)
     assert light.channel_brightness == 127
 
     await central.event(const.INTERFACE_ID, "VCU3716619:7", "COLOR", 1)
     assert light.channel_hs_color == (240.0, 100.0)
-    assert light.channel_color_name == FixedColor.BLUE
+    assert light.channel_color_name == _FixedColor.BLUE
 
     await light.turn_off()
     light.set_on_time(18)
@@ -631,7 +631,7 @@ async def test_ceipfixedcolorlightwired(
     assert light.supports_transition is True
     assert light.effect is None
     assert light.effects == (
-        ColorBehaviour.ON,
+        _ColorBehaviour.ON,
         "BLINKING_SLOW",
         "BLINKING_MIDDLE",
         "BLINKING_FAST",
@@ -644,7 +644,7 @@ async def test_ceipfixedcolorlightwired(
     )
     assert light.brightness == 0
     assert light.is_on is False
-    assert light.color_name == FixedColor.BLACK
+    assert light.color_name == _FixedColor.BLACK
     await light.turn_on()
     assert mock_client.method_calls[-1] == call.put_paramset(
         channel_address="VCU4704397:8",
@@ -653,7 +653,7 @@ async def test_ceipfixedcolorlightwired(
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert light.brightness == 255
-    assert light.color_name == FixedColor.WHITE
+    assert light.color_name == _FixedColor.WHITE
 
     await light.turn_on(brightness=100)
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -663,8 +663,8 @@ async def test_ceipfixedcolorlightwired(
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert light.brightness == 100
-    assert light.color_name == FixedColor.WHITE
-    assert light.effect == ColorBehaviour.ON
+    assert light.color_name == _FixedColor.WHITE
+    assert light.effect == _ColorBehaviour.ON
 
     await light.turn_off()
     assert mock_client.method_calls[-1] == call.set_value(
@@ -675,8 +675,8 @@ async def test_ceipfixedcolorlightwired(
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert light.brightness == 0
-    assert light.color_name == FixedColor.WHITE
-    assert light.effect == ColorBehaviour.ON
+    assert light.color_name == _FixedColor.WHITE
+    assert light.effect == _ColorBehaviour.ON
 
     await light.turn_on(hs_color=(350, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -686,8 +686,8 @@ async def test_ceipfixedcolorlightwired(
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert light.brightness == 255
-    assert light.color_name == FixedColor.RED
-    assert light.effect == ColorBehaviour.ON
+    assert light.color_name == _FixedColor.RED
+    assert light.effect == _ColorBehaviour.ON
 
     await light.turn_on(hs_color=(0.0, 0.0))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -697,8 +697,8 @@ async def test_ceipfixedcolorlightwired(
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert light.brightness == 255
-    assert light.color_name == FixedColor.WHITE
-    assert light.effect == ColorBehaviour.ON
+    assert light.color_name == _FixedColor.WHITE
+    assert light.effect == _ColorBehaviour.ON
 
     await light.turn_on(hs_color=(60.0, 50.0))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -708,8 +708,8 @@ async def test_ceipfixedcolorlightwired(
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert light.brightness == 255
-    assert light.color_name == FixedColor.YELLOW
-    assert light.effect == ColorBehaviour.ON
+    assert light.color_name == _FixedColor.YELLOW
+    assert light.effect == _ColorBehaviour.ON
 
     await light.turn_on(hs_color=(120, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -719,8 +719,8 @@ async def test_ceipfixedcolorlightwired(
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert light.brightness == 255
-    assert light.color_name == FixedColor.GREEN
-    assert light.effect == ColorBehaviour.ON
+    assert light.color_name == _FixedColor.GREEN
+    assert light.effect == _ColorBehaviour.ON
 
     await light.turn_on(hs_color=(180, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -730,8 +730,8 @@ async def test_ceipfixedcolorlightwired(
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert light.brightness == 255
-    assert light.color_name == FixedColor.TURQUOISE
-    assert light.effect == ColorBehaviour.ON
+    assert light.color_name == _FixedColor.TURQUOISE
+    assert light.effect == _ColorBehaviour.ON
 
     await light.turn_on(hs_color=(240, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -741,8 +741,8 @@ async def test_ceipfixedcolorlightwired(
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert light.brightness == 255
-    assert light.color_name == FixedColor.BLUE
-    assert light.effect == ColorBehaviour.ON
+    assert light.color_name == _FixedColor.BLUE
+    assert light.effect == _ColorBehaviour.ON
 
     await light.turn_on(hs_color=(300, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -752,13 +752,13 @@ async def test_ceipfixedcolorlightwired(
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert light.brightness == 255
-    assert light.color_name == FixedColor.PURPLE
-    assert light.effect == ColorBehaviour.ON
+    assert light.color_name == _FixedColor.PURPLE
+    assert light.effect == _ColorBehaviour.ON
 
     await light.turn_off()
     assert light.brightness == 0
-    assert light.color_name == FixedColor.PURPLE
-    assert light.effect == ColorBehaviour.ON
+    assert light.color_name == _FixedColor.PURPLE
+    assert light.effect == _ColorBehaviour.ON
 
     await light.turn_on(brightness=100)
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -768,8 +768,8 @@ async def test_ceipfixedcolorlightwired(
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert light.brightness == 100
-    assert light.color_name == FixedColor.PURPLE
-    assert light.effect == ColorBehaviour.ON
+    assert light.color_name == _FixedColor.PURPLE
+    assert light.effect == _ColorBehaviour.ON
 
     await light.turn_on(brightness=33)
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -779,8 +779,8 @@ async def test_ceipfixedcolorlightwired(
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert light.brightness == 33
-    assert light.color_name == FixedColor.PURPLE
-    assert light.effect == ColorBehaviour.ON
+    assert light.color_name == _FixedColor.PURPLE
+    assert light.effect == _ColorBehaviour.ON
 
     await light.turn_on(effect="FLASH_MIDDLE")
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -790,7 +790,7 @@ async def test_ceipfixedcolorlightwired(
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert light.brightness == 33
-    assert light.color_name == FixedColor.PURPLE
+    assert light.color_name == _FixedColor.PURPLE
     assert light.effect == "FLASH_MIDDLE"
 
     await light.turn_on(brightness=66)
@@ -801,7 +801,7 @@ async def test_ceipfixedcolorlightwired(
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert light.brightness == 66
-    assert light.color_name == FixedColor.PURPLE
+    assert light.color_name == _FixedColor.PURPLE
     assert light.effect == "FLASH_MIDDLE"
 
     await light.turn_off()
@@ -1027,7 +1027,7 @@ async def test_ceiprgbwlight(
             "HUE": 44,
             "SATURATION": 0.66,
             "DURATION_VALUE": 111600,
-            "RAMP_TIME_UNIT": TimeUnit.SECONDS,
+            "RAMP_TIME_UNIT": _TimeUnit.SECONDS,
             "RAMP_TIME_VALUE": 5,
             "LEVEL": 1.0,
         },
@@ -1040,7 +1040,7 @@ async def test_ceiprgbwlight(
         paramset_key=ParamsetKey.VALUES,
         values={
             "DURATION_VALUE": 111600,
-            "RAMP_TIME_UNIT": TimeUnit.SECONDS,
+            "RAMP_TIME_UNIT": _TimeUnit.SECONDS,
             "RAMP_TIME_VALUE": 5,
             "LEVEL": 0.0,
         },
@@ -1054,9 +1054,9 @@ async def test_ceiprgbwlight(
         values={
             "HUE": 44,
             "SATURATION": 0.66,
-            "RAMP_TIME_UNIT": TimeUnit.SECONDS,
+            "RAMP_TIME_UNIT": _TimeUnit.SECONDS,
             "RAMP_TIME_VALUE": 5,
-            "DURATION_UNIT": TimeUnit.SECONDS,
+            "DURATION_UNIT": _TimeUnit.SECONDS,
             "DURATION_VALUE": 8760,
             "LEVEL": 1.0,
         },

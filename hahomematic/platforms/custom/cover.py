@@ -31,26 +31,14 @@ _OPEN_TILT_LEVEL: Final[float] = 1.0  # must be float!
 _WD_CLOSED_LEVEL: Final[float] = -0.005  # must be float! HM-Sec-Win
 
 
-class StateChangeArg(StrEnum):
-    """Enum with cover state change arguments."""
-
-    CLOSE = "close"
-    OPEN = "open"
-    POSITION = "position"
-    TILT_CLOSE = "tilt_close"
-    TILT_OPEN = "tilt_open"
-    TILT_POSITION = "tilt_position"
-    VENT = "vent"
-
-
-class CoverActivity(StrEnum):
+class _CoverActivity(StrEnum):
     """Enum with cover activities."""
 
     CLOSING = "DOWN"
     OPENING = "UP"
 
 
-class CoverPosition(IntEnum):
+class _CoverPosition(IntEnum):
     """Enum with cover positions."""
 
     OPEN = 100
@@ -58,14 +46,14 @@ class CoverPosition(IntEnum):
     CLOSED = 0
 
 
-class GarageDoorActivity(IntEnum):
+class _GarageDoorActivity(IntEnum):
     """Enum with garage door commands."""
 
     CLOSING = 5
     OPENING = 2
 
 
-class GarageDoorCommand(StrEnum):
+class _GarageDoorCommand(StrEnum):
     """Enum with garage door commands."""
 
     CLOSE = "CLOSE"
@@ -75,13 +63,25 @@ class GarageDoorCommand(StrEnum):
     STOP = "STOP"
 
 
-class GarageDoorState(StrEnum):
+class _GarageDoorState(StrEnum):
     """Enum with garage door states."""
 
     CLOSED = "CLOSED"
     OPEN = "OPEN"
     VENTILATION_POSITION = "VENTILATION_POSITION"
     POSITION_UNKNOWN = "_POSITION_UNKNOWN"
+
+
+class _StateChangeArg(StrEnum):
+    """Enum with cover state change arguments."""
+
+    CLOSE = "close"
+    OPEN = "open"
+    POSITION = "position"
+    TILT_CLOSE = "tilt_close"
+    TILT_OPEN = "tilt_open"
+    TILT_POSITION = "tilt_position"
+    VENT = "vent"
 
 
 class CeCover(CustomEntity):
@@ -149,14 +149,14 @@ class CeCover(CustomEntity):
     def is_opening(self) -> bool | None:
         """Return if the cover is opening."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == CoverActivity.OPENING
+            return str(self._e_direction.value) == _CoverActivity.OPENING
         return None
 
     @state_property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == CoverActivity.CLOSING
+            return str(self._e_direction.value) == _CoverActivity.CLOSING
         return None
 
     @bind_collector()
@@ -180,15 +180,18 @@ class CeCover(CustomEntity):
 
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
-        if kwargs.get(StateChangeArg.OPEN) is not None and self._channel_level != self._open_level:
+        if (
+            kwargs.get(_StateChangeArg.OPEN) is not None
+            and self._channel_level != self._open_level
+        ):
             return True
         if (
-            kwargs.get(StateChangeArg.CLOSE) is not None
+            kwargs.get(_StateChangeArg.CLOSE) is not None
             and self._channel_level != self._closed_level
         ):
             return True
         if (
-            position := kwargs.get(StateChangeArg.POSITION)
+            position := kwargs.get(_StateChangeArg.POSITION)
         ) is not None and position != self.current_position:
             return True
         return super().is_state_change(**kwargs)
@@ -398,17 +401,17 @@ class CeBlind(CeCover):
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
         if (
-            tilt_position := kwargs.get(StateChangeArg.TILT_POSITION)
+            tilt_position := kwargs.get(_StateChangeArg.TILT_POSITION)
         ) is not None and tilt_position != self.current_tilt_position:
             return True
         if (
-            kwargs.get(StateChangeArg.TILT_OPEN) is not None
-            and self.current_tilt_position != CoverPosition.OPEN
+            kwargs.get(_StateChangeArg.TILT_OPEN) is not None
+            and self.current_tilt_position != _CoverPosition.OPEN
         ):
             return True
         if (
-            kwargs.get(StateChangeArg.TILT_CLOSE) is not None
-            and self.current_tilt_position != CoverPosition.CLOSED
+            kwargs.get(_StateChangeArg.TILT_CLOSE) is not None
+            and self.current_tilt_position != _CoverPosition.CLOSED
         ):
             return True
         return super().is_state_change(**kwargs)
@@ -487,12 +490,12 @@ class CeGarage(CustomEntity):
     @state_property
     def current_position(self) -> int | None:
         """Return current position of the garage door ."""
-        if self._e_door_state.value == GarageDoorState.OPEN:
-            return CoverPosition.OPEN
-        if self._e_door_state.value == GarageDoorState.VENTILATION_POSITION:
-            return CoverPosition.VENT
-        if self._e_door_state.value == GarageDoorState.CLOSED:
-            return CoverPosition.CLOSED
+        if self._e_door_state.value == _GarageDoorState.OPEN:
+            return _CoverPosition.OPEN
+        if self._e_door_state.value == _GarageDoorState.VENTILATION_POSITION:
+            return _CoverPosition.VENT
+        if self._e_door_state.value == _GarageDoorState.CLOSED:
+            return _CoverPosition.CLOSED
         return None
 
     @bind_collector()
@@ -516,21 +519,21 @@ class CeGarage(CustomEntity):
     def is_closed(self) -> bool | None:
         """Return if the garage door is closed."""
         if self._e_door_state.value is not None:
-            return str(self._e_door_state.value) == GarageDoorState.CLOSED
+            return str(self._e_door_state.value) == _GarageDoorState.CLOSED
         return None
 
     @state_property
     def is_opening(self) -> bool | None:
         """Return if the garage door is opening."""
         if self._e_section.value is not None:
-            return int(self._e_section.value) == GarageDoorActivity.OPENING
+            return int(self._e_section.value) == _GarageDoorActivity.OPENING
         return None
 
     @state_property
     def is_closing(self) -> bool | None:
         """Return if the garage door is closing."""
         if self._e_section.value is not None:
-            return int(self._e_section.value) == GarageDoorActivity.CLOSING
+            return int(self._e_section.value) == _GarageDoorActivity.CLOSING
         return None
 
     @bind_collector()
@@ -538,19 +541,19 @@ class CeGarage(CustomEntity):
         """Open the garage door."""
         if not self.is_state_change(open=True):
             return
-        await self._e_door_command.send_value(value=GarageDoorCommand.OPEN, collector=collector)
+        await self._e_door_command.send_value(value=_GarageDoorCommand.OPEN, collector=collector)
 
     @bind_collector()
     async def close(self, collector: CallParameterCollector | None = None) -> None:
         """Close the garage door."""
         if not self.is_state_change(close=True):
             return
-        await self._e_door_command.send_value(value=GarageDoorCommand.CLOSE, collector=collector)
+        await self._e_door_command.send_value(value=_GarageDoorCommand.CLOSE, collector=collector)
 
     @bind_collector(enabled=False)
     async def stop(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion."""
-        await self._e_door_command.send_value(value=GarageDoorCommand.STOP, collector=collector)
+        await self._e_door_command.send_value(value=_GarageDoorCommand.STOP, collector=collector)
 
     @bind_collector()
     async def vent(self, collector: CallParameterCollector | None = None) -> None:
@@ -558,24 +561,24 @@ class CeGarage(CustomEntity):
         if not self.is_state_change(vent=True):
             return
         await self._e_door_command.send_value(
-            value=GarageDoorCommand.PARTIAL_OPEN, collector=collector
+            value=_GarageDoorCommand.PARTIAL_OPEN, collector=collector
         )
 
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
         if (
-            kwargs.get(StateChangeArg.OPEN) is not None
-            and self.current_position != CoverPosition.OPEN
+            kwargs.get(_StateChangeArg.OPEN) is not None
+            and self.current_position != _CoverPosition.OPEN
         ):
             return True
         if (
-            kwargs.get(StateChangeArg.VENT) is not None
-            and self.current_position != CoverPosition.VENT
+            kwargs.get(_StateChangeArg.VENT) is not None
+            and self.current_position != _CoverPosition.VENT
         ):
             return True
         if (
-            kwargs.get(StateChangeArg.CLOSE) is not None
-            and self.current_position != CoverPosition.CLOSED
+            kwargs.get(_StateChangeArg.CLOSE) is not None
+            and self.current_position != _CoverPosition.CLOSED
         ):
             return True
         return super().is_state_change(**kwargs)

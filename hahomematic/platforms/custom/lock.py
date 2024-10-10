@@ -21,14 +21,14 @@ from hahomematic.platforms.entity import CallParameterCollector, bind_collector
 from hahomematic.platforms.generic import HmAction, HmSensor, HmSwitch
 
 
-class LockActivity(StrEnum):
+class _LockActivity(StrEnum):
     """Enum with lock activities."""
 
     LOCKING = "DOWN"
     UNLOCKING = "UP"
 
 
-class LockError(StrEnum):
+class _LockError(StrEnum):
     """Enum with lock errors."""
 
     NO_ERROR = "NO_ERROR"
@@ -36,19 +36,19 @@ class LockError(StrEnum):
     MOTOR_ABORTED = "MOTOR_ABORTED"
 
 
+class _LockTargetLevel(StrEnum):
+    """Enum with lock target levels."""
+
+    LOCKED = "LOCKED"
+    OPEN = "OPEN"
+    UNLOCKED = "UNLOCKED"
+
+
 class LockState(StrEnum):
     """Enum with lock states."""
 
     LOCKED = "LOCKED"
     UNKNOWN = "UNKNOWN"
-    UNLOCKED = "UNLOCKED"
-
-
-class LockTargetLevel(StrEnum):
-    """Enum with lock target levels."""
-
-    LOCKED = "LOCKED"
-    OPEN = "OPEN"
     UNLOCKED = "UNLOCKED"
 
 
@@ -123,14 +123,14 @@ class CeIpLock(BaseLock):
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == LockActivity.LOCKING
+            return str(self._e_direction.value) == _LockActivity.LOCKING
         return None
 
     @state_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == LockActivity.UNLOCKING
+            return str(self._e_direction.value) == _LockActivity.UNLOCKING
         return None
 
     @property
@@ -142,20 +142,22 @@ class CeIpLock(BaseLock):
     async def lock(self, collector: CallParameterCollector | None = None) -> None:
         """Lock the lock."""
         await self._e_lock_target_level.send_value(
-            value=LockTargetLevel.LOCKED, collector=collector
+            value=_LockTargetLevel.LOCKED, collector=collector
         )
 
     @bind_collector()
     async def unlock(self, collector: CallParameterCollector | None = None) -> None:
         """Unlock the lock."""
         await self._e_lock_target_level.send_value(
-            value=LockTargetLevel.UNLOCKED, collector=collector
+            value=_LockTargetLevel.UNLOCKED, collector=collector
         )
 
     @bind_collector()
     async def open(self, collector: CallParameterCollector | None = None) -> None:
         """Open the lock."""
-        await self._e_lock_target_level.send_value(value=LockTargetLevel.OPEN, collector=collector)
+        await self._e_lock_target_level.send_value(
+            value=_LockTargetLevel.OPEN, collector=collector
+        )
 
 
 class CeButtonLock(BaseLock):
@@ -223,20 +225,20 @@ class CeRfLock(BaseLock):
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == LockActivity.LOCKING
+            return str(self._e_direction.value) == _LockActivity.LOCKING
         return None
 
     @state_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == LockActivity.UNLOCKING
+            return str(self._e_direction.value) == _LockActivity.UNLOCKING
         return None
 
     @state_property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return self._e_error.value is not None and self._e_error.value != LockError.NO_ERROR
+        return self._e_error.value is not None and self._e_error.value != _LockError.NO_ERROR
 
     @property
     def supports_open(self) -> bool:

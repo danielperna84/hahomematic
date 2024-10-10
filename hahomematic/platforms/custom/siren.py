@@ -24,7 +24,7 @@ from hahomematic.platforms.generic import HmAction, HmBinarySensor, HmSensor
 _SMOKE_DETECTOR_ALARM_STATUS_IDLE_OFF: Final = "IDLE_OFF"
 
 
-class SirenCommand(StrEnum):
+class _SirenCommand(StrEnum):
     """Enum with siren commands."""
 
     OFF = "INTRUSION_ALARM_OFF"
@@ -226,13 +226,15 @@ class CeIpSirenSmoke(BaseSiren):
         **kwargs: Unpack[SirenOnArgs],
     ) -> None:
         """Turn the device on."""
-        await self._e_smoke_detector_command.send_value(value=SirenCommand.ON, collector=collector)
+        await self._e_smoke_detector_command.send_value(
+            value=_SirenCommand.ON, collector=collector
+        )
 
     @bind_collector()
     async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the device off."""
         await self._e_smoke_detector_command.send_value(
-            value=SirenCommand.OFF, collector=collector
+            value=_SirenCommand.OFF, collector=collector
         )
 
 

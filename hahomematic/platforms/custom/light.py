@@ -37,20 +37,7 @@ _MIN_BRIGHTNESS: Final = 0.0
 _MIN_MIREDS: Final = 153
 
 
-class StateChangeArg(StrEnum):
-    """Enum with light state change arguments."""
-
-    BRIGHTNESS = "brightness"
-    COLOR_TEMP = "color_temp"
-    EFFECT = "effect"
-    HS_COLOR = "hs_color"
-    OFF = "off"
-    ON = "on"
-    ON_TIME = "on_time"
-    RAMP_TIME = "ramp_time"
-
-
-class DeviceOperationMode(StrEnum):
+class _DeviceOperationMode(StrEnum):
     """Enum with device operation modes."""
 
     PWM = "4_PWM"
@@ -59,7 +46,7 @@ class DeviceOperationMode(StrEnum):
     TUNABLE_WHITE = "2_TUNABLE_WHITE"
 
 
-class ColorBehaviour(StrEnum):
+class _ColorBehaviour(StrEnum):
     """Enum with color behaviours."""
 
     DO_NOT_CARE = "DO_NOT_CARE"
@@ -68,7 +55,7 @@ class ColorBehaviour(StrEnum):
     ON = "ON"
 
 
-class FixedColor(StrEnum):
+class _FixedColor(StrEnum):
     """Enum with colors."""
 
     BLACK = "BLACK"
@@ -83,7 +70,20 @@ class FixedColor(StrEnum):
     YELLOW = "YELLOW"
 
 
-class TimeUnit(IntEnum):
+class _StateChangeArg(StrEnum):
+    """Enum with light state change arguments."""
+
+    BRIGHTNESS = "brightness"
+    COLOR_TEMP = "color_temp"
+    EFFECT = "effect"
+    HS_COLOR = "hs_color"
+    OFF = "off"
+    ON = "on"
+    ON_TIME = "on_time"
+    RAMP_TIME = "ramp_time"
+
+
+class _TimeUnit(IntEnum):
     """Enum with time units."""
 
     SECONDS = 0
@@ -92,31 +92,31 @@ class TimeUnit(IntEnum):
 
 
 _NO_COLOR: Final = (
-    FixedColor.BLACK,
-    FixedColor.DO_NOT_CARE,
-    FixedColor.OLD_VALUE,
+    _FixedColor.BLACK,
+    _FixedColor.DO_NOT_CARE,
+    _FixedColor.OLD_VALUE,
 )
 
 _EXCLUDE_FROM_COLOR_BEHAVIOUR: Final = (
-    ColorBehaviour.DO_NOT_CARE,
-    ColorBehaviour.OFF,
-    ColorBehaviour.OLD_VALUE,
+    _ColorBehaviour.DO_NOT_CARE,
+    _ColorBehaviour.OFF,
+    _ColorBehaviour.OLD_VALUE,
 )
 
 _OFF_COLOR_BEHAVIOUR: Final = (
-    ColorBehaviour.DO_NOT_CARE,
-    ColorBehaviour.OFF,
-    ColorBehaviour.OLD_VALUE,
+    _ColorBehaviour.DO_NOT_CARE,
+    _ColorBehaviour.OFF,
+    _ColorBehaviour.OLD_VALUE,
 )
 
 _FIXED_COLOR_SWITCHER: Mapping[str, tuple[float, float]] = {
-    FixedColor.WHITE: (0.0, 0.0),
-    FixedColor.RED: (0.0, 100.0),
-    FixedColor.YELLOW: (60.0, 100.0),
-    FixedColor.GREEN: (120.0, 100.0),
-    FixedColor.TURQUOISE: (180.0, 100.0),
-    FixedColor.BLUE: (240.0, 100.0),
-    FixedColor.PURPLE: (300.0, 100.0),
+    _FixedColor.WHITE: (0.0, 0.0),
+    _FixedColor.RED: (0.0, 100.0),
+    _FixedColor.YELLOW: (60.0, 100.0),
+    _FixedColor.GREEN: (120.0, 100.0),
+    _FixedColor.TURQUOISE: (180.0, 100.0),
+    _FixedColor.BLUE: (240.0, 100.0),
+    _FixedColor.PURPLE: (300.0, 100.0),
 }
 
 
@@ -282,34 +282,34 @@ class CeDimmer(CustomEntity, OnTimeMixin):
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
         if (
-            kwargs.get(StateChangeArg.ON) is not None
+            kwargs.get(_StateChangeArg.ON) is not None
             and self.is_on is not True
             and len(kwargs) == 1
         ):
             return True
         if (
-            kwargs.get(StateChangeArg.OFF) is not None
+            kwargs.get(_StateChangeArg.OFF) is not None
             and self.is_on is not False
             and len(kwargs) == 1
         ):
             return True
         if (
-            brightness := kwargs.get(StateChangeArg.BRIGHTNESS)
+            brightness := kwargs.get(_StateChangeArg.BRIGHTNESS)
         ) is not None and brightness != self.brightness:
             return True
         if (
-            hs_color := kwargs.get(StateChangeArg.HS_COLOR)
+            hs_color := kwargs.get(_StateChangeArg.HS_COLOR)
         ) is not None and hs_color != self.hs_color:
             return True
         if (
-            color_temp := kwargs.get(StateChangeArg.COLOR_TEMP)
+            color_temp := kwargs.get(_StateChangeArg.COLOR_TEMP)
         ) is not None and color_temp != self.color_temp:
             return True
-        if (effect := kwargs.get(StateChangeArg.EFFECT)) is not None and effect != self.effect:
+        if (effect := kwargs.get(_StateChangeArg.EFFECT)) is not None and effect != self.effect:
             return True
-        if kwargs.get(StateChangeArg.RAMP_TIME) is not None:
+        if kwargs.get(_StateChangeArg.RAMP_TIME) is not None:
             return True
-        if kwargs.get(StateChangeArg.ON_TIME) is not None:
+        if kwargs.get(_StateChangeArg.ON_TIME) is not None:
             return True
         return super().is_state_change(**kwargs)
 
@@ -482,24 +482,24 @@ class CeIpRGBWLight(CeDimmer):
     @property
     def _relevant_entities(self) -> tuple[GenericEntity, ...]:
         """Returns the list of relevant entities. To be overridden by subclasses."""
-        if self._e_device_operation_mode.value == DeviceOperationMode.RGBW:
+        if self._e_device_operation_mode.value == _DeviceOperationMode.RGBW:
             return self._e_hue, self._e_level, self._e_saturation, self._e_color_temperature_kelvin
-        if self._e_device_operation_mode.value == DeviceOperationMode.RGB:
+        if self._e_device_operation_mode.value == _DeviceOperationMode.RGB:
             return self._e_hue, self._e_level, self._e_saturation
-        if self._e_device_operation_mode.value == DeviceOperationMode.TUNABLE_WHITE:
+        if self._e_device_operation_mode.value == _DeviceOperationMode.TUNABLE_WHITE:
             return self._e_level, self._e_color_temperature_kelvin
         return (self._e_level,)
 
     @property
     def supports_color_temperature(self) -> bool:
         """Flag if light supports color temperature."""
-        return self._e_device_operation_mode.value == DeviceOperationMode.TUNABLE_WHITE
+        return self._e_device_operation_mode.value == _DeviceOperationMode.TUNABLE_WHITE
 
     @property
     def supports_effects(self) -> bool:
         """Flag if light supports effects."""
         return (
-            self._e_device_operation_mode.value != DeviceOperationMode.PWM
+            self._e_device_operation_mode.value != _DeviceOperationMode.PWM
             and self.effects is not None
             and len(self.effects) > 0
         )
@@ -508,8 +508,8 @@ class CeIpRGBWLight(CeDimmer):
     def supports_hs_color(self) -> bool:
         """Flag if light supports color."""
         return self._e_device_operation_mode.value in (
-            DeviceOperationMode.RGBW,
-            DeviceOperationMode.RGB,
+            _DeviceOperationMode.RGBW,
+            _DeviceOperationMode.RGB,
         )
 
     @property
@@ -521,10 +521,10 @@ class CeIpRGBWLight(CeDimmer):
         """
         if (
             self._e_device_operation_mode.value
-            in (DeviceOperationMode.RGB, DeviceOperationMode.RGBW)
+            in (_DeviceOperationMode.RGB, _DeviceOperationMode.RGBW)
             and self._channel.no in (2, 3, 4)
         ) or (
-            self._e_device_operation_mode.value == DeviceOperationMode.TUNABLE_WHITE
+            self._e_device_operation_mode.value == _DeviceOperationMode.TUNABLE_WHITE
             and self._channel.no in (3, 4)
         ):
             return EntityUsage.NO_CREATE
@@ -781,11 +781,11 @@ class CeIpFixedColorLight(CeDimmer):
             simple_rgb_color = _convert_color(hs_color)
             await self._e_color.send_value(value=simple_rgb_color, collector=collector)
         elif self.color_name in _NO_COLOR:
-            await self._e_color.send_value(value=FixedColor.WHITE, collector=collector)
+            await self._e_color.send_value(value=_FixedColor.WHITE, collector=collector)
         if (effect := kwargs.get("effect")) is not None and effect in self._effect_list:
             await self._e_effect.send_value(value=effect, collector=collector)
         elif self._e_effect.value not in self._effect_list:
-            await self._e_effect.send_value(value=ColorBehaviour.ON, collector=collector)
+            await self._e_effect.send_value(value=_ColorBehaviour.ON, collector=collector)
         elif (color_behaviour := self._e_effect.value) is not None:
             await self._e_effect.send_value(value=color_behaviour, collector=collector)
 
@@ -813,15 +813,15 @@ class CeIpFixedColorLight(CeDimmer):
 
 def _recalc_unit_timer(time: float) -> tuple[float, int | None]:
     """Recalculate unit and value of timer."""
-    ramp_time_unit = TimeUnit.SECONDS
+    ramp_time_unit = _TimeUnit.SECONDS
     if time == 111600:
         return time, None
     if time > 16343:
         time /= 60
-        ramp_time_unit = TimeUnit.MINUTES
+        ramp_time_unit = _TimeUnit.MINUTES
     if time > 16343:
         time /= 60
-        ramp_time_unit = TimeUnit.HOURS
+        ramp_time_unit = _TimeUnit.HOURS
     return time, ramp_time_unit
 
 
@@ -834,18 +834,18 @@ def _convert_color(color: tuple[float, float]) -> str:
     """
     hue: int = int(color[0])
     if int(color[1]) < 5:
-        return FixedColor.WHITE
+        return _FixedColor.WHITE
     if 30 < hue <= 90:
-        return FixedColor.YELLOW
+        return _FixedColor.YELLOW
     if 90 < hue <= 150:
-        return FixedColor.GREEN
+        return _FixedColor.GREEN
     if 150 < hue <= 210:
-        return FixedColor.TURQUOISE
+        return _FixedColor.TURQUOISE
     if 210 < hue <= 270:
-        return FixedColor.BLUE
+        return _FixedColor.BLUE
     if 270 < hue <= 330:
-        return FixedColor.PURPLE
-    return FixedColor.RED
+        return _FixedColor.PURPLE
+    return _FixedColor.RED
 
 
 def make_ip_dimmer(

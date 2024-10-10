@@ -24,11 +24,11 @@ from hahomematic.platforms.custom import (
     HmHvacMode,
     HmPresetMode,
 )
-from hahomematic.platforms.custom.const import (
-    ClimateEntryType,
-    ClimateModeHmIP,
-    ClimateProfile,
-    ClimateWeekday,
+from hahomematic.platforms.custom.climate import (
+    ScheduleEntryType,
+    ScheduleProfile,
+    ScheduleWeekday,
+    _ModeHmIP,
 )
 
 from tests import const, helper
@@ -202,9 +202,7 @@ async def test_cerfthermostat(
         value=12.0,
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
-    await central.event(
-        const.INTERFACE_ID, "VCU0000050:4", "CONTROL_MODE", ClimateModeHmIP.MANU.value
-    )
+    await central.event(const.INTERFACE_ID, "VCU0000050:4", "CONTROL_MODE", _ModeHmIP.MANU.value)
     assert climate.hvac_mode == HmHvacMode.HEAT
 
     await climate.set_hvac_mode(HmHvacMode.OFF)
@@ -391,9 +389,7 @@ async def test_ceipthermostat(
         values={"CONTROL_MODE": 1, "SET_POINT_TEMPERATURE": 5.0},
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
-    await central.event(
-        const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", ClimateModeHmIP.MANU.value
-    )
+    await central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", _ModeHmIP.MANU.value)
     assert climate.hvac_mode == HmHvacMode.HEAT
 
     assert climate.preset_mode == HmPresetMode.NONE
@@ -419,9 +415,7 @@ async def test_ceipthermostat(
         values={"BOOST_MODE": False, "CONTROL_MODE": 0},
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
-    await central.event(
-        const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", ClimateModeHmIP.AUTO.value
-    )
+    await central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", _ModeHmIP.AUTO.value)
     await central.event(const.INTERFACE_ID, "VCU1769958:1", "BOOST_MODE", 1)
     assert climate.hvac_mode == HmHvacMode.AUTO
     assert climate.preset_modes == (
@@ -442,14 +436,10 @@ async def test_ceipthermostat(
         value=False,
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
-    await central.event(
-        const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", ClimateModeHmIP.AWAY.value
-    )
+    await central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", _ModeHmIP.AWAY.value)
     assert climate.preset_mode == HmPresetMode.AWAY
 
-    await central.event(
-        const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", ClimateModeHmIP.AUTO.value
-    )
+    await central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", _ModeHmIP.AUTO.value)
     await climate.set_preset_mode(HmPresetMode.WEEK_PROGRAM_1)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU1769958:1",
@@ -523,40 +513,40 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         BaseClimateEntity, central_unit_mini.get_custom_entity(address="VCU1769958", channel_no=1)
     )
     assert climate_bwth
-    profile_data = await climate_bwth.get_profile(profile=ClimateProfile.P1)
+    profile_data = await climate_bwth.get_profile(profile=ScheduleProfile.P1)
     assert len(profile_data) == 7
     weekday_data = await climate_bwth.get_profile_weekday(
-        profile=ClimateProfile.P1, weekday=ClimateWeekday.MONDAY
+        profile=ScheduleProfile.P1, weekday=ScheduleWeekday.MONDAY
     )
     assert len(weekday_data) == 13
-    await climate_bwth.set_profile(profile=ClimateProfile.P1, profile_data=profile_data)
+    await climate_bwth.set_profile(profile=ScheduleProfile.P1, profile_data=profile_data)
     await climate_bwth.set_profile_weekday(
-        profile=ClimateProfile.P1, weekday=ClimateWeekday.MONDAY, weekday_data=weekday_data
+        profile=ScheduleProfile.P1, weekday=ScheduleWeekday.MONDAY, weekday_data=weekday_data
     )
     copy_weekday_data = deepcopy(weekday_data)
-    copy_weekday_data[1][ClimateEntryType.TEMPERATURE] = 38.0
+    copy_weekday_data[1][ScheduleEntryType.TEMPERATURE] = 38.0
     with pytest.raises(ValidationException):
         await climate_bwth.set_profile_weekday(
-            profile=ClimateProfile.P1,
-            weekday=ClimateWeekday.MONDAY,
+            profile=ScheduleProfile.P1,
+            weekday=ScheduleWeekday.MONDAY,
             weekday_data=copy_weekday_data,
         )
 
     copy_weekday_data2 = deepcopy(weekday_data)
-    copy_weekday_data2[4][ClimateEntryType.ENDTIME] = 100
+    copy_weekday_data2[4][ScheduleEntryType.ENDTIME] = 100
     with pytest.raises(ValidationException):
         await climate_bwth.set_profile_weekday(
-            profile=ClimateProfile.P1,
-            weekday=ClimateWeekday.MONDAY,
+            profile=ScheduleProfile.P1,
+            weekday=ScheduleWeekday.MONDAY,
             weekday_data=copy_weekday_data2,
         )
 
     copy_weekday_data3 = deepcopy(weekday_data)
-    copy_weekday_data3[4][ClimateEntryType.ENDTIME] = 2100
+    copy_weekday_data3[4][ScheduleEntryType.ENDTIME] = 2100
     with pytest.raises(ValidationException):
         await climate_bwth.set_profile_weekday(
-            profile=ClimateProfile.P1,
-            weekday=ClimateWeekday.MONDAY,
+            profile=ScheduleProfile.P1,
+            weekday=ScheduleWeekday.MONDAY,
             weekday_data=copy_weekday_data3,
         )
     manual_week_profile_data = {

@@ -2,49 +2,7 @@
 
 from __future__ import annotations
 
-from enum import Enum, IntEnum, StrEnum
-from typing import Final
-
-CLIMATE_ENTRY_RANGE: Final = range(1, 13)
-CLIMATE_TIME_RANGE: Final = range(1441)
-HM_PRESET_MODE_PREFIX: Final = "week_program_"
-
-
-class ClimateProfile(StrEnum):
-    """Enum for climate profiles."""
-
-    P1 = "P1"
-    P2 = "P2"
-    P3 = "P3"
-    P4 = "P4"
-    P5 = "P5"
-    P6 = "P6"
-
-
-class ClimateEntryType(StrEnum):
-    """Enum for climate item type."""
-
-    ENDTIME = "ENDTIME"
-    TEMPERATURE = "TEMPERATURE"
-
-
-class ClimateWeekday(StrEnum):
-    """Enum for climate week days."""
-
-    MONDAY = "MONDAY"
-    TUESDAY = "TUESDAY"
-    WEDNESDAY = "WEDNESDAY"
-    THURSDAY = "THURSDAY"
-    FRIDAY = "FRIDAY"
-    SATURDAY = "SATURDAY"
-    SUNDAY = "SUNDAY"
-
-
-SCHEDULE_DICT = dict[
-    ClimateProfile, dict[ClimateWeekday, dict[int, dict[ClimateEntryType, int | float]]]
-]
-PROFILE_DICT = dict[ClimateWeekday, dict[int, dict[ClimateEntryType, int | float]]]
-WEEKDAY_DICT = dict[int, dict[ClimateEntryType, int | float]]
+from enum import Enum, StrEnum
 
 
 class DeviceProfile(StrEnum):
@@ -178,62 +136,3 @@ class Field(Enum):
     TEMPERATURE_MINIMUM = "temperature_minimum"
     VALVE_STATE = "valve_state"
     VOLTAGE = "voltage"
-
-
-class ClimateStateChangeArg(StrEnum):
-    """Enum with climate state change arguments."""
-
-    HVAC_MODE = "hvac_mode"
-    PRESET_MODE = "preset_mode"
-    TEMPERATURE = "temperature"
-
-
-class ClimateModeHm(StrEnum):
-    """Enum with the HM modes."""
-
-    AUTO = "AUTO-MODE"  # 0
-    AWAY = "PARTY-MODE"  # 2
-    BOOST = "BOOST-MODE"  # 3
-    MANU = "MANU-MODE"  # 1
-
-
-class ClimateModeHmIP(IntEnum):
-    """Enum with the HmIP modes."""
-
-    AUTO = 0
-    AWAY = 2
-    MANU = 1
-
-
-class HmHvacAction(StrEnum):
-    """Enum with the hvac actions."""
-
-    COOL = "cooling"
-    HEAT = "heating"
-    IDLE = "idle"
-    OFF = "off"
-
-
-class HmHvacMode(StrEnum):
-    """Enum with the hvac modes."""
-
-    AUTO = "auto"
-    COOL = "cool"
-    HEAT = "heat"
-    OFF = "off"
-
-
-class HmPresetMode(StrEnum):
-    """Enum with preset modes."""
-
-    AWAY = "away"
-    BOOST = "boost"
-    COMFORT = "comfort"
-    ECO = "eco"
-    NONE = "none"
-    WEEK_PROGRAM_1 = "week_program_1"
-    WEEK_PROGRAM_2 = "week_program_2"
-    WEEK_PROGRAM_3 = "week_program_3"
-    WEEK_PROGRAM_4 = "week_program_4"
-    WEEK_PROGRAM_5 = "week_program_5"
-    WEEK_PROGRAM_6 = "week_program_6"
