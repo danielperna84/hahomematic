@@ -575,7 +575,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         13: {"TEMPERATURE": 17, "ENDTIME": 1440},
     }
     await climate_bwth.set_profile_weekday(
-        profile=ClimateProfile.P1,
-        weekday=ClimateWeekday.MONDAY,
+        profile="P1",
+        weekday="MONDAY",
         weekday_data=manual_week_profile_data,
     )

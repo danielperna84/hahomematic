@@ -378,7 +378,7 @@ class BaseClimateEntity(CustomEntity):
                     if time not in CLIMATE_TIME_RANGE:
                         raise ValidationException(
                             f"VALIDATE_PROFILE: Time {time} must be between {CLIMATE_TIME_RANGE.start} and "
-                            f"{CLIMATE_TIME_RANGE.stop} for profile: {profile}/weekday: {weekday}/entry_no: {no}"
+                            f"{CLIMATE_TIME_RANGE.stop-1} for profile: {profile}/weekday: {weekday}/entry_no: {no}"
                         )
                     if time < previous_time:
                         raise ValidationException(
