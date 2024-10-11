@@ -420,13 +420,65 @@ class BaseClimateEntity(CustomEntity):
         simple_weekday_list: SIMPLE_WEEKDAY_LIST,
     ) -> None:
         """Store a simple profile to device."""
-        self._validate_profile_weekday_simple(
-            base_temperature=base_temperature, simple_weekday_list=simple_weekday_list
-        )
-        weekday_data = _convert_simple_to_weekday(
+        weekday_data = self._validate_and_convert_simple_to_weekday(
             base_temperature=base_temperature, simple_weekday_list=simple_weekday_list
         )
         await self.set_profile_weekday(profile=profile, weekday=weekday, weekday_data=weekday_data)
+
+    def _validate_and_convert_simple_to_weekday(
+        self, base_temperature: float, simple_weekday_list: SIMPLE_WEEKDAY_LIST
+    ) -> WEEKDAY_DICT:
+        """Convert weekday dict to simple weekday list."""
+        if not self.min_temp <= base_temperature <= self.max_temp:
+            raise ValidationException(
+                f"VALIDATE_PROFILE_SIMPLE: Base temperature {base_temperature} not in valid range (min: {self.min_temp}, "
+                f"max: {self.max_temp})"
+            )
+
+        weekday_data: WEEKDAY_DICT = {}
+        sorted_simple_weekday_list = _sort_simple_weekday_list(
+            simple_weekday_list=simple_weekday_list
+        )
+        previous_endtime = "00:00"
+        slot_no = 1
+        for slot in sorted_simple_weekday_list:
+            if (starttime := slot.get(ScheduleSlotType.STARTTIME)) is None:
+                raise ValidationException("VALIDATE_PROFILE_SIMPLE: STARTTIME is missing.")
+            if (endtime := slot.get(ScheduleSlotType.ENDTIME)) is None:
+                raise ValidationException("VALIDATE_PROFILE_SIMPLE: ENDTIME is missing.")
+            if (temperature := slot.get(ScheduleSlotType.TEMPERATURE)) is None:
+                raise ValidationException("VALIDATE_PROFILE_SIMPLE: TEMPERATURE is missing.")
+
+            if _convert_time_str_to_minutes(str(starttime)) < _convert_time_str_to_minutes(
+                previous_endtime
+            ):
+                raise ValidationException(
+                    f"VALIDATE_PROFILE: Timespans are overlapping with a previous slot for starttime: {starttime} / endtime: {endtime}"
+                )
+
+            if not self.min_temp <= float(temperature) <= self.max_temp:
+                raise ValidationException(
+                    f"VALIDATE_PROFILE: Temperature {temperature} not in valid range (min: {self.min_temp}, "
+                    f"max: {self.max_temp}) for starttime: {starttime} / endtime: {endtime}"
+                )
+
+            if _convert_time_str_to_minutes(str(starttime)) > _convert_time_str_to_minutes(
+                previous_endtime
+            ):
+                weekday_data[slot_no] = {
+                    ScheduleSlotType.ENDTIME: starttime,
+                    ScheduleSlotType.TEMPERATURE: base_temperature,
+                }
+                slot_no += 1
+
+            weekday_data[slot_no] = {
+                ScheduleSlotType.ENDTIME: endtime,
+                ScheduleSlotType.TEMPERATURE: temperature,
+            }
+            previous_endtime = str(endtime)
+            slot_no += 1
+
+        return _fillup_weekday_data(base_temperature=base_temperature, weekday_data=weekday_data)
 
     def _validate_profile(self, profile: ScheduleProfile, profile_data: PROFILE_DICT) -> None:
         """Validate the profile."""
@@ -450,20 +502,20 @@ class BaseClimateEntity(CustomEntity):
         for no in SCHEDULE_SLOT_RANGE:
             if no not in weekday_data:
                 raise ValidationException(
-                    f"VALIDATE_PROFILE: slot no {no} is missing in profile: {profile}/weekday: {weekday}"
+                    f"VALIDATE_PROFILE: slot no {no} is missing in profile: {profile} / weekday: {weekday}"
                 )
             slot = weekday_data[no]
             for slot_type in RELEVANT_SLOT_TYPES:
                 if slot_type not in slot:
                     raise ValidationException(
                         f"VALIDATE_PROFILE: slot type {slot_type} is missing in profile: "
-                        f"{profile}/weekday: {weekday}/slot_no: {no}"
+                        f"{profile} / weekday: {weekday} / slot_no: {no}"
                     )
                 temperature = float(weekday_data[no][ScheduleSlotType.TEMPERATURE])
                 if not self.min_temp <= temperature <= self.max_temp:
                     raise ValidationException(
                         f"VALIDATE_PROFILE: Temperature {temperature} not in valid range (min: {self.min_temp}, "
-                        f"max: {self.max_temp}) for profile: {profile}/weekday: {weekday}/slot_no: {no}"
+                        f"max: {self.max_temp}) for profile: {profile} / weekday: {weekday} / slot_no: {no}"
                     )
 
                 endtime_str = str(weekday_data[no][ScheduleSlotType.ENDTIME])
@@ -471,26 +523,14 @@ class BaseClimateEntity(CustomEntity):
                     if endtime not in SCHEDULE_TIME_RANGE:
                         raise ValidationException(
                             f"VALIDATE_PROFILE: Time {endtime_str} must be between {_convert_minutes_to_time_str(minutes=SCHEDULE_TIME_RANGE.start)} and "
-                            f"{_convert_minutes_to_time_str(minutes=SCHEDULE_TIME_RANGE.stop - 1)} for profile: {profile}/weekday: {weekday}/slot_no: {no}"
+                            f"{_convert_minutes_to_time_str(minutes=SCHEDULE_TIME_RANGE.stop - 1)} for profile: {profile} / weekday: {weekday} / slot_no: {no}"
                         )
                     if endtime < previous_endtime:
                         raise ValidationException(
                             f"VALIDATE_PROFILE: Time sequence must be rising. {endtime_str} is lower than the previous "
-                            f"value {_convert_minutes_to_time_str(minutes=previous_endtime)} for profile: {profile}/weekday: {weekday}/slot_no: {no}"
+                            f"value {_convert_minutes_to_time_str(minutes=previous_endtime)} for profile: {profile} / weekday: {weekday} / slot_no: {no}"
                         )
                 previous_endtime = endtime
-
-    def _validate_profile_weekday_simple(
-        self,
-        base_temperature: float,
-        simple_weekday_list: SIMPLE_WEEKDAY_LIST,
-    ) -> None:
-        """Validate the profile weekday simple."""
-        if not self.min_temp <= base_temperature <= self.max_temp:
-            raise ValidationException(
-                f"VALIDATE_PROFILE_SIMPLE: Base temperature {base_temperature} not in valid range (min: {self.min_temp}, "
-                f"max: {self.max_temp})"
-            )
 
 
 class CeSimpleRfThermostat(BaseClimateEntity):
@@ -866,41 +906,6 @@ def _convert_time_str_to_minutes(time_str: str) -> int:
         raise ValidationException(
             f"Failed to convert time {time_str}. Format must be hh:mm."
         ) from ex
-
-
-def _convert_simple_to_weekday(
-    base_temperature: float, simple_weekday_list: SIMPLE_WEEKDAY_LIST
-) -> WEEKDAY_DICT:
-    """Convert weekday dict to simple weekday list."""
-    weekday_data: WEEKDAY_DICT = {}
-    sorted_simple_weekday_list = _sort_simple_weekday_list(simple_weekday_list=simple_weekday_list)
-    previous_endtime = "00:00"
-    slot_no = 1
-    for slot in sorted_simple_weekday_list:
-        if (starttime := slot.get(ScheduleSlotType.STARTTIME)) is None:
-            raise ValidationException("VALIDATE_PROFILE_SIMPLE: STARTTIME is missing.")
-        if (endtime := slot.get(ScheduleSlotType.ENDTIME)) is None:
-            raise ValidationException("VALIDATE_PROFILE_SIMPLE: ENDTIME is missing.")
-        if (temperature := slot.get(ScheduleSlotType.TEMPERATURE)) is None:
-            raise ValidationException("VALIDATE_PROFILE_SIMPLE: TEMPERATURE is missing.")
-
-        if _convert_time_str_to_minutes(str(starttime)) > _convert_time_str_to_minutes(
-            previous_endtime
-        ):
-            weekday_data[slot_no] = {
-                ScheduleSlotType.ENDTIME: starttime,
-                ScheduleSlotType.TEMPERATURE: base_temperature,
-            }
-            slot_no += 1
-
-        weekday_data[slot_no] = {
-            ScheduleSlotType.ENDTIME: endtime,
-            ScheduleSlotType.TEMPERATURE: temperature,
-        }
-        previous_endtime = str(endtime)
-        slot_no += 1
-
-    return _fillup_weekday_data(base_temperature=base_temperature, weekday_data=weekday_data)
 
 
 def _sort_simple_weekday_list(simple_weekday_list: SIMPLE_WEEKDAY_LIST) -> SIMPLE_WEEKDAY_LIST:

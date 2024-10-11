@@ -28,7 +28,6 @@ from hahomematic.platforms.custom.climate import (
     ScheduleProfile,
     ScheduleSlotType,
     ScheduleWeekday,
-    _convert_simple_to_weekday,
     _ModeHmIP,
 )
 
@@ -588,10 +587,9 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         {"TEMPERATURE": 22.0, "STARTTIME": "19:00", "ENDTIME": "22:00"},
         {"TEMPERATURE": 17.0, "STARTTIME": "09:00", "ENDTIME": "15:00"},
     ]
-    weekday_data = _convert_simple_to_weekday(
+    weekday_data = climate_bwth._validate_and_convert_simple_to_weekday(
         base_temperature=16.0, simple_weekday_list=manual_simple_weekday_list
     )
-
     assert weekday_data == {
         1: {ScheduleSlotType.ENDTIME: "05:00", ScheduleSlotType.TEMPERATURE: 16.0},
         2: {ScheduleSlotType.ENDTIME: "06:00", ScheduleSlotType.TEMPERATURE: 17.0},
@@ -607,10 +605,65 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         12: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
         13: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
     }
-
     await climate_bwth.set_profile_weekday_simple(
         profile="P1",
         weekday="MONDAY",
         base_temperature=16.0,
         simple_weekday_list=manual_simple_weekday_list,
     )
+
+    manual_simple_weekday_list2 = []
+    weekday_data2 = climate_bwth._validate_and_convert_simple_to_weekday(
+        base_temperature=16.0, simple_weekday_list=manual_simple_weekday_list2
+    )
+    assert weekday_data2 == {
+        1: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
+        2: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
+        3: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
+        4: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
+        5: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
+        6: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
+        7: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
+        8: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
+        9: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
+        10: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
+        11: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
+        12: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
+        13: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
+    }
+    await climate_bwth.set_profile_weekday_simple(
+        profile="P1",
+        weekday="MONDAY",
+        base_temperature=16.0,
+        simple_weekday_list=manual_simple_weekday_list2,
+    )
+
+    with pytest.raises(ValidationException):
+        await climate_bwth.set_profile_weekday_simple(
+            profile="P1",
+            weekday="MONDAY",
+            base_temperature=16.0,
+            simple_weekday_list=[
+                {"TEMPERATURE": 34.0, "STARTTIME": "05:00", "ENDTIME": "06:00"},
+            ],
+        )
+
+    with pytest.raises(ValidationException):
+        await climate_bwth.set_profile_weekday_simple(
+            profile="P1",
+            weekday="MONDAY",
+            base_temperature=34.0,
+            simple_weekday_list=[],
+        )
+
+    with pytest.raises(ValidationException):
+        await climate_bwth.set_profile_weekday_simple(
+            profile="P1",
+            weekday="MONDAY",
+            base_temperature=16.0,
+            simple_weekday_list=[
+                {"TEMPERATURE": 17.0, "STARTTIME": "05:00", "ENDTIME": "06:00"},
+                {"TEMPERATURE": 22.0, "STARTTIME": "19:00", "ENDTIME": "22:00"},
+                {"TEMPERATURE": 17.0, "STARTTIME": "09:00", "ENDTIME": "20:00"},
+            ],
+        )
