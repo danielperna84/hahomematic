@@ -41,7 +41,7 @@ _PARTY_DATE_FORMAT: Final = "%Y_%m_%d %H:%M"
 _PARTY_INIT_DATE: Final = "2000_01_01 00:00"
 _RAW_SCHEDULE_DICT = dict[str, float | int]
 _TEMP_CELSIUS: Final = "°C"
-SCHEDULE_SLOT_RANGE: Final = range(1, 13)
+SCHEDULE_SLOT_RANGE: Final = range(1, 14)
 SCHEDULE_TIME_RANGE: Final = range(1441)
 HM_PRESET_MODE_PREFIX: Final = "week_program_"
 
@@ -420,6 +420,9 @@ class BaseClimateEntity(CustomEntity):
         simple_weekday_list: SIMPLE_WEEKDAY_LIST,
     ) -> None:
         """Store a simple profile to device."""
+        self._validate_profile_weekday_simple(
+            base_temperature=base_temperature, simple_weekday_list=simple_weekday_list
+        )
         weekday_data = _convert_simple_to_weekday(
             base_temperature=base_temperature, simple_weekday_list=simple_weekday_list
         )
@@ -476,6 +479,18 @@ class BaseClimateEntity(CustomEntity):
                             f"value {_convert_minutes_to_time_str(minutes=previous_endtime)} for profile: {profile}/weekday: {weekday}/slot_no: {no}"
                         )
                 previous_endtime = endtime
+
+    def _validate_profile_weekday_simple(
+        self,
+        base_temperature: float,
+        simple_weekday_list: SIMPLE_WEEKDAY_LIST,
+    ) -> None:
+        """Validate the profile weekday simple."""
+        if not self.min_temp <= base_temperature <= self.max_temp:
+            raise ValidationException(
+                f"VALIDATE_PROFILE_SIMPLE: Base temperature {base_temperature} not in valid range (min: {self.min_temp}, "
+                f"max: {self.max_temp})"
+            )
 
 
 class CeSimpleRfThermostat(BaseClimateEntity):
@@ -857,7 +872,58 @@ def _convert_simple_to_weekday(
     base_temperature: float, simple_weekday_list: SIMPLE_WEEKDAY_LIST
 ) -> WEEKDAY_DICT:
     """Convert weekday dict to simple weekday list."""
-    return {}
+    weekday_data: WEEKDAY_DICT = {}
+    sorted_simple_weekday_list = _sort_simple_weekday_list(simple_weekday_list=simple_weekday_list)
+    previous_endtime = "00:00"
+    slot_no = 1
+    for slot in sorted_simple_weekday_list:
+        if (starttime := slot.get(ScheduleSlotType.STARTTIME)) is None:
+            raise ValidationException("VALIDATE_PROFILE_SIMPLE: STARTTIME is missing.")
+        if (endtime := slot.get(ScheduleSlotType.ENDTIME)) is None:
+            raise ValidationException("VALIDATE_PROFILE_SIMPLE: ENDTIME is missing.")
+        if (temperature := slot.get(ScheduleSlotType.TEMPERATURE)) is None:
+            raise ValidationException("VALIDATE_PROFILE_SIMPLE: TEMPERATURE is missing.")
+
+        if _convert_time_str_to_minutes(str(starttime)) > _convert_time_str_to_minutes(
+            previous_endtime
+        ):
+            weekday_data[slot_no] = {
+                ScheduleSlotType.ENDTIME: starttime,
+                ScheduleSlotType.TEMPERATURE: base_temperature,
+            }
+            slot_no += 1
+
+        weekday_data[slot_no] = {
+            ScheduleSlotType.ENDTIME: endtime,
+            ScheduleSlotType.TEMPERATURE: temperature,
+        }
+        previous_endtime = str(endtime)
+        slot_no += 1
+
+    return _fillup_weekday_data(base_temperature=base_temperature, weekday_data=weekday_data)
+
+
+def _sort_simple_weekday_list(simple_weekday_list: SIMPLE_WEEKDAY_LIST) -> SIMPLE_WEEKDAY_LIST:
+    """Sort simple weekday list."""
+    simple_weekday_dict = sorted(
+        {
+            _convert_time_str_to_minutes(str(slot[ScheduleSlotType.STARTTIME])): slot
+            for slot in simple_weekday_list
+        }.items()
+    )
+    return [slot[1] for slot in simple_weekday_dict]
+
+
+def _fillup_weekday_data(base_temperature: float, weekday_data: WEEKDAY_DICT) -> WEEKDAY_DICT:
+    """Fillup weekday data."""
+    for slot_no in SCHEDULE_SLOT_RANGE:
+        if slot_no not in weekday_data:
+            weekday_data[slot_no] = {
+                ScheduleSlotType.ENDTIME: "24:00",
+                ScheduleSlotType.TEMPERATURE: base_temperature,
+            }
+
+    return weekday_data
 
 
 def _get_raw_paramset(schedule_data: _SCHEDULE_DICT) -> _RAW_SCHEDULE_DICT:

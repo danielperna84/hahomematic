@@ -1,5 +1,6 @@
 # Version 2024.10.5 (2024-10-11)
 
+- Add simple climate schedule service to store profiles
 - Reuse existing dict types
 - Convert schedule time from minutes to hh:mm
 
