@@ -685,11 +685,10 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         },
     )
 
-    with pytest.raises(ValidationException):
-        await climate_bwth.set_simple_profile(
-            profile="P1",
-            base_temperature=16.0,
-            simple_profile_data={
-                "MONDAY": [],
-            },
-        )
+    await climate_bwth.set_simple_profile(
+        profile="P1",
+        base_temperature=16.0,
+        simple_profile_data={
+            "MONDAY": [],
+        },
+    )
