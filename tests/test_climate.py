@@ -80,7 +80,8 @@ async def test_cesimplerfthermostat(
         "set_preset_mode",
         "set_profile",
         "set_profile_weekday",
-        "set_profile_weekday_simple",
+        "set_simple_profile",
+        "set_simple_profile_weekday",
         "set_temperature",
     )
     assert climate.state_uncertain is False
@@ -165,7 +166,8 @@ async def test_cerfthermostat(
         "set_preset_mode",
         "set_profile",
         "set_profile_weekday",
-        "set_profile_weekday_simple",
+        "set_simple_profile",
+        "set_simple_profile_weekday",
         "set_temperature",
     )
     assert climate.min_temp == 5.0
@@ -339,7 +341,8 @@ async def test_ceipthermostat(
         "set_preset_mode",
         "set_profile",
         "set_profile_weekday",
-        "set_profile_weekday_simple",
+        "set_simple_profile",
+        "set_simple_profile_weekday",
         "set_temperature",
     )
     assert climate.min_temp == 5.0
@@ -587,7 +590,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         {"TEMPERATURE": 22.0, "STARTTIME": "19:00", "ENDTIME": "22:00"},
         {"TEMPERATURE": 17.0, "STARTTIME": "09:00", "ENDTIME": "15:00"},
     ]
-    weekday_data = climate_bwth._validate_and_convert_simple_to_weekday(
+    weekday_data = climate_bwth._validate_and_convert_simple_to_profile_weekday(
         base_temperature=16.0, simple_weekday_list=manual_simple_weekday_list
     )
     assert weekday_data == {
@@ -605,7 +608,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         12: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
         13: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
     }
-    await climate_bwth.set_profile_weekday_simple(
+    await climate_bwth.set_simple_profile_weekday(
         profile="P1",
         weekday="MONDAY",
         base_temperature=16.0,
@@ -613,7 +616,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
     )
 
     manual_simple_weekday_list2 = []
-    weekday_data2 = climate_bwth._validate_and_convert_simple_to_weekday(
+    weekday_data2 = climate_bwth._validate_and_convert_simple_to_profile_weekday(
         base_temperature=16.0, simple_weekday_list=manual_simple_weekday_list2
     )
     assert weekday_data2 == {
@@ -631,7 +634,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         12: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
         13: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
     }
-    await climate_bwth.set_profile_weekday_simple(
+    await climate_bwth.set_simple_profile_weekday(
         profile="P1",
         weekday="MONDAY",
         base_temperature=16.0,
@@ -639,7 +642,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
     )
 
     with pytest.raises(ValidationException):
-        await climate_bwth.set_profile_weekday_simple(
+        await climate_bwth.set_simple_profile_weekday(
             profile="P1",
             weekday="MONDAY",
             base_temperature=16.0,
@@ -649,7 +652,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         )
 
     with pytest.raises(ValidationException):
-        await climate_bwth.set_profile_weekday_simple(
+        await climate_bwth.set_simple_profile_weekday(
             profile="P1",
             weekday="MONDAY",
             base_temperature=34.0,
@@ -657,7 +660,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         )
 
     with pytest.raises(ValidationException):
-        await climate_bwth.set_profile_weekday_simple(
+        await climate_bwth.set_simple_profile_weekday(
             profile="P1",
             weekday="MONDAY",
             base_temperature=16.0,
@@ -666,4 +669,27 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
                 {"TEMPERATURE": 22.0, "STARTTIME": "19:00", "ENDTIME": "22:00"},
                 {"TEMPERATURE": 17.0, "STARTTIME": "09:00", "ENDTIME": "20:00"},
             ],
+        )
+
+    await climate_bwth.set_simple_profile(
+        profile="P1",
+        base_temperature=16.0,
+        simple_profile_data={
+            "MONDAY": [],
+            "TUESDAY": [],
+            "WEDNESDAY": [],
+            "THURSDAY": [],
+            "FRIDAY": [],
+            "SATURDAY": [],
+            "SUNDAY": [],
+        },
+    )
+
+    with pytest.raises(ValidationException):
+        await climate_bwth.set_simple_profile(
+            profile="P1",
+            base_temperature=16.0,
+            simple_profile_data={
+                "MONDAY": [],
+            },
         )

@@ -140,6 +140,7 @@ class ScheduleWeekday(StrEnum):
 
 
 SIMPLE_WEEKDAY_LIST = list[dict[ScheduleSlotType, str | float]]
+SIMPLE_PROFILE_DICT = dict[ScheduleWeekday, SIMPLE_WEEKDAY_LIST]
 WEEKDAY_DICT = dict[int, dict[ScheduleSlotType, str | float]]
 PROFILE_DICT = dict[ScheduleWeekday, WEEKDAY_DICT]
 _SCHEDULE_DICT = dict[ScheduleProfile, PROFILE_DICT]
@@ -389,6 +390,19 @@ class BaseClimateEntity(CustomEntity):
         )
 
     @service()
+    async def set_simple_profile(
+        self,
+        profile: ScheduleProfile,
+        base_temperature: float,
+        simple_profile_data: SIMPLE_PROFILE_DICT,
+    ) -> None:
+        """Set a profile to device."""
+        profile_data = self._validate_and_convert_simple_to_profile(
+            base_temperature=base_temperature, simple_profile_data=simple_profile_data
+        )
+        await self.set_profile(profile=profile, profile_data=profile_data)
+
+    @service()
     async def set_profile_weekday(
         self, profile: ScheduleProfile, weekday: ScheduleWeekday, weekday_data: WEEKDAY_DICT
     ) -> None:
@@ -412,26 +426,39 @@ class BaseClimateEntity(CustomEntity):
         )
 
     @service()
-    async def set_profile_weekday_simple(
+    async def set_simple_profile_weekday(
         self,
         profile: ScheduleProfile,
         weekday: ScheduleWeekday,
         base_temperature: float,
         simple_weekday_list: SIMPLE_WEEKDAY_LIST,
     ) -> None:
-        """Store a simple profile to device."""
-        weekday_data = self._validate_and_convert_simple_to_weekday(
+        """Store a simple weekday profile to device."""
+        weekday_data = self._validate_and_convert_simple_to_profile_weekday(
             base_temperature=base_temperature, simple_weekday_list=simple_weekday_list
         )
         await self.set_profile_weekday(profile=profile, weekday=weekday, weekday_data=weekday_data)
 
-    def _validate_and_convert_simple_to_weekday(
+    def _validate_and_convert_simple_to_profile(
+        self, base_temperature: float, simple_profile_data: SIMPLE_PROFILE_DICT
+    ) -> PROFILE_DICT:
+        """Convert simple profile dict to profile dict."""
+        profile_dict: PROFILE_DICT = {}
+        for day in ScheduleWeekday:
+            if day not in simple_profile_data:
+                raise ValidationException(f"VALIDATE_SIMPLE_PROFILE: {day} missing in profile")
+            profile_dict[day] = self._validate_and_convert_simple_to_profile_weekday(
+                base_temperature=base_temperature, simple_weekday_list=simple_profile_data[day]
+            )
+        return profile_dict
+
+    def _validate_and_convert_simple_to_profile_weekday(
         self, base_temperature: float, simple_weekday_list: SIMPLE_WEEKDAY_LIST
     ) -> WEEKDAY_DICT:
-        """Convert weekday dict to simple weekday list."""
+        """Convert simple weekday list to weekday dict."""
         if not self.min_temp <= base_temperature <= self.max_temp:
             raise ValidationException(
-                f"VALIDATE_PROFILE_SIMPLE: Base temperature {base_temperature} not in valid range (min: {self.min_temp}, "
+                f"VALIDATE_SIMPLE_PROFILE: Base temperature {base_temperature} not in valid range (min: {self.min_temp}, "
                 f"max: {self.max_temp})"
             )
 
@@ -443,22 +470,22 @@ class BaseClimateEntity(CustomEntity):
         slot_no = 1
         for slot in sorted_simple_weekday_list:
             if (starttime := slot.get(ScheduleSlotType.STARTTIME)) is None:
-                raise ValidationException("VALIDATE_PROFILE_SIMPLE: STARTTIME is missing.")
+                raise ValidationException("VALIDATE_SIMPLE_PROFILE: STARTTIME is missing.")
             if (endtime := slot.get(ScheduleSlotType.ENDTIME)) is None:
-                raise ValidationException("VALIDATE_PROFILE_SIMPLE: ENDTIME is missing.")
+                raise ValidationException("VALIDATE_SIMPLE_PROFILE: ENDTIME is missing.")
             if (temperature := slot.get(ScheduleSlotType.TEMPERATURE)) is None:
-                raise ValidationException("VALIDATE_PROFILE_SIMPLE: TEMPERATURE is missing.")
+                raise ValidationException("VALIDATE_SIMPLE_PROFILE: TEMPERATURE is missing.")
 
             if _convert_time_str_to_minutes(str(starttime)) < _convert_time_str_to_minutes(
                 previous_endtime
             ):
                 raise ValidationException(
-                    f"VALIDATE_PROFILE: Timespans are overlapping with a previous slot for starttime: {starttime} / endtime: {endtime}"
+                    f"VALIDATE_SIMPLE_PROFILE: Timespans are overlapping with a previous slot for starttime: {starttime} / endtime: {endtime}"
                 )
 
             if not self.min_temp <= float(temperature) <= self.max_temp:
                 raise ValidationException(
-                    f"VALIDATE_PROFILE: Temperature {temperature} not in valid range (min: {self.min_temp}, "
+                    f"VALIDATE_SIMPLE_PROFILE: Temperature {temperature} not in valid range (min: {self.min_temp}, "
                     f"max: {self.max_temp}) for starttime: {starttime} / endtime: {endtime}"
                 )
 
