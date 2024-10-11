@@ -444,11 +444,9 @@ class BaseClimateEntity(CustomEntity):
     ) -> PROFILE_DICT:
         """Convert simple profile dict to profile dict."""
         profile_dict: PROFILE_DICT = {}
-        for day in ScheduleWeekday:
-            if day not in simple_profile_data:
-                raise ValidationException(f"VALIDATE_SIMPLE_PROFILE: {day} missing in profile")
+        for day, simple_weekday_list in simple_profile_data.items():
             profile_dict[day] = self._validate_and_convert_simple_to_profile_weekday(
-                base_temperature=base_temperature, simple_weekday_list=simple_profile_data[day]
+                base_temperature=base_temperature, simple_weekday_list=simple_weekday_list
             )
         return profile_dict
 
@@ -509,10 +507,6 @@ class BaseClimateEntity(CustomEntity):
 
     def _validate_profile(self, profile: ScheduleProfile, profile_data: PROFILE_DICT) -> None:
         """Validate the profile."""
-        for day in ScheduleWeekday:
-            if day not in profile_data:
-                raise ValidationException(f"VALIDATE_PROFILE: {day} missing in profile")
-
         for weekday, weekday_data in profile_data.items():
             self._validate_profile_weekday(
                 profile=profile, weekday=weekday, weekday_data=weekday_data
