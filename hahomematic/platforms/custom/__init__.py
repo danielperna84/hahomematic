@@ -9,6 +9,8 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom.climate import (
     HM_PRESET_MODE_PREFIX,
     PROFILE_DICT,
+    SIMPLE_PROFILE_DICT,
+    SIMPLE_WEEKDAY_LIST,
     WEEKDAY_DICT,
     BaseClimateEntity,
     CeIpThermostat,
@@ -77,6 +79,8 @@ __all__ = [
     "SirenOnArgs",
     "WEEKDAY_DICT",
     "PROFILE_DICT",
+    "SIMPLE_PROFILE_DICT",
+    "SIMPLE_WEEKDAY_LIST",
     "create_custom_entities",
     "get_required_parameters",
     "validate_entity_definition",
