@@ -433,7 +433,7 @@ class BaseClimateEntity(CustomEntity):
         base_temperature: float,
         simple_weekday_list: SIMPLE_WEEKDAY_LIST,
     ) -> None:
-        """Store a simple profile to device."""
+        """Store a simple weekday profile to device."""
         weekday_data = self._validate_and_convert_simple_to_profile_weekday(
             base_temperature=base_temperature, simple_weekday_list=simple_weekday_list
         )
@@ -455,10 +455,10 @@ class BaseClimateEntity(CustomEntity):
     def _validate_and_convert_simple_to_profile_weekday(
         self, base_temperature: float, simple_weekday_list: SIMPLE_WEEKDAY_LIST
     ) -> WEEKDAY_DICT:
-        """Convert weekday dict to simple weekday list."""
+        """Convert simple weekday list to weekday dict."""
         if not self.min_temp <= base_temperature <= self.max_temp:
             raise ValidationException(
-                f"VALIDATE_PROFILE_SIMPLE: Base temperature {base_temperature} not in valid range (min: {self.min_temp}, "
+                f"VALIDATE_SIMPLE_PROFILE: Base temperature {base_temperature} not in valid range (min: {self.min_temp}, "
                 f"max: {self.max_temp})"
             )
 
@@ -470,22 +470,22 @@ class BaseClimateEntity(CustomEntity):
         slot_no = 1
         for slot in sorted_simple_weekday_list:
             if (starttime := slot.get(ScheduleSlotType.STARTTIME)) is None:
-                raise ValidationException("VALIDATE_PROFILE_SIMPLE: STARTTIME is missing.")
+                raise ValidationException("VALIDATE_SIMPLE_PROFILE: STARTTIME is missing.")
             if (endtime := slot.get(ScheduleSlotType.ENDTIME)) is None:
-                raise ValidationException("VALIDATE_PROFILE_SIMPLE: ENDTIME is missing.")
+                raise ValidationException("VALIDATE_SIMPLE_PROFILE: ENDTIME is missing.")
             if (temperature := slot.get(ScheduleSlotType.TEMPERATURE)) is None:
-                raise ValidationException("VALIDATE_PROFILE_SIMPLE: TEMPERATURE is missing.")
+                raise ValidationException("VALIDATE_SIMPLE_PROFILE: TEMPERATURE is missing.")
 
             if _convert_time_str_to_minutes(str(starttime)) < _convert_time_str_to_minutes(
                 previous_endtime
             ):
                 raise ValidationException(
-                    f"VALIDATE_PROFILE: Timespans are overlapping with a previous slot for starttime: {starttime} / endtime: {endtime}"
+                    f"VALIDATE_SIMPLE_PROFILE: Timespans are overlapping with a previous slot for starttime: {starttime} / endtime: {endtime}"
                 )
 
             if not self.min_temp <= float(temperature) <= self.max_temp:
                 raise ValidationException(
-                    f"VALIDATE_PROFILE: Temperature {temperature} not in valid range (min: {self.min_temp}, "
+                    f"VALIDATE_SIMPLE_PROFILE: Temperature {temperature} not in valid range (min: {self.min_temp}, "
                     f"max: {self.max_temp}) for starttime: {starttime} / endtime: {endtime}"
                 )
 
