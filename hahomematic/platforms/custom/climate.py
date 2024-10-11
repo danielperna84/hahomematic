@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from datetime import datetime, timedelta
 from enum import IntEnum, StrEnum
 import logging
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from hahomematic.const import HmPlatform, ParamsetKey
 from hahomematic.exceptions import ClientException, HaHomematicException, ValidationException
@@ -109,7 +109,11 @@ class ScheduleEntryType(StrEnum):
     """Enum for climate item type."""
 
     ENDTIME = "ENDTIME"
+    STARTTIME = "STARTTIME"
     TEMPERATURE = "TEMPERATURE"
+
+
+RELEVANT_ENTRY_TYPES: Final = (ScheduleEntryType.ENDTIME, ScheduleEntryType.TEMPERATURE)
 
 
 class ScheduleProfile(StrEnum):
@@ -135,7 +139,7 @@ class ScheduleWeekday(StrEnum):
     SUNDAY = "SUNDAY"
 
 
-WEEKDAY_DICT = dict[int, dict[ScheduleEntryType, int | float]]
+WEEKDAY_DICT = dict[int, dict[ScheduleEntryType, str | float]]
 PROFILE_DICT = dict[ScheduleWeekday, WEEKDAY_DICT]
 _SCHEDULE_DICT = dict[ScheduleProfile, PROFILE_DICT]
 
@@ -387,7 +391,7 @@ class BaseClimateEntity(CustomEntity):
     async def set_profile_weekday(
         self, profile: ScheduleProfile, weekday: ScheduleWeekday, weekday_data: WEEKDAY_DICT
     ) -> None:
-        """Set a profile to device."""
+        """Store a profile to device."""
         self._validate_profile_weekday(profile=profile, weekday=weekday, weekday_data=weekday_data)
         schedule_data: _SCHEDULE_DICT = {}
         for entry_no, entry in weekday_data.items():
@@ -431,28 +435,30 @@ class BaseClimateEntity(CustomEntity):
                     f"VALIDATE_PROFILE: Entry no {no} is missing in profile: {profile}/weekday: {weekday}"
                 )
             entry = weekday_data[no]
-            for entry_type in ScheduleEntryType:
+            for entry_type in RELEVANT_ENTRY_TYPES:
                 if entry_type not in entry:
                     raise ValidationException(
                         f"VALIDATE_PROFILE: Entry type {entry_type} is missing in profile: "
                         f"{profile}/weekday: {weekday}/entry_no: {no}"
                     )
-                temperature = weekday_data[no][ScheduleEntryType.TEMPERATURE]
+                temperature = float(weekday_data[no][ScheduleEntryType.TEMPERATURE])
                 if not self.min_temp <= temperature <= self.max_temp:
                     raise ValidationException(
                         f"VALIDATE_PROFILE: Temperature {temperature} not in valid range (min: {self.min_temp}, "
                         f"max: {self.max_temp}) for profile: {profile}/weekday: {weekday}/entry_no: {no}"
                     )
-                if endtime := int(weekday_data[no][ScheduleEntryType.ENDTIME]):
+
+                endtime_str = str(weekday_data[no][ScheduleEntryType.ENDTIME])
+                if endtime := _convert_time_str_to_minutes(time_str=endtime_str):
                     if endtime not in SCHEDULE_TIME_RANGE:
                         raise ValidationException(
-                            f"VALIDATE_PROFILE: Time {endtime} must be between {SCHEDULE_TIME_RANGE.start} and "
-                            f"{SCHEDULE_TIME_RANGE.stop - 1} for profile: {profile}/weekday: {weekday}/entry_no: {no}"
+                            f"VALIDATE_PROFILE: Time {endtime_str} must be between {_convert_minutes_to_time_str(minutes=SCHEDULE_TIME_RANGE.start)} and "
+                            f"{_convert_minutes_to_time_str(minutes=SCHEDULE_TIME_RANGE.stop - 1)} for profile: {profile}/weekday: {weekday}/entry_no: {no}"
                         )
                     if endtime < previous_endtime:
                         raise ValidationException(
-                            f"VALIDATE_PROFILE: Time sequence must be rising. {endtime} is lower than the previous "
-                            f"value {previous_endtime} for profile: {profile}/weekday: {weekday}/entry_no: {no}"
+                            f"VALIDATE_PROFILE: Time sequence must be rising. {endtime_str} is lower than the previous "
+                            f"value {_convert_minutes_to_time_str(minutes=previous_endtime)} for profile: {profile}/weekday: {weekday}/entry_no: {no}"
                         )
                 previous_endtime = endtime
 
@@ -813,6 +819,25 @@ class CeIpThermostat(BaseClimateEntity):
         return profiles
 
 
+def _convert_minutes_to_time_str(minutes: int) -> str:
+    """Convert minutes to a time string."""
+    try:
+        return f"{minutes//60:0=2}:{minutes%60:0=2}"
+    except Exception as ex:
+        raise ValidationException(ex) from ex
+
+
+def _convert_time_str_to_minutes(time_str: str) -> int:
+    """Convert minutes to a time string."""
+    try:
+        h, m = time_str.split(":")
+        return (int(h) * 60) + int(m)
+    except Exception as ex:
+        raise ValidationException(
+            f"Failed to convert time {time_str}. Format must be hh:mm."
+        ) from ex
+
+
 def _get_raw_paramset(schedule_data: _SCHEDULE_DICT) -> _RAW_SCHEDULE_DICT:
     """Return the raw paramset."""
     raw_paramset: _RAW_SCHEDULE_DICT = {}
@@ -820,8 +845,11 @@ def _get_raw_paramset(schedule_data: _SCHEDULE_DICT) -> _RAW_SCHEDULE_DICT:
         for weekday, weekday_data in profile_data.items():
             for entry_no, entry in weekday_data.items():
                 for entry_type, entry_value in entry.items():
+                    raw_value: float | int = cast(float | int, entry_value)
+                    if entry_type == ScheduleEntryType.ENDTIME and isinstance(entry_value, str):
+                        raw_value = _convert_time_str_to_minutes(entry_value)
                     raw_paramset[f"{str(profile)}_{str(entry_type)}_{str(weekday)}_{entry_no}"] = (
-                        entry_value
+                        raw_value
                     )
     return raw_paramset
 
@@ -832,7 +860,7 @@ def _add_to_schedule_data(
     weekday: ScheduleWeekday,
     entry_no: int,
     entry_type: ScheduleEntryType,
-    entry_value: float | int,
+    entry_value: int | float | str,
 ) -> None:
     """Add or update schedule entry."""
     if profile not in schedule_data:
@@ -842,6 +870,8 @@ def _add_to_schedule_data(
     if entry_no not in schedule_data[profile][weekday]:
         schedule_data[profile][weekday][entry_no] = {}
     if entry_type not in schedule_data[profile][weekday][entry_no]:
+        if entry_type == ScheduleEntryType.ENDTIME and isinstance(entry_value, int):
+            entry_value = _convert_minutes_to_time_str(entry_value)
         schedule_data[profile][weekday][entry_no][entry_type] = entry_value
 
 

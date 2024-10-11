@@ -533,7 +533,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         )
 
     copy_weekday_data2 = deepcopy(weekday_data)
-    copy_weekday_data2[4][ScheduleEntryType.ENDTIME] = 100
+    copy_weekday_data2[4][ScheduleEntryType.ENDTIME] = "1:40"
     with pytest.raises(ValidationException):
         await climate_bwth.set_profile_weekday(
             profile=ScheduleProfile.P1,
@@ -542,27 +542,36 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         )
 
     copy_weekday_data3 = deepcopy(weekday_data)
-    copy_weekday_data3[4][ScheduleEntryType.ENDTIME] = 2100
+    copy_weekday_data3[4][ScheduleEntryType.ENDTIME] = "35:00"
     with pytest.raises(ValidationException):
         await climate_bwth.set_profile_weekday(
             profile=ScheduleProfile.P1,
             weekday=ScheduleWeekday.MONDAY,
             weekday_data=copy_weekday_data3,
         )
+
+    copy_weekday_data4 = deepcopy(weekday_data)
+    copy_weekday_data4[4][ScheduleEntryType.ENDTIME] = 100
+    with pytest.raises(ValidationException):
+        await climate_bwth.set_profile_weekday(
+            profile=ScheduleProfile.P1,
+            weekday=ScheduleWeekday.MONDAY,
+            weekday_data=copy_weekday_data4,
+        )
     manual_week_profile_data = {
-        1: {"TEMPERATURE": 17, "ENDTIME": 360},
-        2: {"TEMPERATURE": 21, "ENDTIME": 540},
-        3: {"TEMPERATURE": 17, "ENDTIME": 1020},
-        4: {"TEMPERATURE": 21, "ENDTIME": 1320},
-        5: {"TEMPERATURE": 17, "ENDTIME": 1440},
-        6: {"TEMPERATURE": 17, "ENDTIME": 1440},
-        7: {"TEMPERATURE": 17, "ENDTIME": 1440},
-        8: {"TEMPERATURE": 17, "ENDTIME": 1440},
-        9: {"TEMPERATURE": 17, "ENDTIME": 1440},
-        10: {"TEMPERATURE": 17, "ENDTIME": 1440},
-        11: {"TEMPERATURE": 17, "ENDTIME": 1440},
-        12: {"TEMPERATURE": 17, "ENDTIME": 1440},
-        13: {"TEMPERATURE": 17, "ENDTIME": 1440},
+        1: {"TEMPERATURE": 17, "ENDTIME": "06:00"},
+        2: {"TEMPERATURE": 21, "ENDTIME": "07:00"},
+        3: {"TEMPERATURE": 17, "ENDTIME": "10:00"},
+        4: {"TEMPERATURE": 21, "ENDTIME": "23:00"},
+        5: {"TEMPERATURE": 17, "ENDTIME": "24:00"},
+        6: {"TEMPERATURE": 17, "ENDTIME": "24:00"},
+        7: {"TEMPERATURE": 17, "ENDTIME": "24:00"},
+        8: {"TEMPERATURE": 17, "ENDTIME": "24:00"},
+        9: {"TEMPERATURE": 17, "ENDTIME": "24:00"},
+        10: {"TEMPERATURE": 17, "ENDTIME": "24:00"},
+        11: {"TEMPERATURE": 17, "ENDTIME": "24:00"},
+        12: {"TEMPERATURE": 17, "ENDTIME": "24:00"},
+        13: {"TEMPERATURE": 17, "ENDTIME": "24:00"},
     }
     await climate_bwth.set_profile_weekday(
         profile="P1",
