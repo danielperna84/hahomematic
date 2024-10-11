@@ -80,7 +80,8 @@ async def test_cesimplerfthermostat(
         "set_preset_mode",
         "set_profile",
         "set_profile_weekday",
-        "set_profile_weekday_simple",
+        "set_simple_profile",
+        "set_simple_profile_weekday",
         "set_temperature",
     )
     assert climate.state_uncertain is False
@@ -165,7 +166,8 @@ async def test_cerfthermostat(
         "set_preset_mode",
         "set_profile",
         "set_profile_weekday",
-        "set_profile_weekday_simple",
+        "set_simple_profile",
+        "set_simple_profile_weekday",
         "set_temperature",
     )
     assert climate.min_temp == 5.0
@@ -339,7 +341,8 @@ async def test_ceipthermostat(
         "set_preset_mode",
         "set_profile",
         "set_profile_weekday",
-        "set_profile_weekday_simple",
+        "set_simple_profile",
+        "set_simple_profile_weekday",
         "set_temperature",
     )
     assert climate.min_temp == 5.0
