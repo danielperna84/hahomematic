@@ -1,3 +1,7 @@
+# Version 2024.10.5 (2024-10-11)
+
+- Reuse existing dict types
+
 # Version 2024.10.4 (2024-10-09)
 
 - Add basic climate schedule services

@@ -135,18 +135,16 @@ class ScheduleWeekday(StrEnum):
     SUNDAY = "SUNDAY"
 
 
-_SCHEDULE_DICT = dict[
-    ScheduleProfile, dict[ScheduleWeekday, dict[int, dict[ScheduleEntryType, int | float]]]
-]
-PROFILE_DICT = dict[ScheduleWeekday, dict[int, dict[ScheduleEntryType, int | float]]]
 WEEKDAY_DICT = dict[int, dict[ScheduleEntryType, int | float]]
+PROFILE_DICT = dict[ScheduleWeekday, WEEKDAY_DICT]
+_SCHEDULE_DICT = dict[ScheduleProfile, PROFILE_DICT]
 
 
 class BaseClimateEntity(CustomEntity):
     """Base HomeMatic climate entity."""
 
     _platform = HmPlatform.CLIMATE
-    _schedule_supported = True
+    _supports_schedule = False
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -305,7 +303,7 @@ class BaseClimateEntity(CustomEntity):
     @service()
     async def get_profile(self, profile: ScheduleProfile) -> PROFILE_DICT:
         """Return a schedule by climate profile."""
-        if not self._schedule_supported:
+        if not self._supports_schedule:
             raise HaHomematicException(f"Schedule is not supported by device {self._device.name}")
         schedule_data = await self._get_schedule(profile=profile)
         return schedule_data.get(profile, {})
@@ -313,9 +311,9 @@ class BaseClimateEntity(CustomEntity):
     @service()
     async def get_profile_weekday(
         self, profile: ScheduleProfile, weekday: ScheduleWeekday
-    ) -> dict[int, dict[ScheduleEntryType, int | float]]:
+    ) -> WEEKDAY_DICT:
         """Return a schedule by climate profile."""
-        if not self._schedule_supported:
+        if not self._supports_schedule:
             raise HaHomematicException(f"Schedule is not supported by device {self._device.name}")
         schedule_data = await self._get_schedule(profile=profile, weekday=weekday)
         return schedule_data.get(profile, {}).get(weekday, {})
@@ -331,7 +329,7 @@ class BaseClimateEntity(CustomEntity):
                 paramset_key=ParamsetKey.MASTER,
             )
         except ClientException as cex:
-            self._schedule_supported = False
+            self._supports_schedule = False
             raise HaHomematicException(
                 f"Schedule is not supported by device {self._device.name}"
             ) from cex
@@ -364,11 +362,7 @@ class BaseClimateEntity(CustomEntity):
         return schedule_data
 
     @service()
-    async def set_profile(
-        self,
-        profile: ScheduleProfile,
-        profile_data: dict[ScheduleWeekday, dict[int, dict[ScheduleEntryType, int | float]]],
-    ) -> None:
+    async def set_profile(self, profile: ScheduleProfile, profile_data: PROFILE_DICT) -> None:
         """Set a profile to device."""
         self._validate_profile(profile=profile, profile_data=profile_data)
         schedule_data: _SCHEDULE_DICT = {}
@@ -391,10 +385,7 @@ class BaseClimateEntity(CustomEntity):
 
     @service()
     async def set_profile_weekday(
-        self,
-        profile: ScheduleProfile,
-        weekday: ScheduleWeekday,
-        weekday_data: dict[int, dict[ScheduleEntryType, int | float]],
+        self, profile: ScheduleProfile, weekday: ScheduleWeekday, weekday_data: WEEKDAY_DICT
     ) -> None:
         """Set a profile to device."""
         self._validate_profile_weekday(profile=profile, weekday=weekday, weekday_data=weekday_data)
@@ -415,11 +406,7 @@ class BaseClimateEntity(CustomEntity):
             values=_get_raw_paramset(schedule_data=schedule_data),
         )
 
-    def _validate_profile(
-        self,
-        profile: ScheduleProfile,
-        profile_data: dict[ScheduleWeekday, dict[int, dict[ScheduleEntryType, int | float]]],
-    ) -> None:
+    def _validate_profile(self, profile: ScheduleProfile, profile_data: PROFILE_DICT) -> None:
         """Validate the profile."""
         for day in ScheduleWeekday:
             if day not in profile_data:
@@ -437,7 +424,7 @@ class BaseClimateEntity(CustomEntity):
         weekday_data: WEEKDAY_DICT,
     ) -> None:
         """Validate the profile weekday."""
-        previous_time = 0
+        previous_endtime = 0
         for no in SCHEDULE_ENTRY_RANGE:
             if no not in weekday_data:
                 raise ValidationException(
@@ -456,24 +443,22 @@ class BaseClimateEntity(CustomEntity):
                         f"VALIDATE_PROFILE: Temperature {temperature} not in valid range (min: {self.min_temp}, "
                         f"max: {self.max_temp}) for profile: {profile}/weekday: {weekday}/entry_no: {no}"
                     )
-                if time := int(weekday_data[no][ScheduleEntryType.ENDTIME]):
-                    if time not in SCHEDULE_TIME_RANGE:
+                if endtime := int(weekday_data[no][ScheduleEntryType.ENDTIME]):
+                    if endtime not in SCHEDULE_TIME_RANGE:
                         raise ValidationException(
-                            f"VALIDATE_PROFILE: Time {time} must be between {SCHEDULE_TIME_RANGE.start} and "
+                            f"VALIDATE_PROFILE: Time {endtime} must be between {SCHEDULE_TIME_RANGE.start} and "
                             f"{SCHEDULE_TIME_RANGE.stop - 1} for profile: {profile}/weekday: {weekday}/entry_no: {no}"
                         )
-                    if time < previous_time:
+                    if endtime < previous_endtime:
                         raise ValidationException(
-                            f"VALIDATE_PROFILE: Time sequence must be rising. {time} is lower than the previous "
-                            f"value {previous_time} for profile: {profile}/weekday: {weekday}/entry_no: {no}"
+                            f"VALIDATE_PROFILE: Time sequence must be rising. {endtime} is lower than the previous "
+                            f"value {previous_endtime} for profile: {profile}/weekday: {weekday}/entry_no: {no}"
                         )
-                previous_time = time
+                previous_endtime = endtime
 
 
 class CeSimpleRfThermostat(BaseClimateEntity):
     """Simple classic HomeMatic thermostat HM-CC-TC."""
-
-    _schedule_supported = False
 
 
 class CeRfThermostat(BaseClimateEntity):
@@ -633,6 +618,8 @@ def _party_mode_code(start: datetime, end: datetime, away_temperature: float) ->
 
 class CeIpThermostat(BaseClimateEntity):
     """HomematicIP thermostat like HmIP-eTRV-B."""
+
+    _supports_schedule = True
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""

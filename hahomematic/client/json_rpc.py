@@ -886,7 +886,7 @@ class JsonRpcAioHttpClient:
         extra_msg: str = "",
         multiple_logs: bool = True,
     ) -> None:
-        """Handle Exception and derivates logging."""
+        """Handle Exception and logging."""
         self._connection_state.handle_exception_log(
             issuer=self,
             iid=iid,
