@@ -41,7 +41,7 @@ _PARTY_DATE_FORMAT: Final = "%Y_%m_%d %H:%M"
 _PARTY_INIT_DATE: Final = "2000_01_01 00:00"
 _RAW_SCHEDULE_DICT = dict[str, float | int]
 _TEMP_CELSIUS: Final = "°C"
-SCHEDULE_ENTRY_RANGE: Final = range(1, 13)
+SCHEDULE_SLOT_RANGE: Final = range(1, 13)
 SCHEDULE_TIME_RANGE: Final = range(1441)
 HM_PRESET_MODE_PREFIX: Final = "week_program_"
 
@@ -105,7 +105,7 @@ class HmPresetMode(StrEnum):
     WEEK_PROGRAM_6 = "week_program_6"
 
 
-class ScheduleEntryType(StrEnum):
+class ScheduleSlotType(StrEnum):
     """Enum for climate item type."""
 
     ENDTIME = "ENDTIME"
@@ -113,7 +113,7 @@ class ScheduleEntryType(StrEnum):
     TEMPERATURE = "TEMPERATURE"
 
 
-RELEVANT_ENTRY_TYPES: Final = (ScheduleEntryType.ENDTIME, ScheduleEntryType.TEMPERATURE)
+RELEVANT_SLOT_TYPES: Final = (ScheduleSlotType.ENDTIME, ScheduleSlotType.TEMPERATURE)
 
 
 class ScheduleProfile(StrEnum):
@@ -139,7 +139,8 @@ class ScheduleWeekday(StrEnum):
     SUNDAY = "SUNDAY"
 
 
-WEEKDAY_DICT = dict[int, dict[ScheduleEntryType, str | float]]
+SIMPLE_WEEKDAY_LIST = list[dict[ScheduleSlotType, str | float]]
+WEEKDAY_DICT = dict[int, dict[ScheduleSlotType, str | float]]
 PROFILE_DICT = dict[ScheduleWeekday, WEEKDAY_DICT]
 _SCHEDULE_DICT = dict[ScheduleProfile, PROFILE_DICT]
 
@@ -338,7 +339,7 @@ class BaseClimateEntity(CustomEntity):
                 f"Schedule is not supported by device {self._device.name}"
             ) from cex
 
-        for line, entry_value in raw_schedule.items():
+        for line, slot_value in raw_schedule.items():
             if not line.startswith("P"):
                 continue
             line_split = line.split("_")
@@ -348,19 +349,19 @@ class BaseClimateEntity(CustomEntity):
             _profile = ScheduleProfile(p)
             if profile and profile != _profile:
                 continue
-            _entry_type = ScheduleEntryType(et)
+            _slot_type = ScheduleSlotType(et)
             _weekday = ScheduleWeekday(w)
             if weekday and weekday != _weekday:
                 continue
-            _entry_no = int(no)
+            _slot_no = int(no)
 
             _add_to_schedule_data(
                 schedule_data=schedule_data,
                 profile=_profile,
                 weekday=_weekday,
-                entry_no=_entry_no,
-                entry_type=_entry_type,
-                entry_value=entry_value,
+                slot_no=_slot_no,
+                slot_type=_slot_type,
+                slot_value=slot_value,
             )
 
         return schedule_data
@@ -371,15 +372,15 @@ class BaseClimateEntity(CustomEntity):
         self._validate_profile(profile=profile, profile_data=profile_data)
         schedule_data: _SCHEDULE_DICT = {}
         for weekday, weekday_data in profile_data.items():
-            for entry_no, entry in weekday_data.items():
-                for entry_type, entry_value in entry.items():
+            for slot_no, slot in weekday_data.items():
+                for slot_type, slot_value in slot.items():
                     _add_to_schedule_data(
                         schedule_data=schedule_data,
                         profile=profile,
                         weekday=weekday,
-                        entry_no=entry_no,
-                        entry_type=entry_type,
-                        entry_value=entry_value,
+                        slot_no=slot_no,
+                        slot_type=slot_type,
+                        slot_value=slot_value,
                     )
         await self._client.put_paramset(
             channel_address=self._channel.address,
@@ -394,21 +395,35 @@ class BaseClimateEntity(CustomEntity):
         """Store a profile to device."""
         self._validate_profile_weekday(profile=profile, weekday=weekday, weekday_data=weekday_data)
         schedule_data: _SCHEDULE_DICT = {}
-        for entry_no, entry in weekday_data.items():
-            for entry_type, entry_value in entry.items():
+        for slot_no, slot in weekday_data.items():
+            for slot_type, slot_value in slot.items():
                 _add_to_schedule_data(
                     schedule_data=schedule_data,
                     profile=profile,
                     weekday=weekday,
-                    entry_no=entry_no,
-                    entry_type=entry_type,
-                    entry_value=entry_value,
+                    slot_no=slot_no,
+                    slot_type=slot_type,
+                    slot_value=slot_value,
                 )
         await self._client.put_paramset(
             channel_address=self._channel.address,
             paramset_key=ParamsetKey.MASTER,
             values=_get_raw_paramset(schedule_data=schedule_data),
         )
+
+    @service()
+    async def set_profile_weekday_simple(
+        self,
+        profile: ScheduleProfile,
+        weekday: ScheduleWeekday,
+        base_temperature: float,
+        simple_weekday_list: SIMPLE_WEEKDAY_LIST,
+    ) -> None:
+        """Store a simple profile to device."""
+        weekday_data = _convert_simple_to_weekday(
+            base_temperature=base_temperature, simple_weekday_list=simple_weekday_list
+        )
+        await self.set_profile_weekday(profile=profile, weekday=weekday, weekday_data=weekday_data)
 
     def _validate_profile(self, profile: ScheduleProfile, profile_data: PROFILE_DICT) -> None:
         """Validate the profile."""
@@ -429,36 +444,36 @@ class BaseClimateEntity(CustomEntity):
     ) -> None:
         """Validate the profile weekday."""
         previous_endtime = 0
-        for no in SCHEDULE_ENTRY_RANGE:
+        for no in SCHEDULE_SLOT_RANGE:
             if no not in weekday_data:
                 raise ValidationException(
-                    f"VALIDATE_PROFILE: Entry no {no} is missing in profile: {profile}/weekday: {weekday}"
+                    f"VALIDATE_PROFILE: slot no {no} is missing in profile: {profile}/weekday: {weekday}"
                 )
-            entry = weekday_data[no]
-            for entry_type in RELEVANT_ENTRY_TYPES:
-                if entry_type not in entry:
+            slot = weekday_data[no]
+            for slot_type in RELEVANT_SLOT_TYPES:
+                if slot_type not in slot:
                     raise ValidationException(
-                        f"VALIDATE_PROFILE: Entry type {entry_type} is missing in profile: "
-                        f"{profile}/weekday: {weekday}/entry_no: {no}"
+                        f"VALIDATE_PROFILE: slot type {slot_type} is missing in profile: "
+                        f"{profile}/weekday: {weekday}/slot_no: {no}"
                     )
-                temperature = float(weekday_data[no][ScheduleEntryType.TEMPERATURE])
+                temperature = float(weekday_data[no][ScheduleSlotType.TEMPERATURE])
                 if not self.min_temp <= temperature <= self.max_temp:
                     raise ValidationException(
                         f"VALIDATE_PROFILE: Temperature {temperature} not in valid range (min: {self.min_temp}, "
-                        f"max: {self.max_temp}) for profile: {profile}/weekday: {weekday}/entry_no: {no}"
+                        f"max: {self.max_temp}) for profile: {profile}/weekday: {weekday}/slot_no: {no}"
                     )
 
-                endtime_str = str(weekday_data[no][ScheduleEntryType.ENDTIME])
+                endtime_str = str(weekday_data[no][ScheduleSlotType.ENDTIME])
                 if endtime := _convert_time_str_to_minutes(time_str=endtime_str):
                     if endtime not in SCHEDULE_TIME_RANGE:
                         raise ValidationException(
                             f"VALIDATE_PROFILE: Time {endtime_str} must be between {_convert_minutes_to_time_str(minutes=SCHEDULE_TIME_RANGE.start)} and "
-                            f"{_convert_minutes_to_time_str(minutes=SCHEDULE_TIME_RANGE.stop - 1)} for profile: {profile}/weekday: {weekday}/entry_no: {no}"
+                            f"{_convert_minutes_to_time_str(minutes=SCHEDULE_TIME_RANGE.stop - 1)} for profile: {profile}/weekday: {weekday}/slot_no: {no}"
                         )
                     if endtime < previous_endtime:
                         raise ValidationException(
                             f"VALIDATE_PROFILE: Time sequence must be rising. {endtime_str} is lower than the previous "
-                            f"value {_convert_minutes_to_time_str(minutes=previous_endtime)} for profile: {profile}/weekday: {weekday}/entry_no: {no}"
+                            f"value {_convert_minutes_to_time_str(minutes=previous_endtime)} for profile: {profile}/weekday: {weekday}/slot_no: {no}"
                         )
                 previous_endtime = endtime
 
@@ -838,17 +853,24 @@ def _convert_time_str_to_minutes(time_str: str) -> int:
         ) from ex
 
 
+def _convert_simple_to_weekday(
+    base_temperature: float, simple_weekday_list: SIMPLE_WEEKDAY_LIST
+) -> WEEKDAY_DICT:
+    """Convert weekday dict to simple weekday list."""
+    return {}
+
+
 def _get_raw_paramset(schedule_data: _SCHEDULE_DICT) -> _RAW_SCHEDULE_DICT:
     """Return the raw paramset."""
     raw_paramset: _RAW_SCHEDULE_DICT = {}
     for profile, profile_data in schedule_data.items():
         for weekday, weekday_data in profile_data.items():
-            for entry_no, entry in weekday_data.items():
-                for entry_type, entry_value in entry.items():
-                    raw_value: float | int = cast(float | int, entry_value)
-                    if entry_type == ScheduleEntryType.ENDTIME and isinstance(entry_value, str):
-                        raw_value = _convert_time_str_to_minutes(entry_value)
-                    raw_paramset[f"{str(profile)}_{str(entry_type)}_{str(weekday)}_{entry_no}"] = (
+            for slot_no, slot in weekday_data.items():
+                for slot_type, slot_value in slot.items():
+                    raw_value: float | int = cast(float | int, slot_value)
+                    if slot_type == ScheduleSlotType.ENDTIME and isinstance(slot_value, str):
+                        raw_value = _convert_time_str_to_minutes(slot_value)
+                    raw_paramset[f"{str(profile)}_{str(slot_type)}_{str(weekday)}_{slot_no}"] = (
                         raw_value
                     )
     return raw_paramset
@@ -858,21 +880,21 @@ def _add_to_schedule_data(
     schedule_data: _SCHEDULE_DICT,
     profile: ScheduleProfile,
     weekday: ScheduleWeekday,
-    entry_no: int,
-    entry_type: ScheduleEntryType,
-    entry_value: int | float | str,
+    slot_no: int,
+    slot_type: ScheduleSlotType,
+    slot_value: str | float,
 ) -> None:
-    """Add or update schedule entry."""
+    """Add or update schedule slot."""
     if profile not in schedule_data:
         schedule_data[profile] = {}
     if weekday not in schedule_data[profile]:
         schedule_data[profile][weekday] = {}
-    if entry_no not in schedule_data[profile][weekday]:
-        schedule_data[profile][weekday][entry_no] = {}
-    if entry_type not in schedule_data[profile][weekday][entry_no]:
-        if entry_type == ScheduleEntryType.ENDTIME and isinstance(entry_value, int):
-            entry_value = _convert_minutes_to_time_str(entry_value)
-        schedule_data[profile][weekday][entry_no][entry_type] = entry_value
+    if slot_no not in schedule_data[profile][weekday]:
+        schedule_data[profile][weekday][slot_no] = {}
+    if slot_type not in schedule_data[profile][weekday][slot_no]:
+        if slot_type == ScheduleSlotType.ENDTIME and isinstance(slot_value, int):
+            slot_value = _convert_minutes_to_time_str(slot_value)
+        schedule_data[profile][weekday][slot_no][slot_type] = slot_value
 
 
 def make_simple_thermostat(

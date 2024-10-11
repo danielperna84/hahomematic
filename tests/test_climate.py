@@ -25,8 +25,8 @@ from hahomematic.platforms.custom import (
     HmPresetMode,
 )
 from hahomematic.platforms.custom.climate import (
-    ScheduleEntryType,
     ScheduleProfile,
+    ScheduleSlotType,
     ScheduleWeekday,
     _ModeHmIP,
 )
@@ -524,7 +524,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         profile=ScheduleProfile.P1, weekday=ScheduleWeekday.MONDAY, weekday_data=weekday_data
     )
     copy_weekday_data = deepcopy(weekday_data)
-    copy_weekday_data[1][ScheduleEntryType.TEMPERATURE] = 38.0
+    copy_weekday_data[1][ScheduleSlotType.TEMPERATURE] = 38.0
     with pytest.raises(ValidationException):
         await climate_bwth.set_profile_weekday(
             profile=ScheduleProfile.P1,
@@ -533,7 +533,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         )
 
     copy_weekday_data2 = deepcopy(weekday_data)
-    copy_weekday_data2[4][ScheduleEntryType.ENDTIME] = "1:40"
+    copy_weekday_data2[4][ScheduleSlotType.ENDTIME] = "1:40"
     with pytest.raises(ValidationException):
         await climate_bwth.set_profile_weekday(
             profile=ScheduleProfile.P1,
@@ -542,7 +542,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         )
 
     copy_weekday_data3 = deepcopy(weekday_data)
-    copy_weekday_data3[4][ScheduleEntryType.ENDTIME] = "35:00"
+    copy_weekday_data3[4][ScheduleSlotType.ENDTIME] = "35:00"
     with pytest.raises(ValidationException):
         await climate_bwth.set_profile_weekday(
             profile=ScheduleProfile.P1,
@@ -551,7 +551,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         )
 
     copy_weekday_data4 = deepcopy(weekday_data)
-    copy_weekday_data4[4][ScheduleEntryType.ENDTIME] = 100
+    copy_weekday_data4[4][ScheduleSlotType.ENDTIME] = 100
     with pytest.raises(ValidationException):
         await climate_bwth.set_profile_weekday(
             profile=ScheduleProfile.P1,
