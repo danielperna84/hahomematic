@@ -140,6 +140,7 @@ class ScheduleWeekday(StrEnum):
 
 
 SIMPLE_WEEKDAY_LIST = list[dict[ScheduleSlotType, str | float]]
+SIMPLE_PROFILE_DICT = dict[ScheduleWeekday, SIMPLE_WEEKDAY_LIST]
 WEEKDAY_DICT = dict[int, dict[ScheduleSlotType, str | float]]
 PROFILE_DICT = dict[ScheduleWeekday, WEEKDAY_DICT]
 _SCHEDULE_DICT = dict[ScheduleProfile, PROFILE_DICT]
@@ -389,6 +390,19 @@ class BaseClimateEntity(CustomEntity):
         )
 
     @service()
+    async def set_simple_profile(
+        self,
+        profile: ScheduleProfile,
+        base_temperature: float,
+        simple_profile_data: SIMPLE_PROFILE_DICT,
+    ) -> None:
+        """Set a profile to device."""
+        profile_data = self._validate_and_convert_simple_to_profile(
+            base_temperature=base_temperature, simple_profile_data=simple_profile_data
+        )
+        await self.set_profile(profile=profile, profile_data=profile_data)
+
+    @service()
     async def set_profile_weekday(
         self, profile: ScheduleProfile, weekday: ScheduleWeekday, weekday_data: WEEKDAY_DICT
     ) -> None:
@@ -412,7 +426,7 @@ class BaseClimateEntity(CustomEntity):
         )
 
     @service()
-    async def set_profile_weekday_simple(
+    async def set_simple_profile_weekday(
         self,
         profile: ScheduleProfile,
         weekday: ScheduleWeekday,
@@ -420,12 +434,25 @@ class BaseClimateEntity(CustomEntity):
         simple_weekday_list: SIMPLE_WEEKDAY_LIST,
     ) -> None:
         """Store a simple profile to device."""
-        weekday_data = self._validate_and_convert_simple_to_weekday(
+        weekday_data = self._validate_and_convert_simple_to_profile_weekday(
             base_temperature=base_temperature, simple_weekday_list=simple_weekday_list
         )
         await self.set_profile_weekday(profile=profile, weekday=weekday, weekday_data=weekday_data)
 
-    def _validate_and_convert_simple_to_weekday(
+    def _validate_and_convert_simple_to_profile(
+        self, base_temperature: float, simple_profile_data: SIMPLE_PROFILE_DICT
+    ) -> PROFILE_DICT:
+        """Convert simple profile dict to profile dict."""
+        profile_dict: PROFILE_DICT = {}
+        for day in ScheduleWeekday:
+            if day not in simple_profile_data:
+                raise ValidationException(f"VALIDATE_SIMPLE_PROFILE: {day} missing in profile")
+            profile_dict[day] = self._validate_and_convert_simple_to_profile_weekday(
+                base_temperature=base_temperature, simple_weekday_list=simple_profile_data[day]
+            )
+        return profile_dict
+
+    def _validate_and_convert_simple_to_profile_weekday(
         self, base_temperature: float, simple_weekday_list: SIMPLE_WEEKDAY_LIST
     ) -> WEEKDAY_DICT:
         """Convert weekday dict to simple weekday list."""
