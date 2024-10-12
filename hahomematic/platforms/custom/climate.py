@@ -41,7 +41,7 @@ _PARTY_DATE_FORMAT: Final = "%Y_%m_%d %H:%M"
 _PARTY_INIT_DATE: Final = "2000_01_01 00:00"
 _RAW_SCHEDULE_DICT = dict[str, float | int]
 _TEMP_CELSIUS: Final = "°C"
-SCHEDULE_SLOT_RANGE: Final = range(1, 14)
+SCHEDULE_SLOT_RANGE: Final = range(1, 13)
 SCHEDULE_TIME_RANGE: Final = range(1441)
 HM_PRESET_MODE_PREFIX: Final = "week_program_"
 
@@ -456,7 +456,7 @@ class BaseClimateEntity(CustomEntity):
         """Convert simple weekday list to weekday dict."""
         if not self.min_temp <= base_temperature <= self.max_temp:
             raise ValidationException(
-                f"VALIDATE_SIMPLE_PROFILE: Base temperature {base_temperature} not in valid range (min: {self.min_temp}, "
+                f"VALIDATE_PROFILE: Base temperature {base_temperature} not in valid range (min: {self.min_temp}, "
                 f"max: {self.max_temp})"
             )
 
@@ -468,22 +468,22 @@ class BaseClimateEntity(CustomEntity):
         slot_no = 1
         for slot in sorted_simple_weekday_list:
             if (starttime := slot.get(ScheduleSlotType.STARTTIME)) is None:
-                raise ValidationException("VALIDATE_SIMPLE_PROFILE: STARTTIME is missing.")
+                raise ValidationException("VALIDATE_PROFILE: STARTTIME is missing.")
             if (endtime := slot.get(ScheduleSlotType.ENDTIME)) is None:
-                raise ValidationException("VALIDATE_SIMPLE_PROFILE: ENDTIME is missing.")
+                raise ValidationException("VALIDATE_PROFILE: ENDTIME is missing.")
             if (temperature := slot.get(ScheduleSlotType.TEMPERATURE)) is None:
-                raise ValidationException("VALIDATE_SIMPLE_PROFILE: TEMPERATURE is missing.")
+                raise ValidationException("VALIDATE_PROFILE: TEMPERATURE is missing.")
 
             if _convert_time_str_to_minutes(str(starttime)) < _convert_time_str_to_minutes(
                 previous_endtime
             ):
                 raise ValidationException(
-                    f"VALIDATE_SIMPLE_PROFILE: Timespans are overlapping with a previous slot for starttime: {starttime} / endtime: {endtime}"
+                    f"VALIDATE_PROFILE: Timespans are overlapping with a previous slot for starttime: {starttime} / endtime: {endtime}"
                 )
 
             if not self.min_temp <= float(temperature) <= self.max_temp:
                 raise ValidationException(
-                    f"VALIDATE_SIMPLE_PROFILE: Temperature {temperature} not in valid range (min: {self.min_temp}, "
+                    f"VALIDATE_PROFILE: Temperature {temperature} not in valid range (min: {self.min_temp}, "
                     f"max: {self.max_temp}) for starttime: {starttime} / endtime: {endtime}"
                 )
 
@@ -520,7 +520,11 @@ class BaseClimateEntity(CustomEntity):
     ) -> None:
         """Validate the profile weekday."""
         previous_endtime = 0
-        for no in SCHEDULE_SLOT_RANGE:
+        if len(weekday_data) != 13:
+            raise ValidationException(
+                f"VALIDATE_PROFILE: {"Too many" if len(weekday_data) > 13 else "Too few"} slots in profile: {profile} / weekday: {weekday}"
+            )
+        for no in range(1, 13):
             if no not in weekday_data:
                 raise ValidationException(
                     f"VALIDATE_PROFILE: slot no {no} is missing in profile: {profile} / weekday: {weekday}"
@@ -942,7 +946,7 @@ def _sort_simple_weekday_list(simple_weekday_list: SIMPLE_WEEKDAY_LIST) -> SIMPL
 
 def _fillup_weekday_data(base_temperature: float, weekday_data: WEEKDAY_DICT) -> WEEKDAY_DICT:
     """Fillup weekday data."""
-    for slot_no in SCHEDULE_SLOT_RANGE:
+    for slot_no in range(1, 14):
         if slot_no not in weekday_data:
             weekday_data[slot_no] = {
                 ScheduleSlotType.ENDTIME: "24:00",

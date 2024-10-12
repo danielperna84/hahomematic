@@ -1,7 +1,10 @@
+# Version 2024.10.7 (2024-10-12)
+
+- Improve profile validation
+
 # Version 2024.10.6 (2024-10-11)
 
 - Export SIMPLE_PROFILE_DICT, SIMPLE_WEEKDAY_LIST
--
 
 # Version 2024.10.5 (2024-10-11)
 
