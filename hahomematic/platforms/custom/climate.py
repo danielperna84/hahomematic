@@ -42,6 +42,7 @@ _PARTY_INIT_DATE: Final = "2000_01_01 00:00"
 _RAW_SCHEDULE_DICT = dict[str, float | int]
 _TEMP_CELSIUS: Final = "°C"
 SCHEDULE_SLOT_RANGE: Final = range(1, 13)
+SCHEDULE_SLOT_IN_RANGE: Final = range(1, 14)
 SCHEDULE_TIME_RANGE: Final = range(1441)
 HM_PRESET_MODE_PREFIX: Final = "week_program_"
 
@@ -524,7 +525,7 @@ class BaseClimateEntity(CustomEntity):
             raise ValidationException(
                 f"VALIDATE_PROFILE: {"Too many" if len(weekday_data) > 13 else "Too few"} slots in profile: {profile} / weekday: {weekday}"
             )
-        for no in range(1, 13):
+        for no in SCHEDULE_SLOT_RANGE:
             if no not in weekday_data:
                 raise ValidationException(
                     f"VALIDATE_PROFILE: slot no {no} is missing in profile: {profile} / weekday: {weekday}"
@@ -946,7 +947,7 @@ def _sort_simple_weekday_list(simple_weekday_list: SIMPLE_WEEKDAY_LIST) -> SIMPL
 
 def _fillup_weekday_data(base_temperature: float, weekday_data: WEEKDAY_DICT) -> WEEKDAY_DICT:
     """Fillup weekday data."""
-    for slot_no in range(1, 14):
+    for slot_no in SCHEDULE_SLOT_IN_RANGE:
         if slot_no not in weekday_data:
             weekday_data[slot_no] = {
                 ScheduleSlotType.ENDTIME: "24:00",
