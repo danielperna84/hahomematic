@@ -1,6 +1,7 @@
 # Version 2024.10.7 (2024-10-12)
 
 - Improve profile validation
+- Use regex to identify schedule profiles
 
 # Version 2024.10.6 (2024-10-11)
 

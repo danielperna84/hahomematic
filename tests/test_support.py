@@ -14,6 +14,8 @@ from hahomematic.central import CentralUnit
 from hahomematic.client import Client
 from hahomematic.const import (
     INIT_DATETIME,
+    SCHEDULER_PROFILE_PATTERN,
+    SCHEDULER_TIME_PATTERN,
     VIRTUAL_REMOTE_ADDRESSES,
     EntityUsage,
     ParameterType,
@@ -603,3 +605,23 @@ def test_is_channel_address() -> None:
     assert is_channel_address("ABcdEFghIJ1234567890:123") is True
     assert is_channel_address("12345678901234567890:123") is True
     assert is_channel_address("123456789012345678901:123") is False
+
+
+def test_scheduler_profile_pattern() -> None:
+    """Test the SCHEDULER_PROFILE_PATTERN."""
+    assert SCHEDULER_PROFILE_PATTERN.match("P1_TEMPERATURE_THURSDAY_13")
+    assert SCHEDULER_PROFILE_PATTERN.match("P1_ENDTIME_THURSDAY_13")
+    assert SCHEDULER_PROFILE_PATTERN.match("P1_ENDTIME_THURSDAY_3")
+    assert SCHEDULER_PROFILE_PATTERN.match("Px_ENDTIME_THURSDAY_13") is None
+    assert SCHEDULER_PROFILE_PATTERN.match("P3_ENDTIME_THURSDAY_19") is None
+
+
+def test_scheduler_time_pattern() -> None:
+    """Test the SCHEDULER_TIME_PATTERN."""
+    assert SCHEDULER_TIME_PATTERN.match("00:00")
+    assert SCHEDULER_TIME_PATTERN.match("01:15")
+    assert SCHEDULER_TIME_PATTERN.match("23:59")
+    assert SCHEDULER_TIME_PATTERN.match("24:00")
+    assert SCHEDULER_TIME_PATTERN.match("5:00")
+    assert SCHEDULER_TIME_PATTERN.match("25:00") is None
+    assert SCHEDULER_TIME_PATTERN.match("F:00") is None
