@@ -574,7 +574,7 @@ async def test_add_device(
     """Test add_device."""
     central, _, _ = central_client_factory
     assert len(central._devices) == 1
-    assert len(central.get_entities(exclude_no_create=False)) == 26
+    assert len(central.get_entities(exclude_no_create=False)) == 27
     assert len(central.device_descriptions._raw_device_descriptions.get(const.INTERFACE_ID)) == 9
     assert (
         len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 9
@@ -582,7 +582,7 @@ async def test_add_device(
     dev_desc = helper.load_device_description(central=central, filename="HmIP-BSM.json")
     await central.add_new_devices(interface_id=const.INTERFACE_ID, device_descriptions=dev_desc)
     assert len(central._devices) == 2
-    assert len(central.get_entities(exclude_no_create=False)) == 57
+    assert len(central.get_entities(exclude_no_create=False)) == 58
     assert len(central.device_descriptions._raw_device_descriptions.get(const.INTERFACE_ID)) == 20
     assert (
         len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 20
@@ -611,7 +611,7 @@ async def test_delete_device(
     """Test device delete_device."""
     central, _, _ = central_client_factory
     assert len(central._devices) == 2
-    assert len(central.get_entities(exclude_no_create=False)) == 57
+    assert len(central.get_entities(exclude_no_create=False)) == 58
     assert len(central.device_descriptions._raw_device_descriptions.get(const.INTERFACE_ID)) == 20
     assert (
         len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 20
@@ -619,7 +619,7 @@ async def test_delete_device(
 
     await central.delete_devices(interface_id=const.INTERFACE_ID, addresses=["VCU2128127"])
     assert len(central._devices) == 1
-    assert len(central.get_entities(exclude_no_create=False)) == 26
+    assert len(central.get_entities(exclude_no_create=False)) == 27
     assert len(central.device_descriptions._raw_device_descriptions.get(const.INTERFACE_ID)) == 9
     assert (
         len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 9
@@ -760,29 +760,29 @@ async def test_central_services(
         include_internal=DEFAULT_INCLUDE_INTERNAL_SYSVARS
     )
 
-    assert len(mock_client.method_calls) == 41
+    assert len(mock_client.method_calls) == 42
     await central.load_and_refresh_entity_data(paramset_key=ParamsetKey.MASTER)
-    assert len(mock_client.method_calls) == 41
+    assert len(mock_client.method_calls) == 42
     await central.load_and_refresh_entity_data(paramset_key=ParamsetKey.VALUES)
-    assert len(mock_client.method_calls) == 59
+    assert len(mock_client.method_calls) == 60
 
     await central.get_system_variable(name="SysVar_Name")
     assert mock_client.method_calls[-1] == call.get_system_variable("SysVar_Name")
 
-    assert len(mock_client.method_calls) == 60
+    assert len(mock_client.method_calls) == 61
     await central.set_system_variable(name="sv_alarm", value=True)
     assert mock_client.method_calls[-1] == call.set_system_variable(name="sv_alarm", value=True)
-    assert len(mock_client.method_calls) == 61
+    assert len(mock_client.method_calls) == 62
     await central.set_system_variable(name="SysVar_Name", value=True)
-    assert len(mock_client.method_calls) == 61
+    assert len(mock_client.method_calls) == 62
 
     await central.set_install_mode(interface_id=const.INTERFACE_ID)
     assert mock_client.method_calls[-1] == call.set_install_mode(
         on=True, t=60, mode=1, device_address=None
     )
-    assert len(mock_client.method_calls) == 62
+    assert len(mock_client.method_calls) == 63
     await central.set_install_mode(interface_id="NOT_A_VALID_INTERFACE_ID")
-    assert len(mock_client.method_calls) == 62
+    assert len(mock_client.method_calls) == 63
 
     await central.get_client(interface_id=const.INTERFACE_ID).set_value(
         channel_address="123",
@@ -796,7 +796,7 @@ async def test_central_services(
         parameter="LEVEL",
         value=1.0,
     )
-    assert len(mock_client.method_calls) == 63
+    assert len(mock_client.method_calls) == 64
 
     with pytest.raises(HaHomematicException):
         await central.get_client(interface_id="NOT_A_VALID_INTERFACE_ID").set_value(
@@ -805,7 +805,7 @@ async def test_central_services(
             parameter="LEVEL",
             value=1.0,
         )
-    assert len(mock_client.method_calls) == 63
+    assert len(mock_client.method_calls) == 64
 
     await central.get_client(interface_id=const.INTERFACE_ID).put_paramset(
         channel_address="123",
@@ -815,14 +815,14 @@ async def test_central_services(
     assert mock_client.method_calls[-1] == call.put_paramset(
         channel_address="123", paramset_key="VALUES", values={"LEVEL": 1.0}
     )
-    assert len(mock_client.method_calls) == 64
+    assert len(mock_client.method_calls) == 65
     with pytest.raises(HaHomematicException):
         await central.get_client(interface_id="NOT_A_VALID_INTERFACE_ID").put_paramset(
             channel_address="123",
             paramset_key=ParamsetKey.VALUES,
             values={"LEVEL": 1.0},
         )
-    assert len(mock_client.method_calls) == 64
+    assert len(mock_client.method_calls) == 65
 
     assert (
         central.get_generic_entity(
@@ -851,7 +851,7 @@ async def test_central_direct(factory: helper.Factory) -> None:
         assert central.available is False
         assert central.system_information.serial == "0815_4711"
         assert len(central._devices) == 2
-        assert len(central.get_entities(exclude_no_create=False)) == 57
+        assert len(central.get_entities(exclude_no_create=False)) == 58
     finally:
         await central.stop()
 

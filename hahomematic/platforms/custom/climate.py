@@ -166,6 +166,9 @@ class BaseClimateEntity(CustomEntity):
         self._e_humidity: HmSensor[int | None] = self._get_entity(
             field=Field.HUMIDITY, entity_type=HmSensor[int | None]
         )
+        self._e_min_max_value_not_relevant_for_manu_mode: HmBinarySensor = self._get_entity(
+            field=Field.MIN_MAX_VALUE_NOT_RELEVANT_FOR_MANU_MODE, entity_type=HmBinarySensor
+        )
         self._e_setpoint: HmFloat = self._get_entity(field=Field.SETPOINT, entity_type=HmFloat)
         self._e_temperature: HmSensor[float | None] = self._get_entity(
             field=Field.TEMPERATURE, entity_type=HmSensor[float | None]
@@ -201,6 +204,13 @@ class BaseClimateEntity(CustomEntity):
     def hvac_modes(self) -> tuple[HmHvacMode, ...]:
         """Return the available hvac operation modes."""
         return (HmHvacMode.HEAT,)
+
+    @state_property
+    def min_max_value_not_relevant_for_manu_mode(self) -> bool:
+        """Return the maximum temperature."""
+        if self._e_min_max_value_not_relevant_for_manu_mode.value is not None:
+            return self._e_min_max_value_not_relevant_for_manu_mode.value
+        return False
 
     @state_property
     def min_temp(self) -> float:

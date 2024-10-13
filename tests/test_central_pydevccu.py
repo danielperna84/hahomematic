@@ -29,7 +29,7 @@ async def test_central_mini(central_unit_mini) -> None:
     assert central_unit_mini.get_client(const.INTERFACE_ID).model == "PyDevCCU"
     assert central_unit_mini.primary_client.model == "PyDevCCU"
     assert len(central_unit_mini._devices) == 1
-    assert len(central_unit_mini.get_entities(exclude_no_create=False)) == 33
+    assert len(central_unit_mini.get_entities(exclude_no_create=False)) == 34
 
 
 @pytest.mark.asyncio()
@@ -115,7 +115,7 @@ async def test_central_full(central_unit_full) -> None:
     ) as fptr:
         fptr.write(orjson.dumps(addresses, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS))
 
-    assert usage_types[EntityUsage.NO_CREATE] == 3154
+    assert usage_types[EntityUsage.NO_CREATE] == 3172
     assert usage_types[EntityUsage.CE_PRIMARY] == 208
     assert usage_types[EntityUsage.ENTITY] == 3638
     assert usage_types[EntityUsage.CE_VISIBLE] == 125
