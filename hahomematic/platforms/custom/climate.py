@@ -278,6 +278,19 @@ class BaseClimateEntity(CustomEntity):
         """Set new target temperature."""
         if not self.is_state_change(temperature=temperature):
             return
+
+        if (
+            do_validate
+            and self.hvac_mode == HmHvacMode.HEAT
+            and self.min_max_value_not_relevant_for_manu_mode
+        ):
+            do_validate = False
+
+        if do_validate and not (self.min_temp <= temperature <= self.max_temp):
+            raise ValueError(
+                f"SET_TEMPERATURE failed: Invalid temperature: {temperature} (min: {self.min_temp}, max: {self.max_temp})"
+            )
+
         await self._e_setpoint.send_value(
             value=temperature, collector=collector, do_validate=do_validate
         )
