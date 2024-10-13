@@ -310,11 +310,13 @@ _ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                     Field.ACTIVE_PROFILE: Parameter.ACTIVE_PROFILE,
                     Field.BOOST_MODE: Parameter.BOOST_MODE,
                     Field.CONTROL_MODE: Parameter.CONTROL_MODE,
+                    Field.OPTIMUM_START_STOP: Parameter.OPTIMUM_START_STOP,
                     Field.PARTY_MODE: Parameter.PARTY_MODE,
                     Field.SETPOINT: Parameter.SET_POINT_TEMPERATURE,
                     Field.SET_POINT_MODE: Parameter.SET_POINT_MODE,
                     Field.TEMPERATURE_MAXIMUM: Parameter.TEMPERATURE_MAXIMUM,
                     Field.TEMPERATURE_MINIMUM: Parameter.TEMPERATURE_MINIMUM,
+                    Field.TEMPERATURE_OFFSET: Parameter.TEMPERATURE_OFFSET,
                 },
                 ED.VISIBLE_REPEATABLE_FIELDS: {
                     Field.HEATING_COOLING: Parameter.HEATING_COOLING,
@@ -338,11 +340,13 @@ _ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                     Field.ACTIVE_PROFILE: Parameter.ACTIVE_PROFILE,
                     Field.BOOST_MODE: Parameter.BOOST_MODE,
                     Field.CONTROL_MODE: Parameter.CONTROL_MODE,
+                    Field.OPTIMUM_START_STOP: Parameter.OPTIMUM_START_STOP,
                     Field.PARTY_MODE: Parameter.PARTY_MODE,
                     Field.SETPOINT: Parameter.SET_POINT_TEMPERATURE,
                     Field.SET_POINT_MODE: Parameter.SET_POINT_MODE,
                     Field.TEMPERATURE_MAXIMUM: Parameter.TEMPERATURE_MAXIMUM,
                     Field.TEMPERATURE_MINIMUM: Parameter.TEMPERATURE_MINIMUM,
+                    Field.TEMPERATURE_OFFSET: Parameter.TEMPERATURE_OFFSET,
                 },
                 ED.VISIBLE_REPEATABLE_FIELDS: {
                     Field.HEATING_COOLING: Parameter.HEATING_COOLING,
@@ -478,6 +482,7 @@ _ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                     Field.SETPOINT: Parameter.SET_TEMPERATURE,
                     Field.TEMPERATURE_MAXIMUM: Parameter.TEMPERATURE_MAXIMUM,
                     Field.TEMPERATURE_MINIMUM: Parameter.TEMPERATURE_MINIMUM,
+                    Field.TEMPERATURE_OFFSET: Parameter.TEMPERATURE_OFFSET,
                 },
                 ED.VISIBLE_REPEATABLE_FIELDS: {
                     Field.HUMIDITY: Parameter.ACTUAL_HUMIDITY,
@@ -502,6 +507,7 @@ _ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                     Field.SETPOINT: Parameter.SET_TEMPERATURE,
                     Field.TEMPERATURE_MAXIMUM: Parameter.TEMPERATURE_MAXIMUM,
                     Field.TEMPERATURE_MINIMUM: Parameter.TEMPERATURE_MINIMUM,
+                    Field.TEMPERATURE_OFFSET: Parameter.TEMPERATURE_OFFSET,
                 },
                 ED.VISIBLE_REPEATABLE_FIELDS: {
                     Field.HUMIDITY: Parameter.ACTUAL_HUMIDITY,
