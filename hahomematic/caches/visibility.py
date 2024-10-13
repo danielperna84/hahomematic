@@ -29,35 +29,22 @@ _IGNORE_MODEL: Final = "ignore_"
 # from being display by default. Usually these enties are used within custom entities,
 # and not for general display.
 # {model: (channel_no, parameter)}
+
+_CLIMATE_MASTER_PARAMETERS: Final[tuple[Parameter, ...]] = (
+    Parameter.GLOBAL_BUTTON_LOCK,
+    Parameter.OPTIMUM_START_STOP,
+    Parameter.TEMPERATURE_MAXIMUM,
+    Parameter.TEMPERATURE_MINIMUM,
+    Parameter.TEMPERATURE_OFFSET,
+)
 _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[
     Mapping[str, tuple[tuple[int | None, ...], tuple[Parameter, ...]]]
 ] = {
-    "ALPHA-IP-RBG": (
-        (0, 1),
-        (
-            Parameter.TEMPERATURE_MAXIMUM,
-            Parameter.TEMPERATURE_MINIMUM,
-            Parameter.GLOBAL_BUTTON_LOCK,
-        ),
-    ),
-    "HM-CC-RT-DN": (
-        (None, 1),
-        (
-            Parameter.TEMPERATURE_MAXIMUM,
-            Parameter.TEMPERATURE_MINIMUM,
-            Parameter.GLOBAL_BUTTON_LOCK,
-        ),
-    ),
-    "HM-CC-VG-1": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "ALPHA-IP-RBG": ((0, 1), _CLIMATE_MASTER_PARAMETERS),
+    "HM-CC-RT-DN": ((None, 1), _CLIMATE_MASTER_PARAMETERS),
+    "HM-CC-VG-1": ((0, 1), _CLIMATE_MASTER_PARAMETERS),
     "HM-TC-IT-WM-W-EU": ((None,), (Parameter.GLOBAL_BUTTON_LOCK,)),
-    "HmIP-BWTH": (
-        (0, 1),
-        (
-            Parameter.TEMPERATURE_MAXIMUM,
-            Parameter.TEMPERATURE_MINIMUM,
-            Parameter.GLOBAL_BUTTON_LOCK,
-        ),
-    ),
+    "HmIP-BWTH": ((0, 1), _CLIMATE_MASTER_PARAMETERS),
     "HmIP-DRBLI4": (
         (1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 21),
         (Parameter.CHANNEL_OPERATION_MODE,),
@@ -70,33 +57,19 @@ _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[
     "HmIP-FCI1": ((1,), (Parameter.CHANNEL_OPERATION_MODE,)),
     "HmIP-FCI6": (tuple(range(1, 7)), (Parameter.CHANNEL_OPERATION_MODE,)),
     "HmIP-FSI16": ((1,), (Parameter.CHANNEL_OPERATION_MODE,)),
-    "HmIP-HEATING": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HmIP-HEATING": ((0, 1), _CLIMATE_MASTER_PARAMETERS),
     "HmIP-MIO16-PCB": ((13, 14, 15, 16), (Parameter.CHANNEL_OPERATION_MODE,)),
     "HmIP-MOD-RC8": (tuple(range(1, 9)), (Parameter.CHANNEL_OPERATION_MODE,)),
     "HmIP-RGBW": ((0,), (Parameter.DEVICE_OPERATION_MODE,)),
-    "HmIP-STH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
-    "HmIP-WTH": (
-        (0, 1),
-        (
-            Parameter.TEMPERATURE_MAXIMUM,
-            Parameter.TEMPERATURE_MINIMUM,
-            Parameter.GLOBAL_BUTTON_LOCK,
-        ),
-    ),
-    "HmIP-eTRV": (
-        (0, 1),
-        (
-            Parameter.TEMPERATURE_MAXIMUM,
-            Parameter.TEMPERATURE_MINIMUM,
-            Parameter.GLOBAL_BUTTON_LOCK,
-        ),
-    ),
+    "HmIP-STH": ((1,), _CLIMATE_MASTER_PARAMETERS),
+    "HmIP-WTH": ((0, 1), _CLIMATE_MASTER_PARAMETERS),
+    "HmIP-eTRV": ((0, 1), _CLIMATE_MASTER_PARAMETERS),
     "HmIPW-DRBL4": ((1, 5, 9, 13), (Parameter.CHANNEL_OPERATION_MODE,)),
     "HmIPW-DRI16": (tuple(range(1, 17)), (Parameter.CHANNEL_OPERATION_MODE,)),
     "HmIPW-DRI32": (tuple(range(1, 33)), (Parameter.CHANNEL_OPERATION_MODE,)),
     "HmIPW-FAL": ((0,), (Parameter.GLOBAL_BUTTON_LOCK,)),
     "HmIPW-FIO6": (tuple(range(1, 7)), (Parameter.CHANNEL_OPERATION_MODE,)),
-    "HmIPW-STH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HmIPW-STH": ((0, 1), _CLIMATE_MASTER_PARAMETERS),
 }
 
 # Ignore events for some devices
@@ -111,10 +84,12 @@ _HIDDEN_PARAMETERS: Final[tuple[Parameter, ...]] = (
     Parameter.CONFIG_PENDING,
     Parameter.DIRECTION,
     Parameter.ERROR,
+    Parameter.OPTIMUM_START_STOP,
     Parameter.SECTION,
     Parameter.STICKY_UN_REACH,
     Parameter.TEMPERATURE_MAXIMUM,
     Parameter.TEMPERATURE_MINIMUM,
+    Parameter.TEMPERATURE_OFFSET,
     Parameter.UN_REACH,
     Parameter.UPDATE_PENDING,
     Parameter.WORKING,

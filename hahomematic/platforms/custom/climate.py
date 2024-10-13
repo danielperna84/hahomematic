@@ -177,10 +177,30 @@ class BaseClimateEntity(CustomEntity):
             field=Field.TEMPERATURE_MINIMUM, entity_type=HmFloat
         )
 
-    @config_property
-    def temperature_unit(self) -> str:
-        """Return temperature unit."""
-        return _TEMP_CELSIUS
+    @state_property
+    def current_humidity(self) -> int | None:
+        """Return the current humidity."""
+        return self._e_humidity.value
+
+    @state_property
+    def current_temperature(self) -> float | None:
+        """Return current temperature."""
+        return self._e_temperature.value
+
+    @state_property
+    def hvac_action(self) -> HmHvacAction | None:
+        """Return the hvac action."""
+        return None
+
+    @state_property
+    def hvac_mode(self) -> HmHvacMode:
+        """Return hvac operation mode."""
+        return HmHvacMode.HEAT
+
+    @state_property
+    def hvac_modes(self) -> tuple[HmHvacMode, ...]:
+        """Return the available hvac operation modes."""
+        return (HmHvacMode.HEAT,)
 
     @state_property
     def min_temp(self) -> float:
@@ -202,14 +222,14 @@ class BaseClimateEntity(CustomEntity):
         return self._e_setpoint.max  # type: ignore[no-any-return]
 
     @state_property
-    def current_humidity(self) -> int | None:
-        """Return the current humidity."""
-        return self._e_humidity.value
+    def preset_mode(self) -> HmPresetMode:
+        """Return the current preset mode."""
+        return HmPresetMode.NONE
 
     @state_property
-    def current_temperature(self) -> float | None:
-        """Return current temperature."""
-        return self._e_temperature.value
+    def preset_modes(self) -> tuple[HmPresetMode, ...]:
+        """Return available preset modes."""
+        return (HmPresetMode.NONE,)
 
     @state_property
     def target_temperature(self) -> float | None:
@@ -221,35 +241,15 @@ class BaseClimateEntity(CustomEntity):
         """Return the supported step of target temperature."""
         return _DEFAULT_TEMPERATURE_STEP
 
-    @state_property
-    def preset_mode(self) -> HmPresetMode:
-        """Return the current preset mode."""
-        return HmPresetMode.NONE
-
-    @state_property
-    def preset_modes(self) -> tuple[HmPresetMode, ...]:
-        """Return available preset modes."""
-        return (HmPresetMode.NONE,)
-
-    @state_property
-    def hvac_action(self) -> HmHvacAction | None:
-        """Return the hvac action."""
-        return None
-
-    @state_property
-    def hvac_mode(self) -> HmHvacMode:
-        """Return hvac operation mode."""
-        return HmHvacMode.HEAT
-
-    @state_property
-    def hvac_modes(self) -> tuple[HmHvacMode, ...]:
-        """Return the available hvac operation modes."""
-        return (HmHvacMode.HEAT,)
-
     @property
     def supports_preset(self) -> bool:
         """Flag if climate supports preset."""
         return False
+
+    @config_property
+    def temperature_unit(self) -> str:
+        """Return temperature unit."""
+        return _TEMP_CELSIUS
 
     @property
     def _min_or_target_temperature(self) -> float:
@@ -590,6 +590,9 @@ class CeRfThermostat(BaseClimateEntity):
         self._e_control_mode: HmSensor[str | None] = self._get_entity(
             field=Field.CONTROL_MODE, entity_type=HmSensor[str | None]
         )
+        self._e_temperature_offset: HmSelect = self._get_entity(
+            field=Field.TEMPERATURE_OFFSET, entity_type=HmSelect
+        )
         self._e_valve_state: HmSensor[int | None] = self._get_entity(
             field=Field.VALVE_STATE, entity_type=HmSensor[int | None]
         )
@@ -644,6 +647,11 @@ class CeRfThermostat(BaseClimateEntity):
     def supports_preset(self) -> bool:
         """Flag if climate supports preset."""
         return True
+
+    @state_property
+    def temperature_offset(self) -> str | None:
+        """Return the maximum temperature."""
+        return self._e_temperature_offset.value
 
     @bind_collector()
     async def set_hvac_mode(
@@ -745,15 +753,21 @@ class CeIpThermostat(BaseClimateEntity):
         self._e_heating_mode: HmSelect = self._get_entity(
             field=Field.HEATING_COOLING, entity_type=HmSelect
         )
+        self._e_level: HmFloat = self._get_entity(field=Field.LEVEL, entity_type=HmFloat)
+        self._e_optimum_start_stop: HmBinarySensor = self._get_entity(
+            field=Field.OPTIMUM_START_STOP, entity_type=HmBinarySensor
+        )
         self._e_party_mode: HmBinarySensor = self._get_entity(
             field=Field.PARTY_MODE, entity_type=HmBinarySensor
         )
         self._e_set_point_mode: HmInteger = self._get_entity(
             field=Field.SET_POINT_MODE, entity_type=HmInteger
         )
-        self._e_level: HmFloat = self._get_entity(field=Field.LEVEL, entity_type=HmFloat)
         self._e_state: HmBinarySensor = self._get_entity(
             field=Field.STATE, entity_type=HmBinarySensor
+        )
+        self._e_temperature_offset: HmFloat = self._get_entity(
+            field=Field.TEMPERATURE_OFFSET, entity_type=HmFloat
         )
 
     @property
@@ -816,9 +830,19 @@ class CeIpThermostat(BaseClimateEntity):
         return tuple(presets)
 
     @property
+    def optimum_start_stop(self) -> bool | None:
+        """Return if optimum_start_stop is enabled."""
+        return self._e_optimum_start_stop.value
+
+    @property
     def supports_preset(self) -> bool:
         """Flag if climate supports preset."""
         return True
+
+    @state_property
+    def temperature_offset(self) -> float | None:
+        """Return the maximum temperature."""
+        return self._e_temperature_offset.value
 
     @bind_collector()
     async def set_hvac_mode(
