@@ -47,6 +47,10 @@ CHANNEL_ADDRESS_PATTERN: Final = re.compile(r"^[0-9a-zA-Z-]{5,20}:[0-9]{1,3}$")
 DEVICE_ADDRESS_PATTERN: Final = re.compile(r"^[0-9a-zA-Z-]{5,20}$")
 ALLOWED_HOSTNAME_PATTERN: Final = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
 HTMLTAG_PATTERN: Final = re.compile(r"<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});")
+SCHEDULER_PROFILE_PATTERN = re.compile(
+    r"^P[1-6]_(ENDTIME|TEMPERATURE)_(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)_(1[0-3]|[1-9])"
+)
+SCHEDULER_TIME_PATTERN = re.compile(r"^(([0-1]{0,1}[0-9])|(2[0-4])):[0-5][0-9]")
 
 HUB_PATH: Final = "hub"
 BLOCK_LOG_TIMEOUT = 60

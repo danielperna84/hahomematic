@@ -12,7 +12,12 @@ from enum import IntEnum, StrEnum
 import logging
 from typing import Any, Final, cast
 
-from hahomematic.const import HmPlatform, ParamsetKey
+from hahomematic.const import (
+    SCHEDULER_PROFILE_PATTERN,
+    SCHEDULER_TIME_PATTERN,
+    HmPlatform,
+    ParamsetKey,
+)
 from hahomematic.exceptions import ClientException, HaHomematicException, ValidationException
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
@@ -36,6 +41,8 @@ _LOGGER: Final = logging.getLogger(__name__)
 # HA constants
 _CLOSED_LEVEL: Final = 0.0
 _DEFAULT_TEMPERATURE_STEP: Final = 0.5
+_MAX_SCHEDULER_TIME: Final = "24:00"
+_MIN_SCHEDULER_TIME: Final = "00:00"
 _OFF_TEMPERATURE: Final = 4.5
 _PARTY_DATE_FORMAT: Final = "%Y_%m_%d %H:%M"
 _PARTY_INIT_DATE: Final = "2000_01_01 00:00"
@@ -341,21 +348,21 @@ class BaseClimateEntity(CustomEntity):
                 f"Schedule is not supported by device {self._device.name}"
             ) from cex
 
-        for line, slot_value in raw_schedule.items():
-            if not line.startswith("P"):
+        for slot_name, slot_value in raw_schedule.items():
+            if SCHEDULER_PROFILE_PATTERN.match(slot_name) is None:
                 continue
-            line_split = line.split("_")
-            if len(line_split) != 4:
+            slot_name_tuple = slot_name.split("_")
+            if len(slot_name_tuple) != 4:
                 continue
-            p, et, w, no = line_split
-            _profile = ScheduleProfile(p)
+            profile_name, slot_type, slot_weekday, slot_no = slot_name_tuple
+            _profile = ScheduleProfile(profile_name)
             if profile and profile != _profile:
                 continue
-            _slot_type = ScheduleSlotType(et)
-            _weekday = ScheduleWeekday(w)
+            _slot_type = ScheduleSlotType(slot_type)
+            _weekday = ScheduleWeekday(slot_weekday)
             if weekday and weekday != _weekday:
                 continue
-            _slot_no = int(no)
+            _slot_no = int(slot_no)
 
             _add_to_schedule_data(
                 schedule_data=schedule_data,
@@ -465,7 +472,7 @@ class BaseClimateEntity(CustomEntity):
         sorted_simple_weekday_list = _sort_simple_weekday_list(
             simple_weekday_list=simple_weekday_list
         )
-        previous_endtime = "00:00"
+        previous_endtime = _MIN_SCHEDULER_TIME
         slot_no = 1
         for slot in sorted_simple_weekday_list:
             if (starttime := slot.get(ScheduleSlotType.STARTTIME)) is None:
@@ -915,16 +922,24 @@ class CeIpThermostat(BaseClimateEntity):
         return profiles
 
 
-def _convert_minutes_to_time_str(minutes: int) -> str:
+def _convert_minutes_to_time_str(minutes: Any) -> str:
     """Convert minutes to a time string."""
-    try:
-        return f"{minutes//60:0=2}:{minutes%60:0=2}"
-    except Exception as ex:
-        raise ValidationException(ex) from ex
+    if not isinstance(minutes, int):
+        return _MAX_SCHEDULER_TIME
+    time_str = f"{minutes//60:0=2}:{minutes%60:0=2}"
+    if SCHEDULER_TIME_PATTERN.match(time_str) is None:
+        raise ValidationException(
+            f"Time {time_str} is not valid. Format must be hh:mm with min: {_MIN_SCHEDULER_TIME} and max: {_MAX_SCHEDULER_TIME}"
+        )
+    return time_str
 
 
 def _convert_time_str_to_minutes(time_str: str) -> int:
     """Convert minutes to a time string."""
+    if SCHEDULER_TIME_PATTERN.match(time_str) is None:
+        raise ValidationException(
+            f"Time {time_str} is not valid. Format must be hh:mm with min: {_MIN_SCHEDULER_TIME} and max: {_MAX_SCHEDULER_TIME}"
+        )
     try:
         h, m = time_str.split(":")
         return (int(h) * 60) + int(m)
@@ -950,7 +965,7 @@ def _fillup_weekday_data(base_temperature: float, weekday_data: WEEKDAY_DICT) ->
     for slot_no in SCHEDULE_SLOT_IN_RANGE:
         if slot_no not in weekday_data:
             weekday_data[slot_no] = {
-                ScheduleSlotType.ENDTIME: "24:00",
+                ScheduleSlotType.ENDTIME: _MAX_SCHEDULER_TIME,
                 ScheduleSlotType.TEMPERATURE: base_temperature,
             }
 
@@ -964,12 +979,13 @@ def _get_raw_paramset(schedule_data: _SCHEDULE_DICT) -> _RAW_SCHEDULE_DICT:
         for weekday, weekday_data in profile_data.items():
             for slot_no, slot in weekday_data.items():
                 for slot_type, slot_value in slot.items():
+                    raw_profile_name = f"{str(profile)}_{str(slot_type)}_{str(weekday)}_{slot_no}"
+                    if SCHEDULER_PROFILE_PATTERN.match(raw_profile_name) is None:
+                        raise ValidationException(f"Not a valid profile name: {raw_profile_name}")
                     raw_value: float | int = cast(float | int, slot_value)
                     if slot_type == ScheduleSlotType.ENDTIME and isinstance(slot_value, str):
                         raw_value = _convert_time_str_to_minutes(slot_value)
-                    raw_paramset[f"{str(profile)}_{str(slot_type)}_{str(weekday)}_{slot_no}"] = (
-                        raw_value
-                    )
+                    raw_paramset[raw_profile_name] = raw_value
     return raw_paramset
 
 
