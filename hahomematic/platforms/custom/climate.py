@@ -291,7 +291,7 @@ class BaseClimateEntity(CustomEntity):
                 f"SET_TEMPERATURE failed: Invalid temperature: {temperature} (min: {self.min_temp}, max: {self.max_temp})"
             )
 
-        await self._e_setpoint.send_value(value=temperature, collector=collector, do_validate=True)
+        await self._e_setpoint.send_value(value=temperature, collector=collector)
 
     @bind_collector()
     async def set_hvac_mode(
