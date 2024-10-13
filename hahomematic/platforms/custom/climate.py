@@ -166,6 +166,9 @@ class BaseClimateEntity(CustomEntity):
         self._e_humidity: HmSensor[int | None] = self._get_entity(
             field=Field.HUMIDITY, entity_type=HmSensor[int | None]
         )
+        self._e_min_max_value_not_relevant_for_manu_mode: HmBinarySensor = self._get_entity(
+            field=Field.MIN_MAX_VALUE_NOT_RELEVANT_FOR_MANU_MODE, entity_type=HmBinarySensor
+        )
         self._e_setpoint: HmFloat = self._get_entity(field=Field.SETPOINT, entity_type=HmFloat)
         self._e_temperature: HmSensor[float | None] = self._get_entity(
             field=Field.TEMPERATURE, entity_type=HmSensor[float | None]
@@ -201,6 +204,13 @@ class BaseClimateEntity(CustomEntity):
     def hvac_modes(self) -> tuple[HmHvacMode, ...]:
         """Return the available hvac operation modes."""
         return (HmHvacMode.HEAT,)
+
+    @state_property
+    def min_max_value_not_relevant_for_manu_mode(self) -> bool:
+        """Return the maximum temperature."""
+        if self._e_min_max_value_not_relevant_for_manu_mode.value is not None:
+            return self._e_min_max_value_not_relevant_for_manu_mode.value
+        return False
 
     @state_property
     def min_temp(self) -> float:
@@ -268,9 +278,20 @@ class BaseClimateEntity(CustomEntity):
         """Set new target temperature."""
         if not self.is_state_change(temperature=temperature):
             return
-        await self._e_setpoint.send_value(
-            value=temperature, collector=collector, do_validate=do_validate
-        )
+
+        if (
+            do_validate
+            and self.hvac_mode == HmHvacMode.HEAT
+            and self.min_max_value_not_relevant_for_manu_mode
+        ):
+            do_validate = False
+
+        if do_validate and not (self.min_temp <= temperature <= self.max_temp):
+            raise ValueError(
+                f"SET_TEMPERATURE failed: Invalid temperature: {temperature} (min: {self.min_temp}, max: {self.max_temp})"
+            )
+
+        await self._e_setpoint.send_value(value=temperature, collector=collector)
 
     @bind_collector()
     async def set_hvac_mode(
@@ -864,7 +885,9 @@ class CeIpThermostat(BaseClimateEntity):
             )
         elif hvac_mode == HmHvacMode.OFF:
             await self._e_control_mode.send_value(value=_ModeHmIP.MANU, collector=collector)
-            await self.set_temperature(temperature=_OFF_TEMPERATURE, collector=collector)
+            await self.set_temperature(
+                temperature=_OFF_TEMPERATURE, collector=collector, do_validate=False
+            )
 
     @bind_collector()
     async def set_preset_mode(

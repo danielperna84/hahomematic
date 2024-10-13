@@ -104,6 +104,7 @@ class Field(Enum):
     LOWERING_MODE = "lowering_mode"
     LOW_BAT = "low_bat"
     MANU_MODE = "manu_mode"
+    MIN_MAX_VALUE_NOT_RELEVANT_FOR_MANU_MODE = "min_max_value_not_relevant_for_manu_mode"
     ON_TIME_UNIT = "on_time_unit"
     ON_TIME_VALUE = "on_time_value"
     OPEN = "open"

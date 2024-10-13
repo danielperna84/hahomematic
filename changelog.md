@@ -1,6 +1,6 @@
 # Version 2024.10.7 (2024-10-12)
 
-- Add OPTIMUM_START_STOP and TEMPERATURE_OFFSET to climate
+- Add MIN_MAX_VALUE_NOT_RELEVANT_FOR_MANU_MODE, OPTIMUM_START_STOP and TEMPERATURE_OFFSET to climate
 - Improve profile validation
 - Use regex to identify schedule profiles
 

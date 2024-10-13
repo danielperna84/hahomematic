@@ -32,6 +32,7 @@ _IGNORE_MODEL: Final = "ignore_"
 
 _CLIMATE_MASTER_PARAMETERS: Final[tuple[Parameter, ...]] = (
     Parameter.GLOBAL_BUTTON_LOCK,
+    Parameter.MIN_MAX_VALUE_NOT_RELEVANT_FOR_MANU_MODE,
     Parameter.OPTIMUM_START_STOP,
     Parameter.TEMPERATURE_MAXIMUM,
     Parameter.TEMPERATURE_MINIMUM,
@@ -84,6 +85,7 @@ _HIDDEN_PARAMETERS: Final[tuple[Parameter, ...]] = (
     Parameter.CONFIG_PENDING,
     Parameter.DIRECTION,
     Parameter.ERROR,
+    Parameter.MIN_MAX_VALUE_NOT_RELEVANT_FOR_MANU_MODE,
     Parameter.OPTIMUM_START_STOP,
     Parameter.SECTION,
     Parameter.STICKY_UN_REACH,
