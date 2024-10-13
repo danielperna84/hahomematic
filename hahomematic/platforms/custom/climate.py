@@ -887,7 +887,9 @@ class CeIpThermostat(BaseClimateEntity):
             )
         elif hvac_mode == HmHvacMode.OFF:
             await self._e_control_mode.send_value(value=_ModeHmIP.MANU, collector=collector)
-            await self.set_temperature(temperature=_OFF_TEMPERATURE, collector=collector)
+            await self.set_temperature(
+                temperature=_OFF_TEMPERATURE, collector=collector, do_validate=False
+            )
 
     @bind_collector()
     async def set_preset_mode(
