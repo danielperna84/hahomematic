@@ -1,3 +1,7 @@
+# Version 2024.10.8 (2024-10-12)
+
+- Add services to copy climate schedules
+
 # Version 2024.10.7 (2024-10-12)
 
 - Add MIN_MAX_VALUE_NOT_RELEVANT_FOR_MANU_MODE, OPTIMUM_START_STOP and TEMPERATURE_OFFSET to climate

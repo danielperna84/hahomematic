@@ -18,7 +18,7 @@ from hahomematic.const import (
     HmPlatform,
     ParamsetKey,
 )
-from hahomematic.exceptions import ClientException, HaHomematicException, ValidationException
+from hahomematic.exceptions import ClientException, ValidationException
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
@@ -268,6 +268,11 @@ class BaseClimateEntity(CustomEntity):
             return self.min_temp
         return temperature
 
+    @property
+    def schedule_profile_nos(self) -> int:
+        """Return the number of supported profiles."""
+        return 0
+
     @bind_collector()
     async def set_temperature(
         self,
@@ -336,42 +341,105 @@ class BaseClimateEntity(CustomEntity):
         return super().is_state_change(**kwargs)
 
     @service()
-    async def get_profile(self, profile: ScheduleProfile) -> PROFILE_DICT:
+    async def copy_schedule(self, target_climate_entity: BaseClimateEntity) -> None:
+        """Copy schedule to target device."""
+
+        if self.device.product_group != target_climate_entity.device.product_group:
+            raise ValidationException(
+                "Copy schedule profile is only possible within the same product group"
+            )
+        if self.schedule_profile_nos != target_climate_entity.schedule_profile_nos:
+            raise ValidationException(
+                "Copy schedule profile is only: No of schedule profile must be identical"
+            )
+        raw_schedule = await self._get_raw_schedule()
+        await self._client.put_paramset(
+            channel_address=target_climate_entity.channel.address,
+            paramset_key=ParamsetKey.MASTER,
+            values=raw_schedule,
+        )
+
+    @service()
+    async def copy_schedule_profile(
+        self,
+        source_profile: ScheduleProfile,
+        target_profile: ScheduleProfile,
+        target_climate_entity: BaseClimateEntity | None = None,
+    ) -> None:
+        """Copy schedule profile to target device."""
+        same_device = False
+        if not self._supports_schedule:
+            raise ValidationException(f"Schedule is not supported by device {self._device.name}")
+        if target_climate_entity is None:
+            target_climate_entity = self
+        if self is target_climate_entity:
+            same_device = True
+
+        if self.device.product_group != target_climate_entity.device.product_group:
+            raise ValidationException(
+                "Copy schedule profile is only possible within the same product group"
+            )
+        if same_device and (
+            source_profile == target_profile or (source_profile is None or target_profile is None)
+        ):
+            raise ValidationException(
+                "Copy schedule profile on same device is only possible with defined and different source/target profiles"
+            )
+
+        if (
+            source_profile_data := await self.get_schedule_profile(profile=source_profile)
+        ) is None:
+            raise ValidationException(f"Source profile {source_profile} could not be loaded.")
+        await self._set_schedule_profile(
+            target_channel_address=target_climate_entity.channel.address,
+            profile=target_profile,
+            profile_data=source_profile_data,
+        )
+
+    @service()
+    async def get_schedule_profile(self, profile: ScheduleProfile) -> PROFILE_DICT:
         """Return a schedule by climate profile."""
         if not self._supports_schedule:
-            raise HaHomematicException(f"Schedule is not supported by device {self._device.name}")
-        schedule_data = await self._get_schedule(profile=profile)
+            raise ValidationException(f"Schedule is not supported by device {self._device.name}")
+        schedule_data = await self._get_schedule_profile(profile=profile)
         return schedule_data.get(profile, {})
 
     @service()
-    async def get_profile_weekday(
+    async def get_schedule_profile_weekday(
         self, profile: ScheduleProfile, weekday: ScheduleWeekday
     ) -> WEEKDAY_DICT:
         """Return a schedule by climate profile."""
         if not self._supports_schedule:
-            raise HaHomematicException(f"Schedule is not supported by device {self._device.name}")
-        schedule_data = await self._get_schedule(profile=profile, weekday=weekday)
+            raise ValidationException(f"Schedule is not supported by device {self._device.name}")
+        schedule_data = await self._get_schedule_profile(profile=profile, weekday=weekday)
         return schedule_data.get(profile, {}).get(weekday, {})
 
-    async def _get_schedule(
+    async def _get_raw_schedule(self) -> _RAW_SCHEDULE_DICT:
+        """Return the raw schedule."""
+        try:
+            raw_data = await self._client.get_paramset(
+                address=self._channel.address,
+                paramset_key=ParamsetKey.MASTER,
+            )
+            raw_schedule = {
+                key: value
+                for key, value in raw_data.items()
+                if SCHEDULER_PROFILE_PATTERN.match(key)
+            }
+        except ClientException as cex:
+            self._supports_schedule = False
+            raise ValidationException(
+                f"Schedule is not supported by device {self._device.name}"
+            ) from cex
+        return raw_schedule
+
+    async def _get_schedule_profile(
         self, profile: ScheduleProfile | None = None, weekday: ScheduleWeekday | None = None
     ) -> _SCHEDULE_DICT:
         """Get the schedule."""
         schedule_data: _SCHEDULE_DICT = {}
-        try:
-            raw_schedule = await self._client.get_paramset(
-                address=self._channel.address,
-                paramset_key=ParamsetKey.MASTER,
-            )
-        except ClientException as cex:
-            self._supports_schedule = False
-            raise HaHomematicException(
-                f"Schedule is not supported by device {self._device.name}"
-            ) from cex
-
+        raw_schedule = await self._get_raw_schedule()
         for slot_name, slot_value in raw_schedule.items():
-            if SCHEDULER_PROFILE_PATTERN.match(slot_name) is None:
-                continue
             slot_name_tuple = slot_name.split("_")
             if len(slot_name_tuple) != 4:
                 continue
@@ -397,9 +465,21 @@ class BaseClimateEntity(CustomEntity):
         return schedule_data
 
     @service()
-    async def set_profile(self, profile: ScheduleProfile, profile_data: PROFILE_DICT) -> None:
+    async def set_schedule_profile(
+        self, profile: ScheduleProfile, profile_data: PROFILE_DICT
+    ) -> None:
         """Set a profile to device."""
-        self._validate_profile(profile=profile, profile_data=profile_data)
+        await self._set_schedule_profile(
+            target_channel_address=self._channel.address,
+            profile=profile,
+            profile_data=profile_data,
+        )
+
+    async def _set_schedule_profile(
+        self, target_channel_address: str, profile: ScheduleProfile, profile_data: PROFILE_DICT
+    ) -> None:
+        """Set a profile to device."""
+        self._validate_schedule_profile(profile=profile, profile_data=profile_data)
         schedule_data: _SCHEDULE_DICT = {}
         for weekday, weekday_data in profile_data.items():
             for slot_no, slot in weekday_data.items():
@@ -413,13 +493,13 @@ class BaseClimateEntity(CustomEntity):
                         slot_value=slot_value,
                     )
         await self._client.put_paramset(
-            channel_address=self._channel.address,
+            channel_address=target_channel_address,
             paramset_key=ParamsetKey.MASTER,
-            values=_get_raw_paramset(schedule_data=schedule_data),
+            values=_get_raw_schedule_paramset(schedule_data=schedule_data),
         )
 
     @service()
-    async def set_simple_profile(
+    async def set_simple_schedule_profile(
         self,
         profile: ScheduleProfile,
         base_temperature: float,
@@ -429,14 +509,16 @@ class BaseClimateEntity(CustomEntity):
         profile_data = self._validate_and_convert_simple_to_profile(
             base_temperature=base_temperature, simple_profile_data=simple_profile_data
         )
-        await self.set_profile(profile=profile, profile_data=profile_data)
+        await self.set_schedule_profile(profile=profile, profile_data=profile_data)
 
     @service()
-    async def set_profile_weekday(
+    async def set_schedule_profile_weekday(
         self, profile: ScheduleProfile, weekday: ScheduleWeekday, weekday_data: WEEKDAY_DICT
     ) -> None:
         """Store a profile to device."""
-        self._validate_profile_weekday(profile=profile, weekday=weekday, weekday_data=weekday_data)
+        self._validate_schedule_profile_weekday(
+            profile=profile, weekday=weekday, weekday_data=weekday_data
+        )
         schedule_data: _SCHEDULE_DICT = {}
         for slot_no, slot in weekday_data.items():
             for slot_type, slot_value in slot.items():
@@ -451,11 +533,11 @@ class BaseClimateEntity(CustomEntity):
         await self._client.put_paramset(
             channel_address=self._channel.address,
             paramset_key=ParamsetKey.MASTER,
-            values=_get_raw_paramset(schedule_data=schedule_data),
+            values=_get_raw_schedule_paramset(schedule_data=schedule_data),
         )
 
     @service()
-    async def set_simple_profile_weekday(
+    async def set_simple_schedule_profile_weekday(
         self,
         profile: ScheduleProfile,
         weekday: ScheduleWeekday,
@@ -466,7 +548,9 @@ class BaseClimateEntity(CustomEntity):
         weekday_data = self._validate_and_convert_simple_to_profile_weekday(
             base_temperature=base_temperature, simple_weekday_list=simple_weekday_list
         )
-        await self.set_profile_weekday(profile=profile, weekday=weekday, weekday_data=weekday_data)
+        await self.set_schedule_profile_weekday(
+            profile=profile, weekday=weekday, weekday_data=weekday_data
+        )
 
     def _validate_and_convert_simple_to_profile(
         self, base_temperature: float, simple_profile_data: SIMPLE_PROFILE_DICT
@@ -534,14 +618,16 @@ class BaseClimateEntity(CustomEntity):
 
         return _fillup_weekday_data(base_temperature=base_temperature, weekday_data=weekday_data)
 
-    def _validate_profile(self, profile: ScheduleProfile, profile_data: PROFILE_DICT) -> None:
+    def _validate_schedule_profile(
+        self, profile: ScheduleProfile, profile_data: PROFILE_DICT
+    ) -> None:
         """Validate the profile."""
         for weekday, weekday_data in profile_data.items():
-            self._validate_profile_weekday(
+            self._validate_schedule_profile_weekday(
                 profile=profile, weekday=weekday, weekday_data=weekday_data
             )
 
-    def _validate_profile_weekday(
+    def _validate_schedule_profile_weekday(
         self,
         profile: ScheduleProfile,
         weekday: ScheduleWeekday,
@@ -968,6 +1054,11 @@ class CeIpThermostat(BaseClimateEntity):
 
         return profiles
 
+    @property
+    def schedule_profile_nos(self) -> int:
+        """Return the number of supported profiles."""
+        return len(self._profiles)
+
 
 def _convert_minutes_to_time_str(minutes: Any) -> str:
     """Convert minutes to a time string."""
@@ -1019,7 +1110,7 @@ def _fillup_weekday_data(base_temperature: float, weekday_data: WEEKDAY_DICT) ->
     return weekday_data
 
 
-def _get_raw_paramset(schedule_data: _SCHEDULE_DICT) -> _RAW_SCHEDULE_DICT:
+def _get_raw_schedule_paramset(schedule_data: _SCHEDULE_DICT) -> _RAW_SCHEDULE_DICT:
     """Return the raw paramset."""
     raw_paramset: _RAW_SCHEDULE_DICT = {}
     for profile, profile_data in schedule_data.items():
