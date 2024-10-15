@@ -394,6 +394,7 @@ class BaseClimateEntity(CustomEntity):
             target_channel_address=target_climate_entity.channel.address,
             profile=target_profile,
             profile_data=source_profile_data,
+            do_validate=False,
         )
 
     @service()
@@ -466,20 +467,26 @@ class BaseClimateEntity(CustomEntity):
 
     @service()
     async def set_schedule_profile(
-        self, profile: ScheduleProfile, profile_data: PROFILE_DICT
+        self, profile: ScheduleProfile, profile_data: PROFILE_DICT, do_validate: bool = True
     ) -> None:
         """Set a profile to device."""
         await self._set_schedule_profile(
             target_channel_address=self._channel.address,
             profile=profile,
             profile_data=profile_data,
+            do_validate=do_validate,
         )
 
     async def _set_schedule_profile(
-        self, target_channel_address: str, profile: ScheduleProfile, profile_data: PROFILE_DICT
+        self,
+        target_channel_address: str,
+        profile: ScheduleProfile,
+        profile_data: PROFILE_DICT,
+        do_validate: bool,
     ) -> None:
         """Set a profile to device."""
-        self._validate_schedule_profile(profile=profile, profile_data=profile_data)
+        if do_validate:
+            self._validate_schedule_profile(profile=profile, profile_data=profile_data)
         schedule_data: _SCHEDULE_DICT = {}
         for weekday, weekday_data in profile_data.items():
             for slot_no, slot in weekday_data.items():
@@ -513,12 +520,17 @@ class BaseClimateEntity(CustomEntity):
 
     @service()
     async def set_schedule_profile_weekday(
-        self, profile: ScheduleProfile, weekday: ScheduleWeekday, weekday_data: WEEKDAY_DICT
+        self,
+        profile: ScheduleProfile,
+        weekday: ScheduleWeekday,
+        weekday_data: WEEKDAY_DICT,
+        do_validate: bool = True,
     ) -> None:
         """Store a profile to device."""
-        self._validate_schedule_profile_weekday(
-            profile=profile, weekday=weekday, weekday_data=weekday_data
-        )
+        if do_validate:
+            self._validate_schedule_profile_weekday(
+                profile=profile, weekday=weekday, weekday_data=weekday_data
+            )
         schedule_data: _SCHEDULE_DICT = {}
         for slot_no, slot in weekday_data.items():
             for slot_type, slot_value in slot.items():

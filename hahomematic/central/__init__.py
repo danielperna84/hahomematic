@@ -656,6 +656,13 @@ class CentralUnit(PayloadMixin):
         d_address = get_device_address(address=address)
         return self._devices.get(d_address)
 
+    def get_entity_by_custom_id(self, custom_id: str) -> CallbackEntity | None:
+        """Return homematic entity by custom_id."""
+        for entity in self.get_entities(registered=True):
+            if entity.custom_id == custom_id:
+                return entity
+        return None
+
     def get_entities(
         self,
         platform: HmPlatform | None = None,
@@ -670,7 +677,6 @@ class CentralUnit(PayloadMixin):
                     platform=platform, exclude_no_create=exclude_no_create, registered=registered
                 )
             )
-
         return tuple(all_entities)
 
     def get_readable_generic_entities(

@@ -1,6 +1,7 @@
-# Version 2024.10.8 (2024-10-12)
+# Version 2024.10.8 (2024-10-15)
 
 - Add services to copy climate schedules
+- Make validation for climate schedules optional
 
 # Version 2024.10.7 (2024-10-12)
 
