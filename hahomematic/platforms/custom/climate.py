@@ -587,17 +587,24 @@ class BaseClimateEntity(CustomEntity):
             if (temperature := slot.get(ScheduleSlotType.TEMPERATURE)) is None:
                 raise ValidationException("VALIDATE_PROFILE: TEMPERATURE is missing.")
 
+            if _convert_time_str_to_minutes(str(starttime)) >= _convert_time_str_to_minutes(
+                str(endtime)
+            ):
+                raise ValidationException(
+                    f"VALIDATE_PROFILE: Start time {starttime} must lower than end time {endtime}"
+                )
+
             if _convert_time_str_to_minutes(str(starttime)) < _convert_time_str_to_minutes(
                 previous_endtime
             ):
                 raise ValidationException(
-                    f"VALIDATE_PROFILE: Timespans are overlapping with a previous slot for starttime: {starttime} / endtime: {endtime}"
+                    f"VALIDATE_PROFILE: Timespans are overlapping with a previous slot for start time: {starttime} / end time: {endtime}"
                 )
 
             if not self.min_temp <= float(temperature) <= self.max_temp:
                 raise ValidationException(
                     f"VALIDATE_PROFILE: Temperature {temperature} not in valid range (min: {self.min_temp}, "
-                    f"max: {self.max_temp}) for starttime: {starttime} / endtime: {endtime}"
+                    f"max: {self.max_temp}) for start time: {starttime} / end time: {endtime}"
                 )
 
             if _convert_time_str_to_minutes(str(starttime)) > _convert_time_str_to_minutes(
@@ -637,25 +644,25 @@ class BaseClimateEntity(CustomEntity):
         previous_endtime = 0
         if len(weekday_data) != 13:
             raise ValidationException(
-                f"VALIDATE_PROFILE: {"Too many" if len(weekday_data) > 13 else "Too few"} slots in profile: {profile} / weekday: {weekday}"
+                f"VALIDATE_PROFILE: {"Too many" if len(weekday_data) > 13 else "Too few"} slots in profile: {profile} / week day: {weekday}"
             )
         for no in SCHEDULE_SLOT_RANGE:
             if no not in weekday_data:
                 raise ValidationException(
-                    f"VALIDATE_PROFILE: slot no {no} is missing in profile: {profile} / weekday: {weekday}"
+                    f"VALIDATE_PROFILE: slot no {no} is missing in profile: {profile} / week day: {weekday}"
                 )
             slot = weekday_data[no]
             for slot_type in RELEVANT_SLOT_TYPES:
                 if slot_type not in slot:
                     raise ValidationException(
                         f"VALIDATE_PROFILE: slot type {slot_type} is missing in profile: "
-                        f"{profile} / weekday: {weekday} / slot_no: {no}"
+                        f"{profile} / week day: {weekday} / slot no: {no}"
                     )
                 temperature = float(weekday_data[no][ScheduleSlotType.TEMPERATURE])
                 if not self.min_temp <= temperature <= self.max_temp:
                     raise ValidationException(
                         f"VALIDATE_PROFILE: Temperature {temperature} not in valid range (min: {self.min_temp}, "
-                        f"max: {self.max_temp}) for profile: {profile} / weekday: {weekday} / slot_no: {no}"
+                        f"max: {self.max_temp}) for profile: {profile} / week day: {weekday} / slot no: {no}"
                     )
 
                 endtime_str = str(weekday_data[no][ScheduleSlotType.ENDTIME])
@@ -663,12 +670,12 @@ class BaseClimateEntity(CustomEntity):
                     if endtime not in SCHEDULE_TIME_RANGE:
                         raise ValidationException(
                             f"VALIDATE_PROFILE: Time {endtime_str} must be between {_convert_minutes_to_time_str(minutes=SCHEDULE_TIME_RANGE.start)} and "
-                            f"{_convert_minutes_to_time_str(minutes=SCHEDULE_TIME_RANGE.stop - 1)} for profile: {profile} / weekday: {weekday} / slot_no: {no}"
+                            f"{_convert_minutes_to_time_str(minutes=SCHEDULE_TIME_RANGE.stop - 1)} for profile: {profile} / week day: {weekday} / slot no: {no}"
                         )
                     if endtime < previous_endtime:
                         raise ValidationException(
                             f"VALIDATE_PROFILE: Time sequence must be rising. {endtime_str} is lower than the previous "
-                            f"value {_convert_minutes_to_time_str(minutes=previous_endtime)} for profile: {profile} / weekday: {weekday} / slot_no: {no}"
+                            f"value {_convert_minutes_to_time_str(minutes=previous_endtime)} for profile: {profile} / week day: {weekday} / slot no: {no}"
                         )
                 previous_endtime = endtime
 
