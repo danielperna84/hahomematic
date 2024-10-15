@@ -71,17 +71,19 @@ async def test_cesimplerfthermostat(
 
     assert climate.is_valid is False
     assert climate.service_method_names == (
+        "copy_schedule",
+        "copy_schedule_profile",
         "disable_away_mode",
         "enable_away_mode_by_calendar",
         "enable_away_mode_by_duration",
-        "get_profile",
-        "get_profile_weekday",
+        "get_schedule_profile",
+        "get_schedule_profile_weekday",
         "set_hvac_mode",
         "set_preset_mode",
-        "set_profile",
-        "set_profile_weekday",
-        "set_simple_profile",
-        "set_simple_profile_weekday",
+        "set_schedule_profile",
+        "set_schedule_profile_weekday",
+        "set_simple_schedule_profile",
+        "set_simple_schedule_profile_weekday",
         "set_temperature",
     )
     assert climate.state_uncertain is False
@@ -157,17 +159,19 @@ async def test_cerfthermostat(
     )
     assert climate.usage == EntityUsage.CE_PRIMARY
     assert climate.service_method_names == (
+        "copy_schedule",
+        "copy_schedule_profile",
         "disable_away_mode",
         "enable_away_mode_by_calendar",
         "enable_away_mode_by_duration",
-        "get_profile",
-        "get_profile_weekday",
+        "get_schedule_profile",
+        "get_schedule_profile_weekday",
         "set_hvac_mode",
         "set_preset_mode",
-        "set_profile",
-        "set_profile_weekday",
-        "set_simple_profile",
-        "set_simple_profile_weekday",
+        "set_schedule_profile",
+        "set_schedule_profile_weekday",
+        "set_simple_schedule_profile",
+        "set_simple_schedule_profile_weekday",
         "set_temperature",
     )
     assert climate.min_temp == 5.0
@@ -332,17 +336,19 @@ async def test_ceipthermostat(
     )
     assert climate.usage == EntityUsage.CE_PRIMARY
     assert climate.service_method_names == (
+        "copy_schedule",
+        "copy_schedule_profile",
         "disable_away_mode",
         "enable_away_mode_by_calendar",
         "enable_away_mode_by_duration",
-        "get_profile",
-        "get_profile_weekday",
+        "get_schedule_profile",
+        "get_schedule_profile_weekday",
         "set_hvac_mode",
         "set_preset_mode",
-        "set_profile",
-        "set_profile_weekday",
-        "set_simple_profile",
-        "set_simple_profile_weekday",
+        "set_schedule_profile",
+        "set_schedule_profile_weekday",
+        "set_simple_schedule_profile",
+        "set_simple_schedule_profile_weekday",
         "set_temperature",
     )
     assert climate.min_temp == 5.0
@@ -518,21 +524,24 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
     climate_bwth: BaseClimateEntity = cast(
         BaseClimateEntity, central_unit_mini.get_custom_entity(address="VCU1769958", channel_no=1)
     )
+    climate_etrv: BaseClimateEntity = cast(
+        BaseClimateEntity, central_unit_mini.get_custom_entity(address="VCU3609622", channel_no=1)
+    )
     assert climate_bwth
-    profile_data = await climate_bwth.get_profile(profile=ScheduleProfile.P1)
+    profile_data = await climate_bwth.get_schedule_profile(profile=ScheduleProfile.P1)
     assert len(profile_data) == 7
-    weekday_data = await climate_bwth.get_profile_weekday(
+    weekday_data = await climate_bwth.get_schedule_profile_weekday(
         profile=ScheduleProfile.P1, weekday=ScheduleWeekday.MONDAY
     )
     assert len(weekday_data) == 13
-    await climate_bwth.set_profile(profile=ScheduleProfile.P1, profile_data=profile_data)
-    await climate_bwth.set_profile_weekday(
+    await climate_bwth.set_schedule_profile(profile=ScheduleProfile.P1, profile_data=profile_data)
+    await climate_bwth.set_schedule_profile_weekday(
         profile=ScheduleProfile.P1, weekday=ScheduleWeekday.MONDAY, weekday_data=weekday_data
     )
     copy_weekday_data = deepcopy(weekday_data)
     copy_weekday_data[1][ScheduleSlotType.TEMPERATURE] = 38.0
     with pytest.raises(ValidationException):
-        await climate_bwth.set_profile_weekday(
+        await climate_bwth.set_schedule_profile_weekday(
             profile=ScheduleProfile.P1,
             weekday=ScheduleWeekday.MONDAY,
             weekday_data=copy_weekday_data,
@@ -541,7 +550,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
     copy_weekday_data2 = deepcopy(weekday_data)
     copy_weekday_data2[4][ScheduleSlotType.ENDTIME] = "1:40"
     with pytest.raises(ValidationException):
-        await climate_bwth.set_profile_weekday(
+        await climate_bwth.set_schedule_profile_weekday(
             profile=ScheduleProfile.P1,
             weekday=ScheduleWeekday.MONDAY,
             weekday_data=copy_weekday_data2,
@@ -550,7 +559,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
     copy_weekday_data3 = deepcopy(weekday_data)
     copy_weekday_data3[4][ScheduleSlotType.ENDTIME] = "35:00"
     with pytest.raises(ValidationException):
-        await climate_bwth.set_profile_weekday(
+        await climate_bwth.set_schedule_profile_weekday(
             profile=ScheduleProfile.P1,
             weekday=ScheduleWeekday.MONDAY,
             weekday_data=copy_weekday_data3,
@@ -559,7 +568,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
     copy_weekday_data4 = deepcopy(weekday_data)
     copy_weekday_data4[4][ScheduleSlotType.ENDTIME] = 100
     with pytest.raises(ValidationException):
-        await climate_bwth.set_profile_weekday(
+        await climate_bwth.set_schedule_profile_weekday(
             profile=ScheduleProfile.P1,
             weekday=ScheduleWeekday.MONDAY,
             weekday_data=copy_weekday_data4,
@@ -579,7 +588,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         12: {"TEMPERATURE": 17, "ENDTIME": "24:00"},
         13: {"TEMPERATURE": 17, "ENDTIME": "24:00"},
     }
-    await climate_bwth.set_profile_weekday(
+    await climate_bwth.set_schedule_profile_weekday(
         profile="P1",
         weekday="MONDAY",
         weekday_data=manual_week_profile_data,
@@ -608,7 +617,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         12: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
         13: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
     }
-    await climate_bwth.set_simple_profile_weekday(
+    await climate_bwth.set_simple_schedule_profile_weekday(
         profile="P1",
         weekday="MONDAY",
         base_temperature=16.0,
@@ -634,7 +643,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         12: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
         13: {ScheduleSlotType.ENDTIME: "24:00", ScheduleSlotType.TEMPERATURE: 16.0},
     }
-    await climate_bwth.set_simple_profile_weekday(
+    await climate_bwth.set_simple_schedule_profile_weekday(
         profile="P1",
         weekday="MONDAY",
         base_temperature=16.0,
@@ -642,7 +651,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
     )
 
     with pytest.raises(ValidationException):
-        await climate_bwth.set_simple_profile_weekday(
+        await climate_bwth.set_simple_schedule_profile_weekday(
             profile="P1",
             weekday="MONDAY",
             base_temperature=16.0,
@@ -652,7 +661,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         )
 
     with pytest.raises(ValidationException):
-        await climate_bwth.set_simple_profile_weekday(
+        await climate_bwth.set_simple_schedule_profile_weekday(
             profile="P1",
             weekday="MONDAY",
             base_temperature=34.0,
@@ -660,7 +669,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         )
 
     with pytest.raises(ValidationException):
-        await climate_bwth.set_simple_profile_weekday(
+        await climate_bwth.set_simple_schedule_profile_weekday(
             profile="P1",
             weekday="MONDAY",
             base_temperature=16.0,
@@ -671,7 +680,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
             ],
         )
 
-    await climate_bwth.set_simple_profile(
+    await climate_bwth.set_simple_schedule_profile(
         profile="P1",
         base_temperature=16.0,
         simple_profile_data={
@@ -688,7 +697,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         },
     )
 
-    await climate_bwth.set_simple_profile(
+    await climate_bwth.set_simple_schedule_profile(
         profile="P1",
         base_temperature=16.0,
         simple_profile_data={
@@ -727,14 +736,14 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
         12: {"ENDTIME": "16:00", "TEMPERATURE": 17.0},
         13: {"ENDTIME": "24:00", "TEMPERATURE": 16.0},
     }
-    await climate_bwth.set_simple_profile_weekday(
+    await climate_bwth.set_simple_schedule_profile_weekday(
         profile="P1",
         weekday="MONDAY",
         base_temperature=16.0,
         simple_weekday_list=manual_simple_weekday_list3,
     )
 
-    await climate_bwth.set_simple_profile_weekday(
+    await climate_bwth.set_simple_schedule_profile_weekday(
         profile="P1",
         weekday="MONDAY",
         base_temperature=16.0,
@@ -755,7 +764,7 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
 
     # 14 entries
     with pytest.raises(ValidationException):
-        await climate_bwth.set_simple_profile_weekday(
+        await climate_bwth.set_simple_schedule_profile_weekday(
             profile="P1",
             weekday="MONDAY",
             base_temperature=16.0,
@@ -776,3 +785,18 @@ async def test_climate_ip_with_pydevccu(central_unit_mini) -> None:
                 {"TEMPERATURE": 17.0, "STARTTIME": "18:00", "ENDTIME": "19:00"},
             ],
         )
+
+    await climate_bwth.copy_schedule_profile(
+        source_profile=ScheduleProfile.P1, target_profile=ScheduleProfile.P2
+    )
+
+    await climate_bwth.copy_schedule_profile(
+        source_profile=ScheduleProfile.P1,
+        target_profile=ScheduleProfile.P2,
+        target_climate_entity=climate_etrv,
+    )
+
+    await climate_bwth.copy_schedule(target_climate_entity=climate_bwth)
+
+    with pytest.raises(ValidationException):
+        await climate_bwth.copy_schedule(target_climate_entity=climate_etrv)

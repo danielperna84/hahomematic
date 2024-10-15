@@ -37,7 +37,9 @@ def pydev_ccu_full() -> pydevccu.Server:
 @pytest.fixture
 def pydev_ccu_mini() -> pydevccu.Server:
     """Create the virtual ccu."""
-    ccu = pydevccu.Server(addr=(const.CCU_HOST, const.CCU_PORT), devices=["HmIP-BWTH"])
+    ccu = pydevccu.Server(
+        addr=(const.CCU_HOST, const.CCU_PORT), devices=["HmIP-BWTH", "HmIP-eTRV-2"]
+    )
     ccu.start()
     yield ccu
     ccu.stop()
