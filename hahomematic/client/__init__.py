@@ -439,6 +439,16 @@ class Client(ABC):
                 f"GET_LINK_PEERS failed with for: {address}: {reduce_args(args=ex.args)}"
             ) from ex
 
+    @service()
+    async def get_links(self, address: str, flags: int) -> dict[str, Any]:
+        """Return a list of links."""
+        try:
+            return cast(dict[str, Any], await self._proxy.getLinks(address, flags))
+        except BaseHomematicException as ex:
+            raise ClientException(
+                f"GET_LINKS failed with for: {address}: {reduce_args(args=ex.args)}"
+            ) from ex
+
     @service(log_level=logging.NOTSET)
     async def get_value(
         self,
@@ -782,6 +792,16 @@ class Client(ABC):
                 await self.get_paramset_descriptions(device_description=device_description)
             )
         return all_paramsets
+
+    @service()
+    async def report_value_usage(self, address: str, value_id: str, ref_counter: int) -> bool:
+        """Report value usage."""
+        try:
+            return bool(await self._proxy.reportValueUsage(address, value_id, ref_counter))
+        except BaseHomematicException as ex:
+            raise ClientException(
+                f"REPORT_VALUE_USAGE failed with for: {address}: {reduce_args(args=ex.args)}"
+            ) from ex
 
     @service()
     async def update_device_firmware(self, device_address: str) -> bool:
