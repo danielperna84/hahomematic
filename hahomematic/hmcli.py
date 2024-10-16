@@ -8,6 +8,7 @@ import sys
 from typing import Any
 from xmlrpc.client import ServerProxy
 
+from hahomematic import __version__
 from hahomematic.const import ParamsetKey
 from hahomematic.support import build_headers, build_xml_rpc_uri, get_tls_context
 
@@ -17,6 +18,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Commandline tool to query HomeMatic hubs via XML-RPC",
     )
+    parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument(
         "--host",
         "-H",

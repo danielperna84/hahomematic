@@ -1,3 +1,7 @@
+# Version 2024.10.9 (2024-10-16)
+
+- Add version to code
+
 # Version 2024.10.8 (2024-10-15)
 
 - Add services to copy climate schedules
