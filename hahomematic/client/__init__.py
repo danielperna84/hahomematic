@@ -430,6 +430,26 @@ class Client(ABC):
             raise ClientException(f"GET_INSTALL_MODE failed: {reduce_args(args=ex.args)}") from ex
 
     @service()
+    async def add_link(self, sender: str, receiver: str, name: str, description: str) -> None:
+        """Return a list of links."""
+        try:
+            await self._proxy.addLink(sender, receiver, name, description)
+        except BaseHomematicException as ex:
+            raise ClientException(
+                f"ADD_LINK failed with for: {sender}/{receiver}/{name}/{description}: {reduce_args(args=ex.args)}"
+            ) from ex
+
+    @service()
+    async def remove_link(self, sender: str, receiver: str) -> None:
+        """Return a list of links."""
+        try:
+            await self._proxy.removeLink(sender, receiver)
+        except BaseHomematicException as ex:
+            raise ClientException(
+                f"REMOVE_LINK failed with for: {sender}/{receiver}: {reduce_args(args=ex.args)}"
+            ) from ex
+
+    @service()
     async def get_link_peers(self, address: str) -> tuple[str, ...] | None:
         """Return a list of link pers."""
         try:
