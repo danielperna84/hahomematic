@@ -712,7 +712,7 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HmIP-BROLL": CustomConfig(make_ce_func=make_ip_cover, channels=(4,)),
     "HmIP-DRBLI4": CustomConfig(
         make_ce_func=make_ip_blind,
-        channels=(9, 13, 17, 21),
+        channels=(10, 14, 18, 22),
         extended=ExtendedConfig(
             additional_entities={
                 0: (Parameter.ACTUAL_TEMPERATURE,),
