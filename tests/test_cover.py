@@ -153,7 +153,7 @@ async def test_ceipblind_dr(
 
     assert cover.current_position == 0
     assert cover._channel_level == _CLOSED_LEVEL
-    assert cover.channel_operation_mode == "SHUTTER"
+    assert cover.operation_mode == "SHUTTER"
     assert cover.is_closed is True
     await cover.set_position(position=81)
     assert mock_client.method_calls[-1] == call.set_value(

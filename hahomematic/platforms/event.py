@@ -18,13 +18,10 @@ from hahomematic.const import (
     ParameterData,
     ParamsetKey,
 )
-from hahomematic.exceptions import ClientException
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import service
 from hahomematic.platforms.entity import BaseParameterEntity
 from hahomematic.platforms.support import EntityNameData, get_event_name
-
-_CENTRAL_LINK_CHANNEL: Final = "CENTRAL_DEVICE:63"
 
 __all__ = [
     "ClickEvent",
@@ -111,31 +108,9 @@ class ClickEvent(GenericEvent):
     @service()
     async def remove_central_link(self) -> None:
         """Remove a central link."""
-        if self._channel.type_name == "KEY_TRANSCEIVER":
-            await self._device.client.remove_link(
-                sender_address=self._channel.address, receiver_address=_CENTRAL_LINK_CHANNEL
-            )
-        elif self._channel.type_name == "KEY":
-            await self._device.client.report_value_usage(
-                address=self._channel.address, parameter=self._parameter, ref_counter=0
-            )
-
-    @service()
-    async def check_central_link(self) -> bool:
-        """Check if a central link exists."""
-        try:
-            await self._device.client.remove_link(
-                sender_address=self._channel.address, receiver_address=_CENTRAL_LINK_CHANNEL
-            )
-            await self._device.client.add_link(
-                sender_address=self._channel.address,
-                receiver_address=_CENTRAL_LINK_CHANNEL,
-                name=f"{self._channel.address}-{_CENTRAL_LINK_CHANNEL}",
-                description="",
-            )
-        except ClientException:
-            return False
-        return True
+        await self._device.client.report_value_usage(
+            address=self._channel.address, parameter=self._parameter, ref_counter=0
+        )
 
 
 class DeviceErrorEvent(GenericEvent):

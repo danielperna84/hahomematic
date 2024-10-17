@@ -440,17 +440,17 @@ class CeIpBlind(CeBlind):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_channel_operation_mode: HmSelect = self._get_entity(
-            field=Field.CHANNEL_OPERATION_MODE, entity_type=HmSelect
+        self._e_operation_mode: HmSelect = self._get_entity(
+            field=Field.OPERATION_MODE, entity_type=HmSelect
         )
         self._e_combined: HmAction = self._get_entity(
             field=Field.COMBINED_PARAMETER, entity_type=HmAction
         )
 
     @property
-    def channel_operation_mode(self) -> str | None:
-        """Return channel_operation_mode of cover."""
-        return self._e_channel_operation_mode.value
+    def operation_mode(self) -> str | None:
+        """Return operation mode of cover."""
+        return self._e_operation_mode.value
 
     def _get_combined_value(
         self, level: float | None = None, tilt_level: float | None = None

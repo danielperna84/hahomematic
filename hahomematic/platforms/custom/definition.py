@@ -106,7 +106,7 @@ _ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                 ED.FIELDS: {
                     -1: {
                         Field.DIRECTION: Parameter.ACTIVITY_STATE,
-                        Field.CHANNEL_OPERATION_MODE: Parameter.CHANNEL_OPERATION_MODE,
+                        Field.OPERATION_MODE: Parameter.CHANNEL_OPERATION_MODE,
                     },
                 },
                 ED.VISIBLE_FIELDS: {
