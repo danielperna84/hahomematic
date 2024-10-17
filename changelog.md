@@ -1,5 +1,6 @@
 # Version 2024.10.9 (2024-10-16)
 
+- Add central link methods to click event
 - Add reportValueUsage, addLink, removeLink and getLinks to client
 - Add version to code
 

@@ -430,23 +430,25 @@ class Client(ABC):
             raise ClientException(f"GET_INSTALL_MODE failed: {reduce_args(args=ex.args)}") from ex
 
     @service()
-    async def add_link(self, sender: str, receiver: str, name: str, description: str) -> None:
+    async def add_link(
+        self, sender_address: str, receiver_address: str, name: str, description: str
+    ) -> None:
         """Return a list of links."""
         try:
-            await self._proxy.addLink(sender, receiver, name, description)
+            await self._proxy.addLink(sender_address, receiver_address, name, description)
         except BaseHomematicException as ex:
             raise ClientException(
-                f"ADD_LINK failed with for: {sender}/{receiver}/{name}/{description}: {reduce_args(args=ex.args)}"
+                f"ADD_LINK failed with for: {sender_address}/{receiver_address}/{name}/{description}: {reduce_args(args=ex.args)}"
             ) from ex
 
     @service()
-    async def remove_link(self, sender: str, receiver: str) -> None:
+    async def remove_link(self, sender_address: str, receiver_address: str) -> None:
         """Return a list of links."""
         try:
-            await self._proxy.removeLink(sender, receiver)
+            await self._proxy.removeLink(sender_address, receiver_address)
         except BaseHomematicException as ex:
             raise ClientException(
-                f"REMOVE_LINK failed with for: {sender}/{receiver}: {reduce_args(args=ex.args)}"
+                f"REMOVE_LINK failed with for: {sender_address}/{receiver_address}: {reduce_args(args=ex.args)}"
             ) from ex
 
     @service()
@@ -814,10 +816,10 @@ class Client(ABC):
         return all_paramsets
 
     @service()
-    async def report_value_usage(self, address: str, value_id: str, ref_counter: int) -> bool:
+    async def report_value_usage(self, address: str, parameter: str, ref_counter: int) -> bool:
         """Report value usage."""
         try:
-            return bool(await self._proxy.reportValueUsage(address, value_id, ref_counter))
+            return bool(await self._proxy.reportValueUsage(address, parameter, ref_counter))
         except BaseHomematicException as ex:
             raise ClientException(
                 f"REPORT_VALUE_USAGE failed with for: {address}: {reduce_args(args=ex.args)}"
