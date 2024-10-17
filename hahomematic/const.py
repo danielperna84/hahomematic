@@ -64,6 +64,8 @@ KWARGS_ARG_ENTITY = "entity"
 PATH_JSON_RPC: Final = "/api/homematic.cgi"
 PORT_ANY: Final = 0
 
+REPORT_VALUE_USAGE_VALUE_ID: Final = "HAHomematic"
+
 HOMEGEAR_SERIAL = "Homegear_SN0815"
 
 PROGRAM_ADDRESS: Final = "program"

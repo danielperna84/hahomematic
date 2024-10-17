@@ -1,4 +1,8 @@
-# Version 2024.10.9 (2024-10-16)
+# Version 2024.10.10 (2024-10-17)
+
+- Add create_central_links and remove_central_links to device and central
+
+# Version 2024.10.9 (2024-10-17)
 
 - Add central link methods to click event
 - Add reportValueUsage, addLink, removeLink and getLinks to client

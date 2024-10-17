@@ -816,13 +816,13 @@ class Client(ABC):
         return all_paramsets
 
     @service()
-    async def report_value_usage(self, address: str, parameter: str, ref_counter: int) -> bool:
+    async def report_value_usage(self, address: str, value_id: str, ref_counter: int) -> bool:
         """Report value usage."""
         try:
-            return bool(await self._proxy.reportValueUsage(address, parameter, ref_counter))
+            return bool(await self._proxy.reportValueUsage(address, value_id, ref_counter))
         except BaseHomematicException as ex:
             raise ClientException(
-                f"REPORT_VALUE_USAGE failed with for: {address}: {reduce_args(args=ex.args)}"
+                f"REPORT_VALUE_USAGE failed with: {address}/{value_id}/{ref_counter}: {reduce_args(args=ex.args)}"
             ) from ex
 
     @service()

@@ -25,6 +25,7 @@ from hahomematic.const import (
     INIT_DATETIME,
     NO_CACHE_ENTRY,
     RELEVANT_INIT_PARAMETERS,
+    REPORT_VALUE_USAGE_VALUE_ID,
     CallSource,
     DataOperationResult,
     DeviceDescription,
@@ -363,6 +364,20 @@ class HmDevice(PayloadMixin):
             self._sub_device_channels[channel_no] = base_channel_no
         elif self._sub_device_channels[channel_no] != base_channel_no:
             return
+
+    @service()
+    async def create_central_links(self) -> None:
+        """Create a central links to support press events on all channels with click events."""
+        if self._product_group in (ProductGroup.HM, ProductGroup.HMIP):
+            for channel in self._channels.values():
+                await channel.create_central_link()
+
+    @service()
+    async def remove_central_links(self) -> None:
+        """Remove central links."""
+        if self._product_group in (ProductGroup.HM, ProductGroup.HMIP):
+            for channel in self._channels.values():
+                await channel.remove_central_link()
 
     def get_sub_device_base_channel(self, channel_no: int | None) -> int | None:
         """Return the sub device channel."""
@@ -724,6 +739,30 @@ class HmChannel(PayloadMixin):
     def unique_id(self) -> str:
         """Return the unique_id of the channel."""
         return self._unique_id
+
+    @service()
+    async def create_central_link(self) -> None:
+        """Create a central link to support press events."""
+        if any(
+            event
+            for event in self.generic_events
+            if event.event_type is HomematicEventType.KEYPRESS
+        ):
+            await self._device.client.report_value_usage(
+                address=self._address, parameter=REPORT_VALUE_USAGE_VALUE_ID, ref_counter=1
+            )
+
+    @service()
+    async def remove_central_link(self) -> None:
+        """Remove a central link."""
+        if any(
+            event
+            for event in self.generic_events
+            if event.event_type is HomematicEventType.KEYPRESS
+        ):
+            await self._device.client.report_value_usage(
+                address=self._address, value_id=REPORT_VALUE_USAGE_VALUE_ID, ref_counter=0
+            )
 
     def add_entity(self, entity: CallbackEntity) -> None:
         """Add an entity to a channel."""
