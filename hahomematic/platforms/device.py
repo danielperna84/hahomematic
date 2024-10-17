@@ -628,6 +628,15 @@ class HmChannel(PayloadMixin):
         return self._central
 
     @property
+    def operation_mode(self) -> str | None:
+        """Return the channel operation mode if available."""
+        if (
+            cop := self.get_generic_entity(parameter=Parameter.CHANNEL_OPERATION_MODE)
+        ) is not None and cop.value is not None:
+            return str(cop.value)
+        return None
+
+    @property
     def custom_entity(self) -> hmce.CustomEntity | None:
         """Return the custom entities."""
         return self._custom_entity

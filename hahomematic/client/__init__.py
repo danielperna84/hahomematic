@@ -430,6 +430,28 @@ class Client(ABC):
             raise ClientException(f"GET_INSTALL_MODE failed: {reduce_args(args=ex.args)}") from ex
 
     @service()
+    async def add_link(
+        self, sender_address: str, receiver_address: str, name: str, description: str
+    ) -> None:
+        """Return a list of links."""
+        try:
+            await self._proxy.addLink(sender_address, receiver_address, name, description)
+        except BaseHomematicException as ex:
+            raise ClientException(
+                f"ADD_LINK failed with for: {sender_address}/{receiver_address}/{name}/{description}: {reduce_args(args=ex.args)}"
+            ) from ex
+
+    @service()
+    async def remove_link(self, sender_address: str, receiver_address: str) -> None:
+        """Return a list of links."""
+        try:
+            await self._proxy.removeLink(sender_address, receiver_address)
+        except BaseHomematicException as ex:
+            raise ClientException(
+                f"REMOVE_LINK failed with for: {sender_address}/{receiver_address}: {reduce_args(args=ex.args)}"
+            ) from ex
+
+    @service()
     async def get_link_peers(self, address: str) -> tuple[str, ...] | None:
         """Return a list of link pers."""
         try:
@@ -437,6 +459,16 @@ class Client(ABC):
         except BaseHomematicException as ex:
             raise ClientException(
                 f"GET_LINK_PEERS failed with for: {address}: {reduce_args(args=ex.args)}"
+            ) from ex
+
+    @service()
+    async def get_links(self, address: str, flags: int) -> dict[str, Any]:
+        """Return a list of links."""
+        try:
+            return cast(dict[str, Any], await self._proxy.getLinks(address, flags))
+        except BaseHomematicException as ex:
+            raise ClientException(
+                f"GET_LINKS failed with for: {address}: {reduce_args(args=ex.args)}"
             ) from ex
 
     @service(log_level=logging.NOTSET)
@@ -782,6 +814,16 @@ class Client(ABC):
                 await self.get_paramset_descriptions(device_description=device_description)
             )
         return all_paramsets
+
+    @service()
+    async def report_value_usage(self, address: str, parameter: str, ref_counter: int) -> bool:
+        """Report value usage."""
+        try:
+            return bool(await self._proxy.reportValueUsage(address, parameter, ref_counter))
+        except BaseHomematicException as ex:
+            raise ClientException(
+                f"REPORT_VALUE_USAGE failed with for: {address}: {reduce_args(args=ex.args)}"
+            ) from ex
 
     @service()
     async def update_device_firmware(self, device_address: str) -> bool:

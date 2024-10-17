@@ -598,24 +598,13 @@ class BaseParameterEntity[
         return self._visible
 
     @property
-    def _channel_operation_mode(self) -> str | None:
-        """Return the channel operation mode if available."""
-        cop: BaseParameterEntity | None = self._device.get_generic_entity(
-            channel_address=self._channel.address,
-            parameter=Parameter.CHANNEL_OPERATION_MODE,
-        )
-        if cop and cop.value:
-            return str(cop.value)
-        return None
-
-    @property
     def _enabled_by_channel_operation_mode(self) -> bool | None:
         """Return, if the entity/event must be enabled."""
         if self._channel.type_name not in _CONFIGURABLE_CHANNEL:
             return None
         if self._parameter not in KEY_CHANNEL_OPERATION_MODE_VISIBILITY:
             return None
-        if (cop := self._channel_operation_mode) is None:
+        if (cop := self._channel.operation_mode) is None:
             return None
         return cop in KEY_CHANNEL_OPERATION_MODE_VISIBILITY[self._parameter]
 

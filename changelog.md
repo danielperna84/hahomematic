@@ -1,3 +1,11 @@
+# Version 2024.10.9 (2024-10-16)
+
+- Add central link methods to click event
+- Add reportValueUsage, addLink, removeLink and getLinks to client
+- Add version to code
+- Fix wrong channel assignment for HmIP-DRBLI4
+- Add operation_mode to channel
+
 # Version 2024.10.8 (2024-10-15)
 
 - Add services to copy climate schedules

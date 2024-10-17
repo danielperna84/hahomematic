@@ -16,6 +16,9 @@ from typing import Final
 
 from hahomematic import central as hmcu
 
+APPLICATION_NAME: Final = "HaHomematic"
+__version__: Final = "2024.10.9"
+
 if sys.stdout.isatty():
     logging.basicConfig(level=logging.INFO)
 
