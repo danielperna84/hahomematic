@@ -19,7 +19,6 @@ from hahomematic.const import (
     ParamsetKey,
 )
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.decorators import service
 from hahomematic.platforms.entity import BaseParameterEntity
 from hahomematic.platforms.support import EntityNameData, get_event_name
 
@@ -97,20 +96,6 @@ class ClickEvent(GenericEvent):
     """class for handling click events."""
 
     _event_type = HomematicEventType.KEYPRESS
-
-    @service()
-    async def create_central_link(self) -> None:
-        """Create a central link."""
-        await self._device.client.report_value_usage(
-            address=self._channel.address, parameter=self._parameter, ref_counter=1
-        )
-
-    @service()
-    async def remove_central_link(self) -> None:
-        """Remove a central link."""
-        await self._device.client.report_value_usage(
-            address=self._channel.address, parameter=self._parameter, ref_counter=0
-        )
 
 
 class DeviceErrorEvent(GenericEvent):

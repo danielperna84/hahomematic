@@ -73,7 +73,7 @@ from hahomematic.exceptions import (
 from hahomematic.performance import measure_execution_time
 from hahomematic.platforms import create_entities_and_events
 from hahomematic.platforms.custom import CustomEntity, create_custom_entities
-from hahomematic.platforms.decorators import info_property
+from hahomematic.platforms.decorators import info_property, service
 from hahomematic.platforms.device import HmDevice
 from hahomematic.platforms.entity import BaseParameterEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
@@ -1015,6 +1015,18 @@ class CentralUnit(PayloadMixin):
             if entity.entity_key not in self._entity_event_subscriptions:
                 self._entity_event_subscriptions[entity.entity_key] = []
             self._entity_event_subscriptions[entity.entity_key].append(entity.event)
+
+    @service()
+    async def create_central_links(self) -> None:
+        """Create a central links to support press events on all channels with click events."""
+        for device in self.devices:
+            await device.create_central_links()
+
+    @service()
+    async def remove_central_links(self) -> None:
+        """Remove central links."""
+        for device in self.devices:
+            await device.remove_central_links()
 
     def remove_device(self, device: HmDevice) -> None:
         """Remove device to central collections."""
