@@ -785,7 +785,7 @@ class HmChannel(PayloadMixin):
                 value={
                     key: value
                     for key, value in metadata.items()
-                    if key == REPORT_VALUE_USAGE_VALUE_ID
+                    if key != REPORT_VALUE_USAGE_VALUE_ID
                 },
             )
 
