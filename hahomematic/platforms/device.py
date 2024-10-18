@@ -742,7 +742,26 @@ class HmChannel(PayloadMixin):
         return self._unique_id
 
     @service()
-    async def central_link_exists(self) -> bool:
+    async def create_central_link(self) -> None:
+        """Create a central link to support press events."""
+        if self._has_key_press_events and not await self._central_link_exists():
+            await self._device.client.report_value_usage(
+                address=self._address, value_id=REPORT_VALUE_USAGE_VALUE_ID, ref_counter=1
+            )
+
+    @service()
+    async def remove_central_link(self) -> None:
+        """Remove a central link."""
+        if (
+            self._has_key_press_events
+            and REPORT_VALUE_USAGE_VALUE_ID in await self._get_active_central_link_metadata()
+        ):
+            await self._device.client.report_value_usage(
+                address=self._address, value_id=REPORT_VALUE_USAGE_VALUE_ID, ref_counter=0
+            )
+
+    @service()
+    async def _central_link_exists(self) -> bool:
         """Check if central link exists."""
         if metadata := await self._device.client.get_metadata(
             address=self._address, data_id=REPORT_VALUE_USAGE_DATA
@@ -763,25 +782,6 @@ class HmChannel(PayloadMixin):
                 if isinstance(key, str) and isinstance(value, int) and value > 0
             )
         return ()
-
-    @service()
-    async def create_central_link(self) -> None:
-        """Create a central link to support press events."""
-        if self._has_key_press_events and not await self.central_link_exists():
-            await self._device.client.report_value_usage(
-                address=self._address, parameter=REPORT_VALUE_USAGE_VALUE_ID, ref_counter=1
-            )
-
-    @service()
-    async def remove_central_link(self) -> None:
-        """Remove a central link."""
-        if (
-            self._has_key_press_events
-            and REPORT_VALUE_USAGE_VALUE_ID in await self._get_active_central_link_metadata()
-        ):
-            await self._device.client.report_value_usage(
-                address=self._address, value_id=REPORT_VALUE_USAGE_VALUE_ID, ref_counter=0
-            )
 
     @property
     def _has_key_press_events(self) -> bool:
