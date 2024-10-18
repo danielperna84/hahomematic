@@ -473,12 +473,24 @@ class Client(ABC):
 
     @service()
     async def get_metadata(self, address: str, data_id: str) -> dict[str, Any]:
-        """Return a list of links."""
+        """Return the metadata for an object."""
         try:
             return cast(dict[str, Any], await self._proxy.getMetadata(address, data_id))
         except BaseHomematicException as ex:
             raise ClientException(
                 f"GET_METADATA failed with for: {address}/{data_id}: {reduce_args(args=ex.args)}"
+            ) from ex
+
+    @service()
+    async def set_metadata(
+        self, address: str, value_id: str, value: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Write the metadata for an object."""
+        try:
+            return cast(dict[str, Any], await self._proxy.setMetadata(address, value_id, value))
+        except BaseHomematicException as ex:
+            raise ClientException(
+                f"SET_METADATA failed with for: {address}/{value_id}/{value}: {reduce_args(args=ex.args)}"
             ) from ex
 
     @service(log_level=logging.NOTSET)

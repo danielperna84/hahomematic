@@ -759,6 +759,7 @@ class HmChannel(PayloadMixin):
             await self._device.client.report_value_usage(
                 address=self._address, value_id=REPORT_VALUE_USAGE_VALUE_ID, ref_counter=0
             )
+            await self._cleanup_metadata()
 
     @service()
     async def _central_link_exists(self) -> bool:
@@ -767,9 +768,26 @@ class HmChannel(PayloadMixin):
             address=self._address, data_id=REPORT_VALUE_USAGE_DATA
         ):
             return any(
-                value for value in metadata.values() if isinstance(value, int) and value > 1
+                value
+                for key, value in metadata.items()
+                if isinstance(value, int) and key == REPORT_VALUE_USAGE_VALUE_ID and value > 1
             )
         return False
+
+    async def _cleanup_metadata(self) -> None:
+        """Cleanup the metadata for central links."""
+        if metadata := await self._device.client.get_metadata(
+            address=self._address, data_id=REPORT_VALUE_USAGE_DATA
+        ):
+            await self._device.client.set_metadata(
+                address=self._address,
+                value_id=REPORT_VALUE_USAGE_DATA,
+                value={
+                    key: value
+                    for key, value in metadata.items()
+                    if key == REPORT_VALUE_USAGE_VALUE_ID
+                },
+            )
 
     async def _get_active_central_link_metadata(self) -> tuple[str, ...]:
         """Check if central link exists."""
