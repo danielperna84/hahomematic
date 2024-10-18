@@ -471,6 +471,28 @@ class Client(ABC):
                 f"GET_LINKS failed with for: {address}: {reduce_args(args=ex.args)}"
             ) from ex
 
+    @service()
+    async def get_metadata(self, address: str, data_id: str) -> dict[str, Any]:
+        """Return the metadata for an object."""
+        try:
+            return cast(dict[str, Any], await self._proxy.getMetadata(address, data_id))
+        except BaseHomematicException as ex:
+            raise ClientException(
+                f"GET_METADATA failed with for: {address}/{data_id}: {reduce_args(args=ex.args)}"
+            ) from ex
+
+    @service()
+    async def set_metadata(
+        self, address: str, value_id: str, value: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Write the metadata for an object."""
+        try:
+            return cast(dict[str, Any], await self._proxy.setMetadata(address, value_id, value))
+        except BaseHomematicException as ex:
+            raise ClientException(
+                f"SET_METADATA failed with for: {address}/{value_id}/{value}: {reduce_args(args=ex.args)}"
+            ) from ex
+
     @service(log_level=logging.NOTSET)
     async def get_value(
         self,
@@ -818,12 +840,7 @@ class Client(ABC):
     @service()
     async def report_value_usage(self, address: str, value_id: str, ref_counter: int) -> bool:
         """Report value usage."""
-        try:
-            return bool(await self._proxy.reportValueUsage(address, value_id, ref_counter))
-        except BaseHomematicException as ex:
-            raise ClientException(
-                f"REPORT_VALUE_USAGE failed with: {address}/{value_id}/{ref_counter}: {reduce_args(args=ex.args)}"
-            ) from ex
+        return False
 
     @service()
     async def update_device_firmware(self, device_address: str) -> bool:
@@ -971,6 +988,16 @@ class ClientCCU(Client):
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU."""
         return await self._json_rpc_client.execute_program(pid=pid)
+
+    @service()
+    async def report_value_usage(self, address: str, value_id: str, ref_counter: int) -> bool:
+        """Report value usage."""
+        try:
+            return bool(await self._proxy.reportValueUsage(address, value_id, ref_counter))
+        except BaseHomematicException as ex:
+            raise ClientException(
+                f"REPORT_VALUE_USAGE failed with: {address}/{value_id}/{ref_counter}: {reduce_args(args=ex.args)}"
+            ) from ex
 
     @measure_execution_time
     @service()
