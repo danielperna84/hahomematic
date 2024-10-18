@@ -781,7 +781,7 @@ class HmChannel(PayloadMixin):
         ):
             await self._device.client.set_metadata(
                 address=self._address,
-                value_id=REPORT_VALUE_USAGE_DATA,
+                data_id=REPORT_VALUE_USAGE_DATA,
                 value={
                     key: value
                     for key, value in metadata.items()
