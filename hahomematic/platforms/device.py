@@ -25,6 +25,7 @@ from hahomematic.const import (
     INIT_DATETIME,
     NO_CACHE_ENTRY,
     RELEVANT_INIT_PARAMETERS,
+    REPORT_VALUE_USAGE_DATA,
     REPORT_VALUE_USAGE_VALUE_ID,
     CallSource,
     DataOperationResult,
@@ -741,13 +742,32 @@ class HmChannel(PayloadMixin):
         return self._unique_id
 
     @service()
+    async def central_link_exists(self) -> bool:
+        """Check if central link exists."""
+        if metadata := await self._device.client.get_metadata(
+            address=self._address, data_id=REPORT_VALUE_USAGE_DATA
+        ):
+            return any(
+                value for value in metadata.values() if isinstance(value, int) and value > 1
+            )
+        return False
+
+    async def _get_active_central_link_metadata(self) -> tuple[str, ...]:
+        """Check if central link exists."""
+        if metadata := await self._device.client.get_metadata(
+            address=self._address, data_id=REPORT_VALUE_USAGE_DATA
+        ):
+            return tuple(
+                key
+                for key, value in metadata.items()
+                if isinstance(key, str) and isinstance(value, int) and value > 0
+            )
+        return ()
+
+    @service()
     async def create_central_link(self) -> None:
         """Create a central link to support press events."""
-        if any(
-            event
-            for event in self.generic_events
-            if event.event_type is HomematicEventType.KEYPRESS
-        ):
+        if self._has_key_press_events and not await self.central_link_exists():
             await self._device.client.report_value_usage(
                 address=self._address, parameter=REPORT_VALUE_USAGE_VALUE_ID, ref_counter=1
             )
@@ -755,14 +775,22 @@ class HmChannel(PayloadMixin):
     @service()
     async def remove_central_link(self) -> None:
         """Remove a central link."""
-        if any(
-            event
-            for event in self.generic_events
-            if event.event_type is HomematicEventType.KEYPRESS
+        if (
+            self._has_key_press_events
+            and REPORT_VALUE_USAGE_VALUE_ID in await self._get_active_central_link_metadata()
         ):
             await self._device.client.report_value_usage(
                 address=self._address, value_id=REPORT_VALUE_USAGE_VALUE_ID, ref_counter=0
             )
+
+    @property
+    def _has_key_press_events(self) -> bool:
+        """Return if channel has KEYPRESS events."""
+        return any(
+            event
+            for event in self.generic_events
+            if event.event_type is HomematicEventType.KEYPRESS
+        )
 
     def add_entity(self, entity: CallbackEntity) -> None:
         """Add an entity to a channel."""
