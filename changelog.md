@@ -1,4 +1,8 @@
-# Version 2024.10.10 (2024-10-17)
+# Version 2024.10.11 (2024-10-18)
+
+- Align method parameters with CCU
+
+# Version 2024.10.10 (2024-10-18)
 
 - Add create_central_links and remove_central_links to device and central
 
