@@ -28,6 +28,7 @@ from hahomematic.const import (
     RELEVANT_INIT_PARAMETERS,
     REPORT_VALUE_USAGE_DATA,
     REPORT_VALUE_USAGE_VALUE_ID,
+    VIRTUAL_REMOTE_MODELS,
     CallSource,
     DataOperationResult,
     DeviceDescription,
@@ -371,16 +372,24 @@ class HmDevice(PayloadMixin):
     @service()
     async def create_central_links(self) -> None:
         """Create a central links to support press events on all channels with click events."""
-        if self._product_group in (ProductGroup.HM, ProductGroup.HMIP):
+        if self.relevant_for_central_link_management:
             for channel in self._channels.values():
                 await channel.create_central_link()
 
     @service()
     async def remove_central_links(self) -> None:
         """Remove central links."""
-        if self._product_group in (ProductGroup.HM, ProductGroup.HMIP):
+        if self.relevant_for_central_link_management:
             for channel in self._channels.values():
                 await channel.remove_central_link()
+
+    @property
+    def relevant_for_central_link_management(self) -> bool:
+        """Return if channel is relevant for central link management."""
+        return (
+            self._product_group in (ProductGroup.HM, ProductGroup.HMIP)
+            and self._model not in VIRTUAL_REMOTE_MODELS
+        )
 
     def get_sub_device_base_channel(self, channel_no: int | None) -> int | None:
         """Return the sub device channel."""
@@ -744,27 +753,24 @@ class HmChannel(PayloadMixin):
         """Return the unique_id of the channel."""
         return self._unique_id
 
-    @service()
     async def create_central_link(self) -> None:
         """Create a central link to support press events."""
-        if self._has_key_press_events and not await self._central_link_exists():
+        if self._has_key_press_events and not await self._has_central_link():
             await self._device.client.report_value_usage(
                 address=self._address, value_id=REPORT_VALUE_USAGE_VALUE_ID, ref_counter=1
             )
 
-    @service()
     async def remove_central_link(self) -> None:
         """Remove a central link."""
         if (
             self._has_key_press_events
-            and REPORT_VALUE_USAGE_VALUE_ID in await self._get_active_central_link_metadata()
+            and await self._has_central_link()
             and not await self._has_program_ids()
         ):
             await self._device.client.report_value_usage(
                 address=self._address, value_id=REPORT_VALUE_USAGE_VALUE_ID, ref_counter=0
             )
 
-    @service()
     async def cleanup_central_link_metadata(self) -> None:
         """Cleanup the metadata for central links."""
         if metadata := await self._device.client.get_metadata(
@@ -776,26 +782,21 @@ class HmChannel(PayloadMixin):
                 value={key: value for key, value in metadata.items() if key in CLICK_EVENTS},
             )
 
-    @service()
-    async def _central_link_exists(self) -> bool:
-        """Check if central link exists."""
-        if active_central_link_metadata := await self._get_active_central_link_metadata():
-            return REPORT_VALUE_USAGE_VALUE_ID in active_central_link_metadata
-        return False
-
-    async def _get_active_central_link_metadata(self) -> tuple[str, ...]:
+    async def _has_central_link(self) -> bool:
         """Check if central link exists."""
         if metadata := await self._device.client.get_metadata(
             address=self._address, data_id=REPORT_VALUE_USAGE_DATA
         ):
-            return tuple(
+            return any(
                 key
                 for key, value in metadata.items()
-                if isinstance(key, str) and isinstance(value, int) and value > 0
+                if isinstance(key, str)
+                and isinstance(value, int)
+                and key == REPORT_VALUE_USAGE_VALUE_ID
+                and value > 0
             )
-        return ()
+        return False
 
-    @service()
     async def _has_program_ids(self) -> bool:
         """Return if a channel has program ids."""
         return bool(await self._device.client.has_program_ids(channel_hmid=self._hmid))

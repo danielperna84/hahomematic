@@ -22,7 +22,7 @@ from hahomematic.const import (
     HOMEGEAR_SERIAL,
     INIT_DATETIME,
     INTERFACES_SUPPORTING_FIRMWARE_UPDATES,
-    VIRTUAL_REMOTE_TYPES,
+    VIRTUAL_REMOTE_MODELS,
     Backend,
     CallSource,
     CommandRxMode,
@@ -370,7 +370,7 @@ class Client(ABC):
 
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
-        for model in VIRTUAL_REMOTE_TYPES:
+        for model in VIRTUAL_REMOTE_MODELS:
             for device in self.central.devices:
                 if device.interface_id == self.interface_id and device.model == model:
                     return device

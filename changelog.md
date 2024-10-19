@@ -1,3 +1,7 @@
+# Version 2024.10.12 (2024-10-19)
+
+- Small tweaks to improve central link management
+
 # Version 2024.10.11 (2024-10-19)
 
 - Align method parameters with CCU

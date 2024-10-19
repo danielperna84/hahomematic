@@ -9,7 +9,7 @@ from typing import Final
 from hahomematic import support as hms
 from hahomematic.const import (
     CLICK_EVENTS,
-    VIRTUAL_REMOTE_TYPES,
+    VIRTUAL_REMOTE_MODELS,
     Operations,
     Parameter,
     ParameterData,
@@ -72,7 +72,7 @@ def create_entity_and_append_to_channel(
     if p_operations & Operations.WRITE:
         if p_type == ParameterType.ACTION:
             if p_operations == Operations.WRITE:
-                if parameter in _BUTTON_ACTIONS or channel.device.model in VIRTUAL_REMOTE_TYPES:
+                if parameter in _BUTTON_ACTIONS or channel.device.model in VIRTUAL_REMOTE_MODELS:
                     entity_t = HmButton
                 else:
                     entity_t = HmAction
