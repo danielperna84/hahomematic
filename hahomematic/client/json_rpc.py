@@ -77,6 +77,7 @@ class _JsonRpcMethod(StrEnum):
 
     CCU_GET_AUTH_ENABLED = "CCU.getAuthEnabled"
     CCU_GET_HTTPS_REDIRECT_ENABLED = "CCU.getHttpsRedirectEnabled"
+    CHANNEL_HAS_PROGRAM_IDS = "Channel.hasProgramIds"
     DEVICE_LIST_ALL_DETAIL = "Device.listAllDetail"
     INTERFACE_LIST_INTERFACES = "Interface.listInterfaces"
     PROGRAM_EXECUTE = "Program.execute"
@@ -413,6 +414,10 @@ class JsonRpcAioHttpClient:
         """Return if credentials are available."""
         return self._username is not None and self._username != "" and self._password is not None
 
+    def clear_session(self) -> None:
+        """Clear the current session."""
+        self._session_id = None
+
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear."""
         iid = "EXECUTE_PROGRAM"
@@ -476,10 +481,6 @@ class JsonRpcAioHttpClient:
             return False
 
         return True
-
-    def clear_session(self) -> None:
-        """Clear the current session."""
-        self._session_id = None
 
     async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
@@ -762,6 +763,27 @@ class JsonRpcAioHttpClient:
             return ()
 
         return tuple(all_programs)
+
+    async def has_program_ids(self, channel_hmid: str) -> bool:
+        """Return if a channel has program ids."""
+        iid = "HAS_PROGRAM_IDS"
+
+        try:
+            params = {_ID: channel_hmid}
+            response = await self._post(
+                method=_JsonRpcMethod.CHANNEL_HAS_PROGRAM_IDS,
+                extra_params=params,
+            )
+
+            _LOGGER.debug("HAS_PROGRAM_IDS: Checking if channel has program ids")
+            if json_result := response[_P_RESULT]:
+                return bool(json_result)
+            self._connection_state.remove_issue(issuer=self, iid=iid)
+        except BaseHomematicException as ex:
+            self._handle_exception_log(iid=iid, exception=ex, level=logging.WARNING)
+            return False
+
+        return False
 
     async def _get_supported_methods(self) -> tuple[str, ...]:
         """Get the supported methods of the backend."""

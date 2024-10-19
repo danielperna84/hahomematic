@@ -838,6 +838,11 @@ class Client(ABC):
         return all_paramsets
 
     @service()
+    async def has_program_ids(self, channel_hmid: str) -> bool:
+        """Return if a channel has program ids."""
+        return False
+
+    @service()
     async def report_value_usage(self, address: str, value_id: str, ref_counter: int) -> bool:
         """Report value usage."""
         return False
@@ -927,16 +932,16 @@ class ClientCCU(Client):
                 self.central.device_details.add_name(
                     address=device_address, name=device[_JSON_NAME]
                 )
-                self.central.device_details.add_device_channel_id(
-                    address=device_address, channel_id=device[_JSON_ID]
+                self.central.device_details.add_address_id(
+                    address=device_address, hmid=device[_JSON_ID]
                 )
                 for channel in device.get(_JSON_CHANNELS, []):
                     channel_address = channel[_JSON_ADDRESS]
                     self.central.device_details.add_name(
                         address=channel_address, name=channel[_JSON_NAME]
                     )
-                    self.central.device_details.add_device_channel_id(
-                        address=channel_address, channel_id=channel[_JSON_ID]
+                    self.central.device_details.add_address_id(
+                        address=channel_address, hmid=channel[_JSON_ID]
                     )
                 self.central.device_details.add_interface(
                     address=device_address, interface=device[_JSON_INTERFACE]
@@ -988,6 +993,11 @@ class ClientCCU(Client):
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU."""
         return await self._json_rpc_client.execute_program(pid=pid)
+
+    @service()
+    async def has_program_ids(self, channel_hmid: str) -> bool:
+        """Return if a channel has program ids."""
+        return await self._json_rpc_client.has_program_ids(channel_hmid=channel_hmid)
 
     @service()
     async def report_value_usage(self, address: str, value_id: str, ref_counter: int) -> bool:
