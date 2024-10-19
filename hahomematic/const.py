@@ -531,7 +531,7 @@ IGNORE_FOR_UN_IGNORE_PARAMETERS: Final[tuple[Parameter, ...]] = (
 )
 
 # virtual remotes s
-VIRTUAL_REMOTE_TYPES: Final[tuple[str, ...]] = (
+VIRTUAL_REMOTE_MODELS: Final[tuple[str, ...]] = (
     "HM-RCV-50",
     "HMW-RCV-50",
     "HmIP-RCV-50",
