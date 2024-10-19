@@ -1,6 +1,8 @@
-# Version 2024.10.11 (2024-10-18)
+# Version 2024.10.11 (2024-10-19)
 
 - Align method parameters with CCU
+- Use PRESS_SHORT for reportValueUsage
+- Check if channel has programs before deleting links
 
 # Version 2024.10.10 (2024-10-18)
 

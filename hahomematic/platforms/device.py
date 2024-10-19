@@ -18,6 +18,7 @@ from hahomematic import central as hmcu, client as hmcl
 from hahomematic.async_support import loop_check
 from hahomematic.const import (
     CALLBACK_TYPE,
+    CLICK_EVENTS,
     DEFAULT_DEVICE_DESCRIPTIONS_DIR,
     DEFAULT_PARAMSET_DESCRIPTIONS_DIR,
     ENTITY_KEY,
@@ -81,6 +82,7 @@ class HmDevice(PayloadMixin):
         self._interface_id: Final = interface_id
         self._address: Final = device_address
         self._sub_device_channels: Final[dict[int | None, int]] = {}
+        self._hmid: Final = self._central.device_details.get_address_id(address=device_address)
         self._interface: Final = central.device_details.get_interface(address=device_address)
         self._client: Final = central.get_client(interface_id=interface_id)
         self._description = self._central.device_descriptions.get_device_description(
@@ -603,6 +605,7 @@ class HmChannel(PayloadMixin):
         self._device: Final = device
         self._central: Final = device.central
         self._address: Final = channel_address
+        self._hmid: Final = self._central.device_details.get_address_id(address=channel_address)
         self._no: Final[int | None] = get_channel_no(address=channel_address)
         self._name_data: Final = get_channel_name_data(channel=self)
         self._description = self._central.device_descriptions.get_device_description(
@@ -755,26 +758,14 @@ class HmChannel(PayloadMixin):
         if (
             self._has_key_press_events
             and REPORT_VALUE_USAGE_VALUE_ID in await self._get_active_central_link_metadata()
+            and not await self._has_program_ids()
         ):
             await self._device.client.report_value_usage(
                 address=self._address, value_id=REPORT_VALUE_USAGE_VALUE_ID, ref_counter=0
             )
-            await self._cleanup_metadata()
 
     @service()
-    async def _central_link_exists(self) -> bool:
-        """Check if central link exists."""
-        if metadata := await self._device.client.get_metadata(
-            address=self._address, data_id=REPORT_VALUE_USAGE_DATA
-        ):
-            return any(
-                value
-                for key, value in metadata.items()
-                if isinstance(value, int) and key == REPORT_VALUE_USAGE_VALUE_ID and value > 1
-            )
-        return False
-
-    async def _cleanup_metadata(self) -> None:
+    async def cleanup_central_link_metadata(self) -> None:
         """Cleanup the metadata for central links."""
         if metadata := await self._device.client.get_metadata(
             address=self._address, data_id=REPORT_VALUE_USAGE_DATA
@@ -782,12 +773,15 @@ class HmChannel(PayloadMixin):
             await self._device.client.set_metadata(
                 address=self._address,
                 data_id=REPORT_VALUE_USAGE_DATA,
-                value={
-                    key: value
-                    for key, value in metadata.items()
-                    if key != REPORT_VALUE_USAGE_VALUE_ID
-                },
+                value={key: value for key, value in metadata.items() if key in CLICK_EVENTS},
             )
+
+    @service()
+    async def _central_link_exists(self) -> bool:
+        """Check if central link exists."""
+        if active_central_link_metadata := await self._get_active_central_link_metadata():
+            return REPORT_VALUE_USAGE_VALUE_ID in active_central_link_metadata
+        return False
 
     async def _get_active_central_link_metadata(self) -> tuple[str, ...]:
         """Check if central link exists."""
@@ -800,6 +794,11 @@ class HmChannel(PayloadMixin):
                 if isinstance(key, str) and isinstance(value, int) and value > 0
             )
         return ()
+
+    @service()
+    async def _has_program_ids(self) -> bool:
+        """Return if a channel has program ids."""
+        return bool(await self._device.client.has_program_ids(channel_hmid=self._hmid))
 
     @property
     def _has_key_press_events(self) -> bool:

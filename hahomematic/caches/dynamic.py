@@ -175,9 +175,13 @@ class DeviceDetailsCache:
         """Get interface from cache."""
         return self._interface_cache.get(address) or InterfaceName.BIDCOS_RF
 
-    def add_device_channel_id(self, address: str, channel_id: str) -> None:
+    def add_address_id(self, address: str, hmid: str) -> None:
         """Add channel id for a channel."""
-        self._device_channel_ids[address] = channel_id
+        self._device_channel_ids[address] = hmid
+
+    def get_address_id(self, address: str) -> str:
+        """Get id for address."""
+        return self._device_channel_ids.get(address) or "0"
 
     async def _get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms, if available."""
